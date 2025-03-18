@@ -23,11 +23,12 @@ public class Notification extends BaseEntity {
 
     private String content;
 
-    private Boolean read = false;
+    private Boolean isRead = false;
 
     @Builder
-    protected Notification(String content, Boolean read) {
+    protected Notification(User user, String content, Boolean isRead) {
+        this.user = user;
         this.content = content;
-        this.read = read;
+        this.isRead = isRead;
     }
 }
