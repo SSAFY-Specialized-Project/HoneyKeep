@@ -20,20 +20,8 @@ public class SampleController {
     }
 
     @GetMapping("/test1")
-    public ResponseEntity<Map<String, Object>> test1(){
-        long startTime = System.nanoTime();
-        
-        BigDecimal result = BigDecimal.valueOf(1.12).add(BigDecimal.valueOf(2.12));
-        
-        long endTime = System.nanoTime();
-        long elapsedTimeInNanos = endTime - startTime;
-        double elapsedTimeInMs = elapsedTimeInNanos / 1_000_000.0;
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("result", result);
-        response.put("calculationTimeMs", elapsedTimeInMs);
-        
-        return ResponseEntity.ok(response);
+    public ResponseEntity<String> test1(){
+        return ResponseEntity.ok("Hello world");
     }
 
     @GetMapping("/test2")
