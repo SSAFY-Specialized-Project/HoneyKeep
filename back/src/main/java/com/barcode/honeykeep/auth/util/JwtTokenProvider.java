@@ -1,15 +1,22 @@
 package com.barcode.honeykeep.auth.util;
 
-import io.jsonwebtoken.*;
-import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.Base64;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import java.util.Base64;
-import java.util.Date;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 public class JwtTokenProvider {
@@ -19,6 +26,9 @@ public class JwtTokenProvider {
 
     @Value("${jwt.expireSec}")
     private int jwtExpireSec;
+
+    @Value("${jwt.refresh.expireSec}")
+    private int refreshExpireSec;
 
     @PostConstruct
     protected void init() {
@@ -31,16 +41,30 @@ public class JwtTokenProvider {
         this.redisTemplate = redisTemplate;
     }
 
-    // 토큰 생성
-    public String generateToken(Long userId) {
+    // Access Token 생성
+    public String generateAccessToken(Integer userId) {
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
-        Date expiration = new Date(now + jwtExpireSec * 1000L); // 2시간 (밀리초 단위)
+        Date expiration = new Date(now + jwtExpireSec * 1000L);
 
         return Jwts.builder()
                 .claim("userId", userId)
-                .setIssuedAt(issuedAt)          // 토큰 발행 시간
-                .setExpiration(expiration)      // 만료 시간
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .signWith(SignatureAlgorithm.HS256, jwtSecret)
+                .compact();
+    }
+
+    // Refresh Token 생성
+    public String generateRefreshToken(Integer userId) {
+        long now = System.currentTimeMillis();
+        Date issuedAt = new Date(now);
+        Date expiration = new Date(now + refreshExpireSec * 1000L);
+
+        return Jwts.builder()
+                .claim("userId", userId)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .compact();
     }
