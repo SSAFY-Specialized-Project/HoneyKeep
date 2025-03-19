@@ -38,12 +38,14 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)    // token으로 검증하기 때문에 session 필요 없음
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
+                        .requestMatchers(   // Spring Security 검증을 생략할 주소
                                 "/error",
                                 "/favicon.ico",
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
-                                "/api/v1/sample/**") // Spring Security 검증을 생략할 주소
+                                "/api/v1/auth/send-verification",
+                                "/api/v1/auth/verify-email",
+                                "/api/v1/sample/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
