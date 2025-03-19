@@ -3,10 +3,13 @@ package com.barcode.honeykeep.auth.util;
 import java.util.Base64;
 import java.util.Date;
 
+import com.barcode.honeykeep.common.vo.UserId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -30,12 +33,12 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh.expireSec}")
     private int refreshExpireSec;
 
+    private final RedisTemplate<String, String> redisTemplate;
+
     @PostConstruct
     protected void init() {
         jwtSecret = Base64.getEncoder().encodeToString(jwtSecret.getBytes());
     }
-
-    private final RedisTemplate<String, String> redisTemplate;
 
     public JwtTokenProvider(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -71,7 +74,8 @@ public class JwtTokenProvider {
 
     // 토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {
-        Long userId = getUserId(token);
+        Integer id = getUserId(token);
+        UserId userId = new UserId(id);
         return new UsernamePasswordAuthenticationToken(userId, null, null);
     }
 
@@ -90,7 +94,7 @@ public class JwtTokenProvider {
 
             // redis의 blacklist (logout 요청한 jwt token) 중 토큰이 포함되었는지 확인
             String blacklistKey = "jwt:blacklist:" + token;
-            if(redisTemplate.hasKey(blacklistKey)) {
+            if (redisTemplate.hasKey(blacklistKey)) {
                 return false;
             }
 
@@ -105,16 +109,16 @@ public class JwtTokenProvider {
     }
 
     // 토큰에서 userId 조회
-    public Long getUserId(String token) {
+    public Integer getUserId(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(jwtSecret)
                 .parseClaimsJws(token)
                 .getBody();
-        return claims.get("userId", Long.class);
+        return claims.get("userId", Integer.class);
     }
 
     // 만료된 토큰에서 userId 조회
-    public Long getUserIdFromExpiredToken(String token) {
+    public Integer getUserIdFromExpiredToken(String token) {
         try {
             // 아직 안 만료된 토큰이면 그냥 클레임 파싱
             Claims claims = Jwts.parserBuilder()
@@ -122,12 +126,12 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.get("userId", Long.class);
+            return claims.get("userId", Integer.class);
 
         } catch (ExpiredJwtException e) {
             // 만료된 토큰이어도 e.getClaims()로 클레임에 접근 가능
             Claims claims = e.getClaims();
-            return claims.get("userId", Long.class);
+            return claims.get("userId", Integer.class);
         }
     }
 }

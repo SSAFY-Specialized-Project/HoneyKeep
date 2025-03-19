@@ -66,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 스킵 대상이면, 토큰이 유효하다면 userId만 request에 설정하고 필터 계속 진행
         if (isSkipTarget) {
             if (token != null && jwtTokenProvider.validateToken(token)) {
-                Long userId = jwtTokenProvider.getUserId(token);
+                Integer userId = jwtTokenProvider.getUserId(token);
                 request.setAttribute("userId", userId);
             }
             // 토큰이 없거나 유효하지 않아도 스킵하므로 그대로 통과
@@ -81,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             // 컨트롤러에서 userId 참조할 수 있도록 request 에도 설정
-            Long userId = jwtTokenProvider.getUserId(token);
+            Integer userId = jwtTokenProvider.getUserId(token);
             request.setAttribute("userId", userId);
             request.setAttribute("token", token);
 
@@ -110,7 +110,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } else if (uri.startsWith("/api/auth/reissue")) {
             // 토큰이 만료된 상태에서 /api/auth/reissue 로 재발급 시도하는 경우
-            Long userId = jwtTokenProvider.getUserIdFromExpiredToken(token);
+            Integer userId = jwtTokenProvider.getUserIdFromExpiredToken(token);
             request.setAttribute("userId", userId);
 
         } else {
