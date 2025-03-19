@@ -1,4 +1,4 @@
-package com.barcode.honeykeep.fixedexpenses.entity;
+package com.barcode.honeykeep.fixedexpense.entity;
 
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.common.entity.BaseEntity;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "fixed_expenses")
+@Table(name = "fixed_expense")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FixedExpense extends BaseEntity {

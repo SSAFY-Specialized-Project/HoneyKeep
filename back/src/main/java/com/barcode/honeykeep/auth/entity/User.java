@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.common.entity.BaseEntity;
-import com.barcode.honeykeep.fixedexpenses.entity.FixedExpense;
+import com.barcode.honeykeep.fixedexpense.entity.FixedExpense;
 import com.barcode.honeykeep.notification.entity.Notification;
 
 import com.barcode.honeykeep.notification.entity.PushSetting;
@@ -45,7 +45,7 @@ public class User extends BaseEntity {
     private List<Account> accounts = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
-    private List<FixedExpense> fixedExpenses = new ArrayList<>();
+    private List<FixedExpense> fixedExpense = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     private List<PushSetting> pushSettings = new ArrayList<>();
@@ -65,7 +65,7 @@ public class User extends BaseEntity {
         this.phoneNumber = phoneNumber;
         this.notifications = new ArrayList<>();
         this.accounts = new ArrayList<>();
-        this.fixedExpenses = new ArrayList<>();
+        this.fixedExpense = new ArrayList<>();
         this.pushSettings = new ArrayList<>();
         this.cert = cert;
     }
