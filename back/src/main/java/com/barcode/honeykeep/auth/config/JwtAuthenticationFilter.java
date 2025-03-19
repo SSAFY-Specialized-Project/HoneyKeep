@@ -1,11 +1,14 @@
 package com.barcode.honeykeep.auth.config;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
 import com.barcode.honeykeep.auth.util.JwtTokenProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -44,23 +47,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         System.out.println("[JwtAuthenticationFilter] URI: " + uri);
 
-        // favicon 요청은 JWT 검증 건너뛰기
-        if ("/favicon.ico".equals(uri)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        // 인증이 필요없는 URI 패턴 목록
+        List<String> permitAllUriPatterns = Arrays.asList(
+                "/favicon.ico",
+                "/api/v1/auth/register",
+                "/api/v1/auth/login",
+                "/api/v1/sample/**",
+                "/api/v1/auth/reissue"
+        );
 
-        /*
-         * jwt 검증 생략할거 있으면 여기다가 추가해서 쓰면 됨
-         * */
-
-        boolean isSkipTarget = false;
-
-        // 2. /api/auth/login/kakao, /api/auth/login/naver 요청은 JWT 검증 건너뛰기
-        if (uri.contains("/api/v1/sample/")) {
-            filterChain.doFilter(request, response);
-            isSkipTarget = true;
-        }
+        // 패턴 매칭 확인 (경로 와일드카드 처리)
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+        boolean isSkipTarget = permitAllUriPatterns.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, uri));
 
         // 스킵 대상이면, 토큰이 유효하다면 userId만 request에 설정하고 필터 계속 진행
         if (isSkipTarget) {

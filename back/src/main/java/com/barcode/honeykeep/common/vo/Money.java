@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Embeddable
 @Getter
@@ -15,5 +16,17 @@ public class Money {
 
     public Money(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Money money = (Money) o;
+        return Objects.equals(amount, money.amount);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(amount);
     }
 }

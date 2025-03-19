@@ -10,6 +10,7 @@ public enum AuthErrorCode implements ErrorCode {
     REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Refresh token expired"),
     MISSING_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "Refresh token is required"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "Invalid password"),
 
     ;
 

@@ -28,7 +28,7 @@ public class User extends BaseEntity {
 
     private String email;
 
-    private String username;
+    private String name;
 
     private String institutionCode = "00100";
 
@@ -54,11 +54,11 @@ public class User extends BaseEntity {
     private Cert cert;
 
     @Builder
-    protected User(String userKey, String email, String username, String institutionCode,
+    protected User(String userKey, String email, String name, String institutionCode,
                 String identityNumber, String password, String phoneNumber, Cert cert) {
         this.userKey = userKey;
         this.email = email;
-        this.username = username;
+        this.name = name;
         this.institutionCode = institutionCode == null ? "00100" : institutionCode;
         this.identityNumber = identityNumber;
         this.password = password;
@@ -69,5 +69,4 @@ public class User extends BaseEntity {
         this.pushSettings = new ArrayList<>();
         this.cert = cert;
     }
-
 }
