@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.UnsupportedEncodingException;
+
 // Service 에서 DTO로 반환 후 넘겨주기!
 
 @RestController
@@ -51,4 +53,23 @@ public class AuthController {
                 .body(ApiResponse.success("로그인 성공", response));
     }
 
+    @PostMapping("/send-verification")
+    public ResponseEntity<ApiResponse<EmailVerifyResponse>> sendVerification(@RequestBody EmailVerifyRequest request) throws UnsupportedEncodingException {
+        EmailVerifyResponse response = authService.sendVerification(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response)
+        );
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Boolean>> verifyEmail(@RequestBody EmailVerifyCodeRequest request) {
+        boolean isValid = authService.verifyEmail(request);
+
+        return ResponseEntity.ok(
+                isValid ?
+                        ApiResponse.success(isValid) :
+                        ApiResponse.unauthorized("인증번호가 일치하지 않습니다.")
+        );
+    }
 }
