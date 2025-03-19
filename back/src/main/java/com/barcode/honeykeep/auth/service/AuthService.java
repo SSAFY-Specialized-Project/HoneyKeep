@@ -6,6 +6,7 @@ import com.barcode.honeykeep.auth.exception.AuthErrorCode;
 import com.barcode.honeykeep.auth.repository.AuthRepository;
 import com.barcode.honeykeep.auth.util.JwtTokenProvider;
 import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.common.vo.UserId;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -143,5 +144,12 @@ public class AuthService {
         }
 
         return isValid;
+    }
+
+    public boolean validatePassword(Integer userId, String password) {
+        User user = authRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
+
+        return passwordEncoder.matches(password, user.getPassword());
     }
 }
