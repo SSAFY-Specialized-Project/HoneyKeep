@@ -1,6 +1,7 @@
 package com.barcode.honeykeep.transaction.entity;
 
 import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.common.entity.BaseEntity;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import jakarta.persistence.*;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "transactions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Transaction {
+public class Transaction extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,16 +31,23 @@ public class Transaction {
 
     private String name;
 
-    private Money money;
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "amount"))
+    private Money amount;
+
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "balance"))
+    private Money balance;
 
     private LocalDateTime date;
 
     @Builder
-    protected Transaction(Account account, Pocket pocket, String name, Money money, LocalDateTime date) {
+    protected Transaction(Account account, Pocket pocket, String name, Money amount, Money balance, LocalDateTime date) {
         this.account = account;
         this.pocket = pocket;
         this.name = name;
-        this.money = money;
+        this.amount = amount;
+        this.balance = balance;
         this.date = date;
     }
 }
