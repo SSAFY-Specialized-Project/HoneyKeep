@@ -14,7 +14,7 @@ import java.util.List;
 @Table(name = "banks")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Bank extends BaseEntity {
+public class Bank {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
