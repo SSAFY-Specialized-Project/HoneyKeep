@@ -22,3 +22,6 @@
 /server/back/.env.*
 /server/back/.vscode
 !/back/.env.example
+
+/.idea
+/.vscode
