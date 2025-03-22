@@ -89,6 +89,7 @@ services:
 networks:
   my-network:
     name: my-network
+    external: true
     driver: bridge
 
 volumes:
