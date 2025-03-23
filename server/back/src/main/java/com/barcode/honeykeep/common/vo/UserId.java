@@ -1,8 +1,8 @@
 package com.barcode.honeykeep.common.vo;
 
-import lombok.Getter;
-
 import java.util.Objects;
+
+import lombok.Getter;
 
 @Getter
 public class UserId {
@@ -24,6 +24,11 @@ public class UserId {
     @Override
     public int hashCode() {
         return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return value != null ? value.toString() : "null";
     }
 
 }
