@@ -1,24 +1,31 @@
 package com.barcode.honeykeep.auth.controller;
 
-import com.barcode.honeykeep.auth.dto.*;
-import com.barcode.honeykeep.auth.service.AuthService;
-import com.barcode.honeykeep.auth.util.JwtTokenProvider;
-import com.barcode.honeykeep.common.response.ApiResponse;
-import com.barcode.honeykeep.common.vo.UserId;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.UnsupportedEncodingException;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.UnsupportedEncodingException;
+import com.barcode.honeykeep.auth.dto.EmailVerifyCodeRequest;
+import com.barcode.honeykeep.auth.dto.EmailVerifyRequest;
+import com.barcode.honeykeep.auth.dto.EmailVerifyResponse;
+import com.barcode.honeykeep.auth.dto.LoginRequest;
+import com.barcode.honeykeep.auth.dto.LoginResponse;
+import com.barcode.honeykeep.auth.dto.RegisterRequest;
+import com.barcode.honeykeep.auth.dto.RegisterResponse;
+import com.barcode.honeykeep.auth.dto.TokenResponse;
+import com.barcode.honeykeep.auth.dto.ValidatePasswordRequest;
+import com.barcode.honeykeep.auth.service.AuthService;
+import com.barcode.honeykeep.common.response.ApiResponse;
+import com.barcode.honeykeep.common.vo.UserId;
 
-// Service 에서 DTO로 반환 후 넘겨주기!
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -27,14 +34,12 @@ import java.io.UnsupportedEncodingException;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@RequestBody RegisterRequest request) {
         RegisterResponse response = authService.registerUser(request);
-        return ResponseEntity.ok(
-                ApiResponse.success("회원가입 성공", response)
-        );
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created("회원가입 성공", response));
     }
 
     @PostMapping("/login")
@@ -62,20 +67,19 @@ public class AuthController {
     public ResponseEntity<ApiResponse<EmailVerifyResponse>> sendVerification(@RequestBody EmailVerifyRequest request) throws UnsupportedEncodingException {
         EmailVerifyResponse response = authService.sendVerification(request);
 
-        return ResponseEntity.ok(
-                ApiResponse.success(response)
-        );
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(response));
     }
 
     @PostMapping("/verify-email")
     public ResponseEntity<ApiResponse<Boolean>> verifyEmail(@RequestBody EmailVerifyCodeRequest request) {
         boolean isValid = authService.verifyEmail(request);
 
-        return ResponseEntity.ok(
-                isValid ?
-                        ApiResponse.success(isValid) :
-                        ApiResponse.unauthorized("인증번호가 일치하지 않습니다.")
-        );
+        return isValid ?
+                ResponseEntity.ok()
+                        .body(ApiResponse.success(true)) :
+                ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.unauthorized("인증번호가 일치하지 않습니다."));
     }
 
     @PostMapping("/validate-password")
@@ -85,10 +89,10 @@ public class AuthController {
 
         boolean isValid = authService.validatePassword(userId.getValue(), request.password());
 
-        return ResponseEntity.ok(
-                isValid ?
-                        ApiResponse.success(isValid) :
-                        ApiResponse.unauthorized("비밀번호가 일치하지 않습니다.")
-        );
+        return isValid ?
+                ResponseEntity.ok()
+                        .body(ApiResponse.success(true)) :
+                ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.unauthorized("비밀번호가 일치하지 않습니다."));
     }
 }
