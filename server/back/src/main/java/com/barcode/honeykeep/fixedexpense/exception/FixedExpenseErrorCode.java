@@ -17,11 +17,11 @@ public enum FixedExpenseErrorCode implements ErrorCode {
 
     @Override
     public HttpStatus getHttpStatus() {
-        return null;
+        return this.httpStatus;
     }
 
     @Override
     public String getMessage() {
-        return "";
+        return this.message;
     }
 }
