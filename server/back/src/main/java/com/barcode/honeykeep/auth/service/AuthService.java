@@ -6,7 +6,7 @@ import com.barcode.honeykeep.auth.exception.AuthErrorCode;
 import com.barcode.honeykeep.auth.repository.AuthRepository;
 import com.barcode.honeykeep.auth.util.JwtTokenProvider;
 import com.barcode.honeykeep.common.exception.CustomException;
-import com.barcode.honeykeep.common.logging.LoggingService;
+import com.barcode.honeykeep.common.service.LoggingService;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -74,11 +74,11 @@ public class AuthService {
                 .build();
 
         newUser = authRepository.save(newUser);
-        
+
         // 회원가입 이벤트 로깅
         loggingService.logAuthEvent(
-            newUser.getId(), 
-            "회원가입", 
+            newUser.getId(),
+            "회원가입",
             String.format("신규 사용자 등록: %s (%s)", newUser.getEmail(), newUser.getName())
         );
 
@@ -93,10 +93,10 @@ public class AuthService {
                 .orElseThrow(() -> {
                     // 로그인 실패 - 사용자 없음 로깅
                     loggingService.logAuth(
-                        null, 
-                        getClientIp(), 
-                        getUserAgent(), 
-                        "로그인_실패", 
+                        null,
+                        getClientIp(),
+                        getUserAgent(),
+                        "로그인_실패",
                         String.format("로그인 실패: 사용자 없음 (%s)", request.email())
                     );
                     return new CustomException(AuthErrorCode.USER_NOT_FOUND);
@@ -105,10 +105,10 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             // 로그인 실패 - 비밀번호 불일치 로깅
             loggingService.logAuth(
-                user.getId(), 
-                getClientIp(), 
-                getUserAgent(), 
-                "로그인_실패", 
+                user.getId(),
+                getClientIp(),
+                getUserAgent(),
+                "로그인_실패",
                 String.format("로그인 실패: 비밀번호 불일치 (%s)", user.getEmail())
             );
             throw new CustomException(AuthErrorCode.INVALID_PASSWORD);
@@ -119,7 +119,7 @@ public class AuthService {
 
         String refreshTokenKey = "refresh_token:" + user.getId();
         redisTemplate.opsForValue().set(refreshTokenKey, refreshToken);
-        
+
         // 로그인 성공 로깅
         loggingService.logAuth(
             user.getId(),
@@ -178,12 +178,12 @@ public class AuthService {
 
             helper.setText(emailContent, true);
             mailSender.send(message);
-            
+
             loggingService.logAuth(
-                null, 
-                getClientIp(), 
-                getUserAgent(), 
-                "인증코드_발송", 
+                null,
+                getClientIp(),
+                getUserAgent(),
+                "인증코드_발송",
                 String.format("이메일 인증 코드 발송: %s", request.email())
             );
 
@@ -193,9 +193,9 @@ public class AuthService {
         } catch (Exception e) {
             // 인증코드 발송 실패 로깅
             loggingService.logError(
-                "AUTH_ERROR", 
-                String.format("이메일 인증 코드 발송 실패: %s (%s)", request.email(), e.getMessage()), 
-                e, 
+                "AUTH_ERROR",
+                String.format("이메일 인증 코드 발송 실패: %s (%s)", request.email(), e.getMessage()),
+                e,
                 "인증코드_발송_실패"
             );
             throw new CustomException(AuthErrorCode.EMAIL_SEND_FAILED);
@@ -243,7 +243,7 @@ public class AuthService {
             "인증코드_확인_성공",
             String.format("이메일 인증 성공: %s", request.email())
         );
-        
+
         redisTemplate.delete(redisKey);
         return true;
     }
@@ -256,7 +256,7 @@ public class AuthService {
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         boolean isValid = passwordEncoder.matches(password, user.getPassword());
-        
+
         // 비밀번호 검증 결과 로깅
         loggingService.logAuth(
             userId,
@@ -268,33 +268,33 @@ public class AuthService {
 
         return isValid;
     }
-    
+
     /**
      * 현재 요청의 클라이언트 IP 주소를 가져옴
      */
     private String getClientIp() {
         try {
-            HttpServletRequest request = 
+            HttpServletRequest request =
                 ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             return extractClientIp(request);
         } catch (Exception e) {
             return "unknown";
         }
     }
-    
+
     /**
      * 현재 요청의 User-Agent를 가져옴
      */
     private String getUserAgent() {
         try {
-            HttpServletRequest request = 
+            HttpServletRequest request =
                 ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             return request.getHeader("User-Agent");
         } catch (Exception e) {
             return "unknown";
         }
     }
-    
+
     /**
      * 클라이언트의 실제 IP 주소 추출
      */
