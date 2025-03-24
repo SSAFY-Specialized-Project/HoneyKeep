@@ -8,7 +8,7 @@ import java.util.List;
 public interface FixedExpenseService {
     List<FixedExpenseResponse> getFixedExpenses(Long userId);
 
-    FixedExpenseResponse createFixedExpenses(FixedExpenseRequest fixedExpenseRequest);
+    FixedExpenseResponse createFixedExpenses(Long userId, FixedExpenseRequest fixedExpenseRequest);
 
     FixedExpenseResponse updateFixedExpenses(Long id, FixedExpenseRequest fixedExpenseRequest);
 

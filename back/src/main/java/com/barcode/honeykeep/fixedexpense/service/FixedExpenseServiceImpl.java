@@ -1,14 +1,15 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
-import com.barcode.honeykeep.auth.exception.AuthErrorCode;
-import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseRequest;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.entity.FixedExpense;
 import com.barcode.honeykeep.fixedexpense.repository.FixedExpenseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.function.Function;
@@ -24,19 +25,32 @@ public class FixedExpenseServiceImpl implements FixedExpenseService {
     public List<FixedExpenseResponse> getFixedExpenses(Long userId) {
         List<FixedExpense> expenses = fixedExpenseRepository.findByUserId(userId);
 
-        if (expenses.isEmpty()) {
-            throw new CustomException(AuthErrorCode.USER_NOT_FOUND);
-        }
-
         return expenses.stream()
                 .map(toFixedExpensesResponse())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public FixedExpenseResponse createFixedExpenses(FixedExpenseRequest fixedExpenseRequest) {
-        return null;
+    @Transactional
+    public FixedExpenseResponse createFixedExpenses(Long userId, FixedExpenseRequest fixedExpenseRequest) {
+        // 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(HttpStatus.NOT_FOUND, "해당하는 유저를 찾을 수 없습니다"));
+
+        FixedExpense fixedExpense = FixedExpense.builder()
+                .user(user)
+                .name(fixedExpenseRequest.getName())
+                .money(fixedExpenseRequest.getMoney())
+                .startDate(fixedExpenseRequest.getStartDate())
+                .payDay(fixedExpenseRequest.getPayDay())
+                .memo(fixedExpenseRequest.getMemo())
+                .build();
+
+        FixedExpense saved = fixedExpenseRepository.save(fixedExpense);
+
+        return mapFixedExpensesResponse(saved);
     }
+
 
     @Override
     public FixedExpenseResponse updateFixedExpenses(Long id, FixedExpenseRequest fixedExpenseRequest) {
@@ -59,6 +73,7 @@ public class FixedExpenseServiceImpl implements FixedExpenseService {
 
     private FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpenses) {
         return FixedExpenseResponse.builder()
+                .id(fixedExpenses.getId())
                 .name(fixedExpenses.getName())
                 .money(fixedExpenses.getMoney())
                 .startDate(fixedExpenses.getStartDate())

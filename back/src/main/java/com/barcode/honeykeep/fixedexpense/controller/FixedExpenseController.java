@@ -28,8 +28,9 @@ public class FixedExpenseController {
     
     // 고정지출 생성 API
     @PostMapping
-    public ResponseEntity<FixedExpenseResponse> createFixedExpenses(@RequestBody FixedExpenseRequest fixedExpenseRequest) {
-        return ResponseEntity.ok(fixedExpenseService.createFixedExpenses(fixedExpenseRequest));
+    public ResponseEntity<FixedExpenseResponse> createFixedExpenses(@PathVariable("userId") Long userId,
+                                                                    @RequestBody FixedExpenseRequest fixedExpenseRequest) {
+        return ResponseEntity.ok(fixedExpenseService.createFixedExpenses(userId, fixedExpenseRequest));
     }
 
     // 고정지출 수정 API
