@@ -1,6 +1,8 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
 import com.barcode.honeykeep.auth.entity.User;
+import com.barcode.honeykeep.auth.exception.AuthErrorCode;
+import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseRequest;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.entity.FixedExpense;
@@ -34,16 +36,16 @@ public class FixedExpenseServiceImpl implements FixedExpenseService {
     @Transactional
     public FixedExpenseResponse createFixedExpenses(Long userId, FixedExpenseRequest fixedExpenseRequest) {
         // 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(HttpStatus.NOT_FOUND, "해당하는 유저를 찾을 수 없습니다"));
+        User user = authRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         FixedExpense fixedExpense = FixedExpense.builder()
                 .user(user)
-                .name(fixedExpenseRequest.getName())
-                .money(fixedExpenseRequest.getMoney())
-                .startDate(fixedExpenseRequest.getStartDate())
-                .payDay(fixedExpenseRequest.getPayDay())
-                .memo(fixedExpenseRequest.getMemo())
+                .name(fixedExpenseRequest.name())
+                .money(fixedExpenseRequest.money())
+                .startDate(fixedExpenseRequest.startDate())
+                .payDay(fixedExpenseRequest.payDay())
+                .memo(fixedExpenseRequest.memo())
                 .build();
 
         FixedExpense saved = fixedExpenseRepository.save(fixedExpense);

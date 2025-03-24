@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class FixedExpenseController {
     
     // 고정지출 생성 API
     @PostMapping
-    public ResponseEntity<FixedExpenseResponse> createFixedExpenses(@PathVariable("userId") Long userId,
+    public ResponseEntity<FixedExpenseResponse> createFixedExpenses(@AuthenticationPrincipal UserId userId,
                                                                     @RequestBody FixedExpenseRequest fixedExpenseRequest) {
         return ResponseEntity.ok(fixedExpenseService.createFixedExpenses(userId, fixedExpenseRequest));
     }
