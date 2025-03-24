@@ -1,9 +1,10 @@
-package com.barcode.honeykeep.common.logging;
+package com.barcode.honeykeep.common.interceptor;
 
 import java.util.Enumeration;
 import java.util.UUID;
 import java.net.InetAddress;
 
+import com.barcode.honeykeep.common.service.LoggingService;
 import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

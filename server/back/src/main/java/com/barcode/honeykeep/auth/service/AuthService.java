@@ -6,7 +6,7 @@ import com.barcode.honeykeep.auth.exception.AuthErrorCode;
 import com.barcode.honeykeep.auth.repository.AuthRepository;
 import com.barcode.honeykeep.auth.util.JwtTokenProvider;
 import com.barcode.honeykeep.common.exception.CustomException;
-import com.barcode.honeykeep.common.logging.LoggingService;
+import com.barcode.honeykeep.common.service.LoggingService;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

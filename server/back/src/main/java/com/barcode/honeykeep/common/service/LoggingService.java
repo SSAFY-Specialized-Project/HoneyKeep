@@ -1,4 +1,4 @@
-package com.barcode.honeykeep.common.logging;
+package com.barcode.honeykeep.common.service;
 
 import java.math.BigDecimal;
 import java.net.InetAddress;

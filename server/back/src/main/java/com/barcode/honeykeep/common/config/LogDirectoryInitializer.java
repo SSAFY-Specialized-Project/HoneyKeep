@@ -1,4 +1,4 @@
-package com.barcode.honeykeep.common.logging;
+package com.barcode.honeykeep.common.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +8,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.util.Arrays;
 
 /**
  * 애플리케이션 시작 시 로그 디렉토리를 초기화하는 컴포넌트.
