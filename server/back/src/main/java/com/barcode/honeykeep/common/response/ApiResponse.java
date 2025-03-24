@@ -29,11 +29,18 @@ public class ApiResponse<T> {
         return new ApiResponse<>(200, message, data);
     }
 
+    public static <T> ApiResponse<T> created(T data) {
+        return new ApiResponse<>(201, "Created", data);
+    }
+
+    public static <T> ApiResponse<T> created(String message, T data) {
+        return new ApiResponse<>(201, message, data);
+    }
+
     // 에러 응답
     public static <T> ApiResponse<T> error(int status, String message) {
         return new ApiResponse<>(status, message, null);
     }
-
 
     public static <T> ApiResponse<T> badRequest(String message) {
         return new ApiResponse<>(400, message, null);
