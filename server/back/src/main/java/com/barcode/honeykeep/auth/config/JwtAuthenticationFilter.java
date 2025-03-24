@@ -55,7 +55,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/api/v1/auth/send-verification",
                 "/api/v1/auth/verify-email",
                 "/api/v1/sample/**",
-                "/api/v1/auth/reissue"
+                "/api/v1/auth/reissue",
+                "/actuator/health",
+                "/actuator/info"
         );
 
         // 패턴 매칭 확인 (경로 와일드카드 처리)
