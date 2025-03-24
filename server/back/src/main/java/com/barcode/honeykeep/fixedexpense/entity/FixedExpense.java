@@ -1,4 +1,4 @@
-package com.barcode.honeykeep.fixedexpenses.entity;
+package com.barcode.honeykeep.fixedexpense.entity;
 
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.common.entity.BaseEntity;

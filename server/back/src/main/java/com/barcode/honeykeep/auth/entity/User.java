@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.common.entity.BaseEntity;
-import com.barcode.honeykeep.fixedexpenses.entity.FixedExpense;
+import com.barcode.honeykeep.fixedexpense.entity.FixedExpense;
 import com.barcode.honeykeep.notification.entity.Notification;
 
 import com.barcode.honeykeep.notification.entity.PushSetting;
