@@ -250,7 +250,7 @@ public class AuthService {
      * @param password
      * @return
      */
-    public boolean validatePassword(Integer userId, String password) {
+    public boolean validatePassword(Long userId, String password) {
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
