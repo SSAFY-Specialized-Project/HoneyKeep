@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 public class FixedExpense extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -29,14 +30,14 @@ public class FixedExpense extends BaseEntity {
     @Embedded
     private Money money;
 
-    private LocalDateTime startDate;
+    private LocalDate startDate;
 
-    private LocalDateTime payDay;
+    private LocalDate payDay;
 
     private String memo;
 
     @Builder
-    protected FixedExpense(User user, String name, Money money, LocalDateTime startDate, LocalDateTime payDay, String memo) {
+    protected FixedExpense(User user, String name, Money money, LocalDate startDate, LocalDate payDay, String memo) {
         this.user = user;
         this.name = name;
         this.money = money;
@@ -44,4 +45,14 @@ public class FixedExpense extends BaseEntity {
         this.payDay = payDay;
         this.memo = memo;
     }
+
+    public void update(String name, Money money, LocalDate startDate, LocalDate payDay, String memo) {
+        if (name != null) this.name = name;
+        if (money != null) this.money = money;
+        if (startDate != null) this.startDate = startDate;
+        if (payDay != null) this.payDay = payDay;
+        if (memo != null) this.memo = memo;
+    }
+
+
 }

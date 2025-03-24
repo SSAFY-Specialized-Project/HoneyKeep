@@ -26,13 +26,25 @@ public class FixedExpenseServiceImpl implements FixedExpenseService {
     private final AuthRepository authRepository;
 
     @Override
-    public List<FixedExpenseResponse> getFixedExpenses(Integer userId) {
+    public List<FixedExpenseResponse> getAllFixedExpenses(Integer userId) {
         List<FixedExpense> expenses = fixedExpenseRepository.findByUserId(userId);
 
         // 없을 경우 빈 리스트 반환
         return expenses.stream()
                 .map(toFixedExpensesResponse())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public FixedExpenseResponse getFixedExpenses(Integer userId, Long id) {
+        FixedExpense fixedExpense = fixedExpenseRepository.findById(id)
+                .orElseThrow(() -> new CustomException(FixedExpenseErrorCode.FIXED_EXPENSE_NOT_FOUND));
+
+        if (!fixedExpense.getUser().getId().equals(userId)) {
+            throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
+        }
+
+        return mapFixedExpensesResponse(fixedExpense);
     }
 
     @Override
@@ -56,15 +68,14 @@ public class FixedExpenseServiceImpl implements FixedExpenseService {
         return mapFixedExpensesResponse(saved);
     }
 
-
     @Override
     public FixedExpenseResponse updateFixedExpenses(Integer userId, Long id, FixedExpenseRequest fixedExpenseRequest) {
-        FixedExpense fixedExpense = fixedExpenseRepository.findById(id.intValue())
+        FixedExpense fixedExpense = fixedExpenseRepository.findById(id)
                 .orElseThrow(() -> new CustomException(FixedExpenseErrorCode.FIXED_EXPENSE_NOT_FOUND));
 
         // 2. 본인 고정지출인지 확인
         if (!fixedExpense.getUser().getId().equals(userId)) {
-            throw new CustomException(AuthErrorCode.FORBIDDEN); // 유저 권한 없음
+            throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS); // 유저 권한 없음
         }
 
         // 3. 수정
@@ -81,11 +92,11 @@ public class FixedExpenseServiceImpl implements FixedExpenseService {
 
     @Override
     public void deleteFixedExpenses(Integer userId, Long id) {
-        FixedExpense fixedExpense = fixedExpenseRepository.findById(id.intValue())
+        FixedExpense fixedExpense = fixedExpenseRepository.findById(id)
                 .orElseThrow(() -> new CustomException(FixedExpenseErrorCode.FIXED_EXPENSE_NOT_FOUND));
 
         if (!fixedExpense.getUser().getId().equals(userId)) {
-            throw new CustomException(AuthErrorCode.FORBIDDEN); // 유저 권한 없음
+            throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS); // 유저 권한 없음
         }
 
         fixedExpenseRepository.delete(fixedExpense);
