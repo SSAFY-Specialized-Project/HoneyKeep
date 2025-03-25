@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class PayService {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final int TTL_SECONDS = 60;
 
     public String createQr() {
@@ -23,7 +24,7 @@ public class PayService {
         // qruuid 생성
         QrUuid qrUuid = QrUuid.builder()
                 .uuid(uuid)
-                .createdAt(Instant.now())
+                .createdAt(new Date())
                 .isUsed(false)
                 .build();
 
@@ -32,4 +33,6 @@ public class PayService {
         
         return uuid;
     }
+
+
 }
