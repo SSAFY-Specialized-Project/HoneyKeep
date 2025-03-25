@@ -1,0 +1,53 @@
+package com.barcode.honeykeep.transaction.entity;
+
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.common.entity.BaseEntity;
+import com.barcode.honeykeep.common.vo.Money;
+import com.barcode.honeykeep.pocket.entity.Pocket;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "transactions")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Transaction extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pocket_id")
+    private Pocket pocket;
+
+    private String name;
+
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "amount"))
+    private Money amount;
+
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "balance"))
+    private Money balance;
+
+    private LocalDateTime date;
+
+    @Builder
+    protected Transaction(Account account, Pocket pocket, String name, Money amount, Money balance, LocalDateTime date) {
+        this.account = account;
+        this.pocket = pocket;
+        this.name = name;
+        this.amount = amount;
+        this.balance = balance;
+        this.date = date;
+    }
+}
