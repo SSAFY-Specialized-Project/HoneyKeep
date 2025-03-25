@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface FixedExpenseRepository extends JpaRepository<FixedExpense, Long> {
 
-    List<FixedExpense> findByUserId(Integer userId);
+    List<FixedExpense> findByUserId(Long userId);
 
 }
