@@ -25,4 +25,4 @@
 
 /.idea
 /.vscode
-/.env
+/server/.env
