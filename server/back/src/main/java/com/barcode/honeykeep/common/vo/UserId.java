@@ -7,9 +7,9 @@ import lombok.Getter;
 @Getter
 public class UserId {
 
-    private final Integer value;
+    private final Long value;
 
-    public UserId(Integer value) {
+    public UserId(Long value) {
         this.value = value;
     }
 
