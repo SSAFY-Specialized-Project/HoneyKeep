@@ -2,6 +2,7 @@ package com.barcode.honeykeep.auth.controller;
 
 import java.io.UnsupportedEncodingException;
 
+import com.barcode.honeykeep.auth.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -11,15 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.barcode.honeykeep.auth.dto.EmailVerifyCodeRequest;
-import com.barcode.honeykeep.auth.dto.EmailVerifyRequest;
-import com.barcode.honeykeep.auth.dto.EmailVerifyResponse;
-import com.barcode.honeykeep.auth.dto.LoginRequest;
-import com.barcode.honeykeep.auth.dto.LoginResponse;
-import com.barcode.honeykeep.auth.dto.RegisterRequest;
-import com.barcode.honeykeep.auth.dto.RegisterResponse;
-import com.barcode.honeykeep.auth.dto.TokenResponse;
-import com.barcode.honeykeep.auth.dto.ValidatePasswordRequest;
 import com.barcode.honeykeep.auth.service.AuthService;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
@@ -94,5 +86,13 @@ public class AuthController {
                         .body(ApiResponse.success(true)) :
                 ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponse.unauthorized("비밀번호가 일치하지 않습니다."));
+    }
+
+    @PostMapping("/validate-user")
+    public ResponseEntity<ApiResponse<Boolean>> validateUser(@RequestBody ValidateUserRequest request) {
+        boolean isValid = authService.validateUser(request.name(), request.identityNumber(), request.phoneNumber(), request.email());
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(isValid));
     }
 }
