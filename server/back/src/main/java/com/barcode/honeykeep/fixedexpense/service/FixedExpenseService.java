@@ -30,8 +30,8 @@ public class FixedExpenseService {
         List<FixedExpense> expenses = fixedExpenseRepository.findByUserId(userId);
 
         return expenses.stream()
-                .map(toFixedExpensesResponse())
-                .collect(Collectors.toList());
+                .map(this::mapFixedExpensesResponse)
+                .toList();
     }
 
     public FixedExpenseResponse getFixedExpenses(Long userId, Long id) {
@@ -47,7 +47,6 @@ public class FixedExpenseService {
 
     @Transactional
     public FixedExpenseResponse createFixedExpenses(Long userId, FixedExpenseRequest fixedExpenseRequest) {
-        // 유저 조회
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -70,12 +69,10 @@ public class FixedExpenseService {
         FixedExpense fixedExpense = fixedExpenseRepository.findById(id)
                 .orElseThrow(() -> new CustomException(FixedExpenseErrorCode.FIXED_EXPENSE_NOT_FOUND));
 
-        // 2. 본인 고정지출인지 확인
         if (!fixedExpense.getUser().getId().equals(userId)) {
             throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
         }
 
-        // 3. 수정
         fixedExpense.update(
                 fixedExpenseRequest.name(),
                 fixedExpenseRequest.money(),
@@ -96,11 +93,11 @@ public class FixedExpenseService {
             throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
         }
 
-        fixedExpenseRepository.delete(fixedExpense);
-    }
-
-    private Function<FixedExpense, FixedExpenseResponse> toFixedExpensesResponse() {
-        return this::mapFixedExpensesResponse;
+        /**
+         * is_deleted = true로 변경
+         * 이후 더티 체킹 -> 업데이트 됨.
+         */
+        fixedExpense.delete("");
     }
 
     private FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpense) {
