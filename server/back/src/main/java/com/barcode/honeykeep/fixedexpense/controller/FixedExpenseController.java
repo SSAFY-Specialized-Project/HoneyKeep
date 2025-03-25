@@ -1,6 +1,8 @@
 package com.barcode.honeykeep.fixedexpense.controller;
 
+import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
+import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseRequest;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.service.FixedExpenseService;
@@ -20,47 +22,90 @@ import java.util.List;
 public class FixedExpenseController {
     private final FixedExpenseService fixedExpenseService;
 
-    // 고정지출 목록 조회 API
+
+    /**
+     * 고정지출 전체 조회 API
+     *
+     * @param userId
+     * @return
+     */
     @GetMapping
-    public ResponseEntity<List<FixedExpenseResponse>> getAllFixedExpenses(@AuthenticationPrincipal UserId userId) {
-        return ResponseEntity.ok(fixedExpenseService.getAllFixedExpenses(userId.value()));
+    public ResponseEntity<ApiResponse<List<FixedExpenseResponse>>> getAllFixedExpenses(
+            @AuthenticationPrincipal UserId userId) {
+        List<FixedExpenseResponse> response = fixedExpenseService.getAllFixedExpenses(userId.value());
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(response));
     }
 
-    // 고정지출 상세 조회 API
+    /**
+     * 고정지출 상세 조회 API
+     *
+     * @param userId
+     * @param id
+     * @return
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<FixedExpenseResponse> getFixedExpenses(
+    public ResponseEntity<ApiResponse<FixedExpenseResponse>> getFixedExpenses(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long id) {
-        return ResponseEntity.ok(fixedExpenseService.getFixedExpenses(userId.value(), id));
-    }
-    
-    // 고정지출 생성 API
-    @Transactional
-    @PostMapping
-    public ResponseEntity<FixedExpenseResponse> createFixedExpenses(@AuthenticationPrincipal UserId userId,
-                                                                    @RequestBody FixedExpenseRequest fixedExpenseRequest) {
-        return ResponseEntity.ok(fixedExpenseService.createFixedExpenses(userId.value(), fixedExpenseRequest));
+        FixedExpenseResponse response = fixedExpenseService.getFixedExpenses(userId.value(), id);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(response));
     }
 
-    // 고정지출 수정 API
-    @Transactional
+    /**
+     * 고정지출 생성 API
+     *
+     * @param userId
+     * @param fixedExpenseRequest
+     * @return
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<FixedExpenseResponse>> createFixedExpenses(
+            @AuthenticationPrincipal UserId userId,
+            @RequestBody FixedExpenseRequest fixedExpenseRequest) {
+        FixedExpenseResponse response = fixedExpenseService.createFixedExpenses(userId.value(), fixedExpenseRequest);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(response));
+    }
+
+    /**
+     * 고정지출 수정 API
+     *
+     * @param userId
+     * @param id
+     * @param fixedExpenseRequest
+     * @return
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<FixedExpenseResponse> updateFixedExpenses(
+    public ResponseEntity<ApiResponse<FixedExpenseResponse>> updateFixedExpenses(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long id,
             @RequestBody FixedExpenseRequest fixedExpenseRequest) {
-        return ResponseEntity.ok(fixedExpenseService.updateFixedExpenses(userId.value(), id, fixedExpenseRequest));
+        FixedExpenseResponse response = fixedExpenseService.updateFixedExpenses(userId.value(), id, fixedExpenseRequest);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(response));
     }
 
-    // 고정지출 삭제 API
-    @Transactional
+    /**
+     * 고정지출 삭제 API
+     *
+     * @param userId
+     * @param id
+     * @return
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFixedExpenses(
+    public ResponseEntity<ApiResponse<Void>> deleteFixedExpenses(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long id) {
         fixedExpenseService.deleteFixedExpenses(userId.value(), id);
-        return ResponseEntity.noContent().build();
-    }
 
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("고정지출 삭제 완료", null));
+    }
 
 }
