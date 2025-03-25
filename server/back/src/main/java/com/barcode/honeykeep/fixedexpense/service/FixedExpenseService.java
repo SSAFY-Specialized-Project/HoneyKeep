@@ -27,7 +27,7 @@ public class FixedExpenseService {
     private final AuthRepository authRepository;
 
     public List<FixedExpenseResponse> getAllFixedExpenses(Long userId) {
-        List<FixedExpense> expenses = fixedExpenseRepository.findByUserId(userId);
+        List<FixedExpense> expenses = fixedExpenseRepository.findByUser_Id(userId);
 
         return expenses.stream()
                 .map(this::mapFixedExpensesResponse)
