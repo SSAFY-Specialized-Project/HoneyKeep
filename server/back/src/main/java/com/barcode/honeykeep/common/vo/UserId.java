@@ -4,14 +4,7 @@ import java.util.Objects;
 
 import lombok.Getter;
 
-@Getter
-public class UserId {
-
-    private final Long value;
-
-    public UserId(Long value) {
-        this.value = value;
-    }
+public record UserId(Long value) {
 
     @Override
     public boolean equals(Object o) {
@@ -19,11 +12,6 @@ public class UserId {
         if (o == null || getClass() != o.getClass()) return false;
         UserId userId = (UserId) o;
         return Objects.equals(value, userId.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
 
     @Override

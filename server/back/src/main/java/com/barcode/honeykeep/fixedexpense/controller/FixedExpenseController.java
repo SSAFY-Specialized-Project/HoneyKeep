@@ -23,7 +23,7 @@ public class FixedExpenseController {
     // 고정지출 목록 조회 API
     @GetMapping
     public ResponseEntity<List<FixedExpenseResponse>> getAllFixedExpenses(@AuthenticationPrincipal UserId userId) {
-        return ResponseEntity.ok(fixedExpenseService.getAllFixedExpenses(userId.getValue()));
+        return ResponseEntity.ok(fixedExpenseService.getAllFixedExpenses(userId.value()));
     }
 
     // 고정지출 상세 조회 API
@@ -31,7 +31,7 @@ public class FixedExpenseController {
     public ResponseEntity<FixedExpenseResponse> getFixedExpenses(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long id) {
-        return ResponseEntity.ok(fixedExpenseService.getFixedExpenses(userId.getValue(), id));
+        return ResponseEntity.ok(fixedExpenseService.getFixedExpenses(userId.value(), id));
     }
     
     // 고정지출 생성 API
@@ -39,7 +39,7 @@ public class FixedExpenseController {
     @PostMapping
     public ResponseEntity<FixedExpenseResponse> createFixedExpenses(@AuthenticationPrincipal UserId userId,
                                                                     @RequestBody FixedExpenseRequest fixedExpenseRequest) {
-        return ResponseEntity.ok(fixedExpenseService.createFixedExpenses(userId.getValue(), fixedExpenseRequest));
+        return ResponseEntity.ok(fixedExpenseService.createFixedExpenses(userId.value(), fixedExpenseRequest));
     }
 
     // 고정지출 수정 API
@@ -49,7 +49,7 @@ public class FixedExpenseController {
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long id,
             @RequestBody FixedExpenseRequest fixedExpenseRequest) {
-        return ResponseEntity.ok(fixedExpenseService.updateFixedExpenses(userId.getValue(), id, fixedExpenseRequest));
+        return ResponseEntity.ok(fixedExpenseService.updateFixedExpenses(userId.value(), id, fixedExpenseRequest));
     }
 
     // 고정지출 삭제 API
@@ -58,7 +58,7 @@ public class FixedExpenseController {
     public ResponseEntity<Void> deleteFixedExpenses(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long id) {
-        fixedExpenseService.deleteFixedExpenses(userId.getValue(), id);
+        fixedExpenseService.deleteFixedExpenses(userId.value(), id);
         return ResponseEntity.noContent().build();
     }
 

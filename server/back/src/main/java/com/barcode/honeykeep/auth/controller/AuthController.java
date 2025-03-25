@@ -79,7 +79,7 @@ public class AuthController {
             @AuthenticationPrincipal UserId userId,
             @RequestBody ValidatePasswordRequest request) {
 
-        boolean isValid = authService.validatePassword(userId.getValue(), request.password());
+        boolean isValid = authService.validatePassword(userId.value(), request.password());
 
         return isValid ?
                 ResponseEntity.ok()
