@@ -45,7 +45,7 @@ public class JwtTokenProvider {
     }
 
     // Access Token 생성
-    public String generateAccessToken(Integer userId) {
+    public String generateAccessToken(Long userId) {
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
         Date expiration = new Date(now + jwtExpireSec * 1000L);
@@ -59,7 +59,7 @@ public class JwtTokenProvider {
     }
 
     // Refresh Token 생성
-    public String generateRefreshToken(Integer userId) {
+    public String generateRefreshToken(Long userId) {
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
         Date expiration = new Date(now + refreshExpireSec * 1000L);
@@ -74,7 +74,7 @@ public class JwtTokenProvider {
 
     // 토큰에서 인증 정보 조회
     public Authentication getAuthentication(String token) {
-        Integer id = getUserId(token);
+        Long id = getUserId(token);
         UserId userId = new UserId(id);
         return new UsernamePasswordAuthenticationToken(userId, null, null);
     }
@@ -109,16 +109,16 @@ public class JwtTokenProvider {
     }
 
     // 토큰에서 userId 조회
-    public Integer getUserId(String token) {
+    public Long getUserId(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(jwtSecret)
                 .parseClaimsJws(token)
                 .getBody();
-        return claims.get("userId", Integer.class);
+        return claims.get("userId", Long.class);
     }
 
     // 만료된 토큰에서 userId 조회
-    public Integer getUserIdFromExpiredToken(String token) {
+    public Long getUserIdFromExpiredToken(String token) {
         try {
             // 아직 안 만료된 토큰이면 그냥 클레임 파싱
             Claims claims = Jwts.parserBuilder()
@@ -126,12 +126,12 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.get("userId", Integer.class);
+            return claims.get("userId", Long.class);
 
         } catch (ExpiredJwtException e) {
             // 만료된 토큰이어도 e.getClaims()로 클레임에 접근 가능
             Claims claims = e.getClaims();
-            return claims.get("userId", Integer.class);
+            return claims.get("userId", Long.class);
         }
     }
 }

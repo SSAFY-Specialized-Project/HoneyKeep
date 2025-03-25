@@ -88,7 +88,7 @@ public class LoggingService {
      * @param action 수행된 작업 (예: "프로필 업데이트", "계정 설정 변경")
      * @param details 활동에 대한 상세 설명
      */
-    public void logUserActivity(Integer userId, String action, String details) {
+    public void logUserActivity(Long userId, String action, String details) {
         setCommonFields();
         MDC.put("userId", userId.toString());
         MDC.put("action", action);
@@ -108,7 +108,7 @@ public class LoggingService {
      * @param action 거래 유형 (예: "입금", "출금", "이체")
      * @param details 거래에 대한 상세 설명
      */
-    public void logTransaction(String transactionId, Integer userId, BigDecimal amount, String action, String details) {
+    public void logTransaction(String transactionId, Long userId, BigDecimal amount, String action, String details) {
         setCommonFields();
         MDC.put("transactionId", transactionId);
         MDC.put("userId", userId.toString());
@@ -124,7 +124,7 @@ public class LoggingService {
     /**
      * 기존 호환성을 위한 메서드
      */
-    public void logTransaction(String transactionId, Integer userId, BigDecimal amount, String details) {
+    public void logTransaction(String transactionId, Long userId, BigDecimal amount, String details) {
         logTransaction(transactionId, userId, amount, "transaction", details);
     }
 
@@ -137,7 +137,7 @@ public class LoggingService {
      * @param action 인증 작업 유형 (예: "로그인", "로그아웃", "패스워드 변경")
      * @param details 인증 활동에 대한 상세 설명
      */
-    public void logAuth(Integer userId, String clientIp, String userAgent, String action, String details) {
+    public void logAuth(Long userId, String clientIp, String userAgent, String action, String details) {
         setCommonFields();
         MDC.put("userId", userId != null ? userId.toString() : "anonymous");
         MDC.put("clientIp", clientIp);
@@ -152,7 +152,7 @@ public class LoggingService {
     /**
      * 기존 호환성을 위한 메서드
      */
-    public void logAuth(Integer userId, String ip, String userAgent, String details) {
+    public void logAuth(Long userId, String ip, String userAgent, String details) {
         logAuth(userId, ip, userAgent, "auth", details);
     }
 
@@ -324,7 +324,7 @@ public class LoggingService {
      * @param action 액션 (로그인, 로그아웃 등)
      * @param details 추가 세부 정보
      */
-    public void logAuthEvent(Integer userId, String action, String details) {
+    public void logAuthEvent(Long userId, String action, String details) {
         setCommonFields();
         MDC.put("userId", String.valueOf(userId));
         MDC.put("action", action);
