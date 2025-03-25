@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.common.entity.BaseEntity;
+import com.barcode.honeykeep.fixedexpense.entity.DetectedFixedExpense;
 import com.barcode.honeykeep.fixedexpense.entity.FixedExpense;
 import com.barcode.honeykeep.notification.entity.Notification;
 
@@ -14,11 +15,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("is_deleted = false")
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +51,9 @@ public class User extends BaseEntity {
     private List<FixedExpense> fixedExpenses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
+    private List<DetectedFixedExpense> detectedFixedExpenses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
     private List<PushSetting> pushSettings = new ArrayList<>();
 
     @OneToOne(mappedBy = "user")
@@ -55,7 +61,7 @@ public class User extends BaseEntity {
 
     @Builder
     protected User(String userKey, String email, String name, String institutionCode,
-                String identityNumber, String password, String phoneNumber, Cert cert) {
+                   String identityNumber, String password, String phoneNumber, Cert cert) {
         this.userKey = userKey;
         this.email = email;
         this.name = name;
@@ -66,6 +72,7 @@ public class User extends BaseEntity {
         this.notifications = new ArrayList<>();
         this.accounts = new ArrayList<>();
         this.fixedExpenses = new ArrayList<>();
+        this.detectedFixedExpenses = new ArrayList<>();
         this.pushSettings = new ArrayList<>();
         this.cert = cert;
     }
