@@ -4,7 +4,7 @@ import { SendEmailCodeRequest } from "./types";
 
 const verifyEmailCodeAPI = async (
   data: SendEmailCodeRequest
-): Promise<ResponseDTO<boolean> | ResponseErrorDTO>  => {
+): Promise<ResponseDTO<boolean>>  => {
   
   try{
 

@@ -4,7 +4,7 @@ import { apiURL } from '@/shared/lib';
 
 const validateUserAPI = async (
   data: ValidateUserRequest
-): Promise<ResponseDTO<boolean> | ResponseErrorDTO> => {
+): Promise<ResponseDTO<boolean>> => {
 
   try{
 

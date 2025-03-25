@@ -1,5 +1,9 @@
+import loginUserAPI from "@/entities/user/api/loginUserAPI";
+import registerUserAPI from "@/entities/user/api/registerUserAPI";
 import sendVerificationAPI from "@/entities/user/api/sendVerificationAPI";
+import validateUserAPI from "@/entities/user/api/validateUserAPI";
 import verifyEmailCodeAPI from "@/entities/user/api/verifyEmailCodeAPI";
+import { ResponseErrorDTO } from "@/shared/api/types";
 import { useCountdownTimer } from "@/shared/hooks";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -20,7 +24,7 @@ const useLogin = () => {
   const [certification, setCertification] = useState<string>("");
   const [certificationText, setCertificationText] =
     useState<string>("인증하기");
-  const [certificationCheck, setCertificationCheck] = useState<boolean>(true);
+  const [certificationCheck, setCertificationCheck] = useState<boolean>(false);
   const [certificationError, setCertificationError] = useState<string>("");
 
   // 전화번호 state
@@ -43,6 +47,10 @@ const useLogin = () => {
   // 비밀번호 state
   const [password, setPassword] = useState<string>("");
   const [isPasswordOpen, setPasswordOpen] = useState<boolean>(false);
+
+  // 로그인이냐 회원가입이냐 state
+  // true이면 로그인으로 false면 회원가입으로
+  const [isAlready, setAlready] = useState<boolean>(false);
 
   const registerRef = useRef<HTMLInputElement>(null);
 
@@ -83,7 +91,7 @@ const useLogin = () => {
 
   useEffect(() => {
     if (certificationCheck) setModalOpen(true);
-  }, [certificationCheck, setModalOpen]);
+  }, [certificationCheck]);
 
   const handleNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.currentTarget.value);
@@ -143,11 +151,47 @@ const useLogin = () => {
     }
   };
 
+  const validateUserMutation = useMutation({
+    mutationFn: validateUserAPI,
+    onSuccess: (response) => {
+      if (response.data) {
+        console.log("로그인!");
+        setAlready(true);
+      } else {
+        console.log("회원가입!");
+        setAlready(false);
+        setCertificationCheck(true);
+      }
+    },
+    onError: (error: ResponseErrorDTO) => {
+      if (error.status == 400) {
+        // 이미 사용중인 이메일
+        setCertificationError(error.message);
+        setCertificationCheck(false);
+      } else if (error.status == 409) {
+        // 이미 가입된 사용자
+        setCertificationError(error.message);
+        setCertificationCheck(false);
+      }
+    },
+  });
+
   const verifyCodeMutation = useMutation({
     mutationFn: verifyEmailCodeAPI,
     onSuccess: () => {
-      setCertificationCheck(true);
       setCertificationText("인증완료");
+      pauseTimer();
+      validateUserMutation.mutate({
+        name,
+        identityNumber: registerFirst + "-" + registerSecond,
+        phoneNumber:
+          phone.slice(0, 3) +
+          "-" +
+          phone.slice(3, 7) +
+          "-" +
+          phone.slice(7, 11),
+        email,
+      });
     },
     onError: (error) => {
       setCertificationError(error.message);
@@ -159,6 +203,15 @@ const useLogin = () => {
     const data = { email, code: Number(certification) };
     verifyCodeMutation.mutate(data);
   };
+
+  const loginUserMutation = useMutation({
+    mutationFn: loginUserAPI,
+  });
+
+  const registerUserMutation = useMutation({
+    mutationFn: registerUserAPI,
+    onSuccess: () => {},
+  });
 
   return {
     name,

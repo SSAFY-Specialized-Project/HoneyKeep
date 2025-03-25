@@ -116,7 +116,7 @@ const LoginForm = () => {
         <Button
           text="동의사항 확인하기"
           type="button"
-          disabled={certificationCheck}
+          disabled={!certificationCheck}
           onClick={() => {
             setModalOpen(true);
           }}
