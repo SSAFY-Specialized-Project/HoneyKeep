@@ -17,6 +17,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,11 +26,13 @@ import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthService {
 
     private final AuthRepository authRepository;
@@ -46,7 +49,10 @@ public class AuthService {
 
     /**
      * 사용자 회원가입 처리
+     * @param request
+     * @return
      */
+    @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
         Map<String, String> requestBody = new HashMap<>();
         requestBody.put("apiKey", ssafyFinancialNetworkApiKey);
@@ -77,9 +83,9 @@ public class AuthService {
 
         // 회원가입 이벤트 로깅
         loggingService.logAuthEvent(
-            newUser.getId(),
-            "회원가입",
-            String.format("신규 사용자 등록: %s (%s)", newUser.getEmail(), newUser.getName())
+                newUser.getId(),
+                "회원가입",
+                String.format("신규 사용자 등록: %s (%s)", newUser.getEmail(), newUser.getName())
         );
 
         return RegisterResponse.toDto(newUser);
@@ -93,11 +99,11 @@ public class AuthService {
                 .orElseThrow(() -> {
                     // 로그인 실패 - 사용자 없음 로깅
                     loggingService.logAuth(
-                        null,
-                        getClientIp(),
-                        getUserAgent(),
-                        "로그인_실패",
-                        String.format("로그인 실패: 사용자 없음 (%s)", request.email())
+                            null,
+                            getClientIp(),
+                            getUserAgent(),
+                            "로그인_실패",
+                            String.format("로그인 실패: 사용자 없음 (%s)", request.email())
                     );
                     return new CustomException(AuthErrorCode.USER_NOT_FOUND);
                 });
@@ -105,11 +111,11 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             // 로그인 실패 - 비밀번호 불일치 로깅
             loggingService.logAuth(
-                user.getId(),
-                getClientIp(),
-                getUserAgent(),
-                "로그인_실패",
-                String.format("로그인 실패: 비밀번호 불일치 (%s)", user.getEmail())
+                    user.getId(),
+                    getClientIp(),
+                    getUserAgent(),
+                    "로그인_실패",
+                    String.format("로그인 실패: 비밀번호 불일치 (%s)", user.getEmail())
             );
             throw new CustomException(AuthErrorCode.INVALID_PASSWORD);
         }
@@ -122,11 +128,11 @@ public class AuthService {
 
         // 로그인 성공 로깅
         loggingService.logAuth(
-            user.getId(),
-            getClientIp(),
-            getUserAgent(),
-            "로그인_성공",
-            String.format("로그인 성공: %s (%s)", user.getEmail(), user.getName())
+                user.getId(),
+                getClientIp(),
+                getUserAgent(),
+                "로그인_성공",
+                String.format("로그인 성공: %s (%s)", user.getEmail(), user.getName())
         );
 
         return TokenResponse.builder()
@@ -141,17 +147,6 @@ public class AuthService {
     public EmailVerifyResponse sendVerification(EmailVerifyRequest request) throws UnsupportedEncodingException {
         if (request.email() == null || request.email().isEmpty()) {
             throw new CustomException(AuthErrorCode.INVALID_EMAIL);
-        }
-
-        if (authRepository.findByEmail(request.email()).isPresent()) {
-            loggingService.logAuth(
-                null,
-                getClientIp(),
-                getUserAgent(),
-                "이메일_중복",
-                String.format("회원가입 시도: 이미 존재하는 이메일 (%s)", request.email())
-            );
-            throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         Random random = new SecureRandom();
@@ -180,11 +175,11 @@ public class AuthService {
             mailSender.send(message);
 
             loggingService.logAuth(
-                null,
-                getClientIp(),
-                getUserAgent(),
-                "인증코드_발송",
-                String.format("이메일 인증 코드 발송: %s", request.email())
+                    null,
+                    getClientIp(),
+                    getUserAgent(),
+                    "인증코드_발송",
+                    String.format("이메일 인증 코드 발송: %s", request.email())
             );
 
             return EmailVerifyResponse.builder()
@@ -193,10 +188,10 @@ public class AuthService {
         } catch (Exception e) {
             // 인증코드 발송 실패 로깅
             loggingService.logError(
-                "AUTH_ERROR",
-                String.format("이메일 인증 코드 발송 실패: %s (%s)", request.email(), e.getMessage()),
-                e,
-                "인증코드_발송_실패"
+                    "AUTH_ERROR",
+                    String.format("이메일 인증 코드 발송 실패: %s (%s)", request.email(), e.getMessage()),
+                    e,
+                    "인증코드_발송_실패"
             );
             throw new CustomException(AuthErrorCode.EMAIL_SEND_FAILED);
         }
@@ -212,11 +207,11 @@ public class AuthService {
         if (storedCode == null) {
             // 인증 코드 만료 로깅
             loggingService.logAuth(
-                null,
-                getClientIp(),
-                getUserAgent(),
-                "인증코드_만료",
-                String.format("인증 코드 만료: %s", request.email())
+                    null,
+                    getClientIp(),
+                    getUserAgent(),
+                    "인증코드_만료",
+                    String.format("인증 코드 만료: %s", request.email())
             );
             throw new CustomException(AuthErrorCode.VERIFICATION_CODE_EXPIRED);
         }
@@ -226,22 +221,22 @@ public class AuthService {
         if (!isValid) {
             // 인증 코드 불일치 로깅
             loggingService.logAuth(
-                null,
-                getClientIp(),
-                getUserAgent(),
-                "인증코드_불일치",
-                String.format("인증 코드 불일치: %s", request.email())
+                    null,
+                    getClientIp(),
+                    getUserAgent(),
+                    "인증코드_불일치",
+                    String.format("인증 코드 불일치: %s", request.email())
             );
             throw new CustomException(AuthErrorCode.INVALID_VERIFICATION_CODE);
         }
 
         // 인증 성공 로깅
         loggingService.logAuth(
-            null,
-            getClientIp(),
-            getUserAgent(),
-            "인증코드_확인_성공",
-            String.format("이메일 인증 성공: %s", request.email())
+                null,
+                getClientIp(),
+                getUserAgent(),
+                "인증코드_확인_성공",
+                String.format("이메일 인증 성공: %s", request.email())
         );
 
         redisTemplate.delete(redisKey);
@@ -250,8 +245,12 @@ public class AuthService {
 
     /**
      * 사용자 비밀번호 검증
+     *
+     * @param userId
+     * @param password
+     * @return
      */
-    public boolean validatePassword(Integer userId, String password) {
+    public boolean validatePassword(Long userId, String password) {
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -259,14 +258,71 @@ public class AuthService {
 
         // 비밀번호 검증 결과 로깅
         loggingService.logAuth(
-            userId,
-            getClientIp(),
-            getUserAgent(),
-            isValid ? "비밀번호_검증_성공" : "비밀번호_검증_실패",
-            String.format("비밀번호 검증 %s: %s", isValid ? "성공" : "실패", user.getEmail())
+                userId,
+                getClientIp(),
+                getUserAgent(),
+                isValid ? "비밀번호_검증_성공" : "비밀번호_검증_실패",
+                String.format("비밀번호 검증 %s: %s", isValid ? "성공" : "실패", user.getEmail())
         );
 
         return isValid;
+    }
+
+    /**
+     * 사용자 검증
+     *
+     * @param name
+     * @param identityNumber
+     * @param phoneNumber
+     * @param email
+     * @return
+     */
+    public boolean validateUser(String name, String identityNumber, String phoneNumber, String email) {
+        // 1. 먼저 이메일로 사용자 검색
+        Optional<User> emailUserOptional = authRepository.findByEmail(email);
+
+        if (emailUserOptional.isPresent()) {
+            User emailUser = emailUserOptional.get();
+            String decryptedIdNumber = encryptionService.decrypt(emailUser.getIdentityNumber());
+
+            // 이메일은 있지만 다른 정보가 일치하지 않는 경우
+            if (!emailUser.getName().equals(name) ||
+                    !decryptedIdNumber.equals(identityNumber) ||
+                    !emailUser.getPhoneNumber().equals(phoneNumber)) {
+
+                loggingService.logAuth(
+                        emailUser.getId(),
+                        getClientIp(),
+                        getUserAgent(),
+                        "이메일_이미_사용중",
+                        String.format("이미 사용 중인 이메일: %s (정보 불일치)", email)
+                );
+                throw new CustomException(AuthErrorCode.EMAIL_ALREADY_IN_USE);
+            }
+
+            // 모든 정보 일치 - 기존 사용자 확인됨
+            return true;
+        }
+
+        // 2. 이메일은 없지만 이름/주민번호/전화번호 조합으로 사용자 검색
+        String encryptedIdNumber = encryptionService.encrypt(identityNumber);
+        Optional<User> userInfoOptional = authRepository.findByNameAndIdentityNumberAndPhoneNumber(
+                name, encryptedIdNumber, phoneNumber);
+
+        if (userInfoOptional.isPresent()) {
+            // 동일한 개인정보를 가진 사용자가 있지만 이메일이 다른 경우
+            loggingService.logAuth(
+                    userInfoOptional.get().getId(),
+                    getClientIp(),
+                    getUserAgent(),
+                    "개인정보_이미_등록됨",
+                    String.format("이미 등록된 사용자 정보 (다른 이메일): %s", name)
+            );
+            throw new CustomException(AuthErrorCode.USER_INFO_ALREADY_REGISTERED);
+        }
+
+        // 3. 신규 사용자 - 회원가입 진행 가능
+        return false;
     }
 
     /**
@@ -275,7 +331,7 @@ public class AuthService {
     private String getClientIp() {
         try {
             HttpServletRequest request =
-                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             return extractClientIp(request);
         } catch (Exception e) {
             return "unknown";
@@ -288,7 +344,7 @@ public class AuthService {
     private String getUserAgent() {
         try {
             HttpServletRequest request =
-                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             return request.getHeader("User-Agent");
         } catch (Exception e) {
             return "unknown";
