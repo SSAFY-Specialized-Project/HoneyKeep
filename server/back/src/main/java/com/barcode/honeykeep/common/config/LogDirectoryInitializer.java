@@ -1,13 +1,13 @@
 package com.barcode.honeykeep.common.config;
 
+import java.io.File;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
 
 /**
  * 애플리케이션 시작 시 로그 디렉토리를 초기화하는 컴포넌트.
@@ -18,7 +18,7 @@ import java.io.File;
 public class LogDirectoryInitializer implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(LogDirectoryInitializer.class);
 
-    @Value("${LOG_PATH:${user.home}/honeykeep/logs}")
+    @Value("${LOG_PATH:/var/log/honeykeep}")
     private String logPath;
     
     private final Environment environment;
