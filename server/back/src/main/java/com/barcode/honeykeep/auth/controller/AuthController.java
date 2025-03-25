@@ -40,7 +40,7 @@ public class AuthController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", tokens.refreshToken())
                 .httpOnly(true)
-                .secure(false)          // HTTPS 환경에서만 전송 (https 설정이 아직 안된 상태라 꺼놓음)
+                .secure(true)          // HTTPS 환경에서만 전송 (https 설정이 아직 안된 상태라 꺼놓음)
                 .path("/")              // 필요한 경로 지정
                 .domain("localhost")    // ✅ 도메인 설정 필요
                 .sameSite("Lax")        // CSRF 방지
