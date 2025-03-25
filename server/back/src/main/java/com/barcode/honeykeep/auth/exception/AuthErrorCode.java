@@ -16,7 +16,8 @@ public enum AuthErrorCode implements ErrorCode {
     VERIFICATION_CODE_EXPIRED(HttpStatus.GONE, "인증번호가 만료되었습니다."),
     INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "잘못된 인증번호입니다."),
     EMAIL_ALREADY_IN_USE(HttpStatus.BAD_REQUEST, "이미 사용 중인 이메일"),
-    USER_INFO_ALREADY_REGISTERED(HttpStatus.CONFLICT, "이미 가입된 사용자")
+    USER_INFO_ALREADY_REGISTERED(HttpStatus.CONFLICT, "이미 가입된 사용자"),
+    FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "권한이 없는 사용자입니다.")
     ;
 
     private final HttpStatus httpStatus;
