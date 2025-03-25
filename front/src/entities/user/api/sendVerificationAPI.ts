@@ -1,10 +1,10 @@
 import { ResponseDTO, ResponseErrorDTO } from "@/shared/api/types";
-import { SendEmailResponse } from "./types";
+import { SendEmailRequest } from "./types";
 import { apiURL } from "@/shared/lib";
 
 const sendVerificationAPI = async (
-  data: SendEmailResponse
-): Promise<ResponseDTO<SendEmailResponse> | ResponseErrorDTO> => {
+  data: SendEmailRequest
+): Promise<ResponseDTO<SendEmailRequest> | ResponseErrorDTO> => {
   try {
     const response = await fetch(apiURL("/auth/send-verification"), {
       method: "POST",
@@ -18,7 +18,7 @@ const sendVerificationAPI = async (
       const errorData: ResponseErrorDTO = await response.json();
       return errorData;
     } else {
-      const responseData: ResponseDTO<SendEmailResponse> =
+      const responseData: ResponseDTO<SendEmailRequest> =
         await response.json();
       return responseData;
     }
@@ -29,7 +29,7 @@ const sendVerificationAPI = async (
       message:
         error instanceof Error
           ? error.message
-          : "알수없는 에러가 발생했습니다.",
+          : "에기치 못한 에러가 발생했습니다.",
     };
 
     return networkError;

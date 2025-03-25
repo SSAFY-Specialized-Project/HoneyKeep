@@ -8,7 +8,10 @@ interface Props {
 const Layout = ({ headerSlot, navbarSlot }: Props) => {
   return (
     <div className="w-lvw h-lvh">
-      <div className="max-w-[600px] min-w-[375px] h-full mx-auto">
+      <div
+        className="max-w-[600px] min-w-[375px] h-full mx-auto relative"
+        id="topLayout"
+      >
         {headerSlot}
         <div className="w-full h-full">
           <Outlet />

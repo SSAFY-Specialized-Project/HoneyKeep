@@ -1,6 +1,6 @@
 const apiURL = (url: string):string => {
 
-  const makeURL = `${import.meta.env.BASE_URL}${url}`
+  const makeURL = `${import.meta.env.VITE_BASE_URL}${url}`
 
   return makeURL;
 }

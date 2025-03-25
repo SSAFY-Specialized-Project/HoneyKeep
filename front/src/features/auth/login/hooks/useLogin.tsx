@@ -1,4 +1,7 @@
+import sendVerificationAPI from "@/entities/user/api/sendVerificationAPI";
+import verifyEmailCodeAPI from "@/entities/user/api/verifyEmailCodeAPI";
 import { useCountdownTimer } from "@/shared/hooks";
+import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
 const useLogin = () => {
@@ -11,10 +14,14 @@ const useLogin = () => {
   const [email, setEmail] = useState<string>("");
   const [emailCheck, setEmailCheck] = useState<boolean>(false);
   const [emailError, setEmailError] = useState<string>("에러");
+  const [emailText, setEmailText] = useState<string>("인증요청");
 
   // 이메일 인증 state
   const [certification, setCertification] = useState<string>("");
-  const [certificationCheck, setCertificationCheck] = useState<boolean>(false);
+  const [certificationText, setCertificationText] =
+    useState<string>("인증하기");
+  const [certificationCheck, setCertificationCheck] = useState<boolean>(true);
+  const [certificationError, setCertificationError] = useState<string>("");
 
   // 전화번호 state
   const [phone, setPhone] = useState<string>("");
@@ -29,6 +36,13 @@ const useLogin = () => {
   const [registerSecond, setRegisterSecond] = useState<string>("");
   const [registerCheck, setRegisterCheck] = useState<boolean>(false);
   const [registerError, setRegisterError] = useState<string>("");
+
+  // 동의사항 state
+  const [isModalOpen, setModalOpen] = useState<boolean>(false);
+
+  // 비밀번호 state
+  const [password, setPassword] = useState<string>("");
+  const [isPasswordOpen, setPasswordOpen] = useState<boolean>(false);
 
   const registerRef = useRef<HTMLInputElement>(null);
 
@@ -66,6 +80,10 @@ const useLogin = () => {
       setRegisterError("");
     }
   }, [registerFirst, registerSecond]);
+
+  useEffect(() => {
+    if (certificationCheck) setModalOpen(true);
+  }, [certificationCheck, setModalOpen]);
 
   const handleNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.currentTarget.value);
@@ -109,7 +127,38 @@ const useLogin = () => {
     setCertification(e.currentTarget.value);
   };
 
-  const sendEmailCode = (e: React.MouseEvent<HTMLButtonElement>) => {};
+  const sendEmailCode = async () => {
+    const data = { email };
+    resetTimer();
+
+    const response = await sendVerificationAPI(data);
+
+    if (response.status == 200) {
+      startTimer();
+      setEmailText("재요청");
+    } else if (response.status == 500) {
+      setEmailError("이메일 발송에 실패했습니다.");
+      setEmailText("재요청");
+      pauseTimer();
+    }
+  };
+
+  const verifyCodeMutation = useMutation({
+    mutationFn: verifyEmailCodeAPI,
+    onSuccess: () => {
+      setCertificationCheck(true);
+      setCertificationText("인증완료");
+    },
+    onError: (error) => {
+      setCertificationError(error.message);
+      setCertificationCheck(false);
+    },
+  });
+
+  const verifyEmailCode = () => {
+    const data = { email, code: Number(certification) };
+    verifyCodeMutation.mutate(data);
+  };
 
   return {
     name,
@@ -123,14 +172,27 @@ const useLogin = () => {
     phoneCheck,
     email,
     emailCheck,
+    emailText,
     emailError,
     certification,
+    certificationText,
+    certificationError,
+    certificationCheck,
+    isModalOpen,
+    isPasswordOpen,
+    password,
+    setPassword,
+    setModalOpen,
+    setPasswordOpen,
     handleNameInput,
     handlePhoneInput,
     handleRegisterFirstInput,
     handleRegisterSecondInput,
     handleEmailInput,
     handleCertificationInput,
+    formatTime,
+    sendEmailCode,
+    verifyEmailCode,
   };
 };
 

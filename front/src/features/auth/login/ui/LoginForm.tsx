@@ -1,6 +1,8 @@
 import { BasicInput, Button } from "@/shared/ui";
 import RegisterInput from "@/shared/ui/RegisterInput/RegisterInput";
-import { useLogin } from "@/features/auth/login";
+import { AgreementModal, useLogin } from "@/features/auth/login";
+import { createPortal } from "react-dom";
+import PasswordModal from "./PasswordModal";
 
 const LoginForm = () => {
   const {
@@ -15,14 +17,27 @@ const LoginForm = () => {
     phoneCheck,
     email,
     emailCheck,
+    emailText,
     emailError,
     certification,
+    certificationCheck,
+    certificationError,
+    certificationText,
+    isModalOpen,
+    isPasswordOpen,
+    password,
+    setPassword,
+    setModalOpen,
+    setPasswordOpen,
     handleNameInput,
     handlePhoneInput,
     handleRegisterFirstInput,
     handleRegisterSecondInput,
     handleEmailInput,
     handleCertificationInput,
+    formatTime,
+    sendEmailCode,
+    verifyEmailCode,
   } = useLogin();
 
   return (
@@ -65,33 +80,68 @@ const LoginForm = () => {
             name="email"
             type="email"
             label="이메일"
-            buttonText="인증요청"
+            buttonText={emailText}
             disabled={!emailCheck}
-            timer="00:00"
-            onClick={(e) => {}}
+            timer={formatTime()}
+            onClick={sendEmailCode}
             value={email}
             onChange={handleEmailInput}
           />
         </div>
         <div className={`${!emailCheck ? "hidden" : "block"}`}>
           <BasicInput
+            errorMessage={certificationError}
             id="certification"
             name="certification"
             type="certification"
             label="인증번호"
+            buttonText={certificationText}
+            disabled={certification.length < 6}
             value={certification}
-            buttonText="인증하기"
-            onClick={(e) => {}}
+            onClick={verifyEmailCode}
             onChange={handleCertificationInput}
           />
         </div>
       </form>
-      <div className="mt-auto">
-        <Button text="인증하기" type="button" disabled={true} />
+      <div className="mt-auto flex flex-col gap-8">
+        <p className="text-text-lg font-bold text-gray-300">
+          소중한 내 정보를 위해 마이데이터 서비스 가입은 충분히
+          <br />
+          검토해주세요. 꼭 필요한 서비스만 가입하고 잘 이용하지 않는
+          <br />
+          서비스는 탈퇴 및 삭제해주세요. 현재 가입하신 마이데이터 서비스
+          <br />
+          앱은 마이데이터 종합포털에서 확인할 수 있습니다.
+        </p>
+        <Button
+          text="동의사항 확인하기"
+          type="button"
+          disabled={certificationCheck}
+          onClick={() => {
+            setModalOpen(true);
+          }}
+        />
       </div>
-      <div className="hidden">
-        <Button text="회원가입" type="submit" disabled={true} />
-      </div>
+      {isModalOpen &&
+        document.getElementById("topLayout") &&
+        createPortal(
+          <AgreementModal
+            isOpen={isModalOpen}
+            setIsOpen={setModalOpen}
+            setPasswordOpen={setPasswordOpen}
+          />,
+          document.getElementById("topLayout") as HTMLElement
+        )}
+      {isPasswordOpen &&
+        document.getElementById("topLayout") &&
+        createPortal(
+          <PasswordModal
+            isOpen={isPasswordOpen}
+            value={password}
+            setValue={setPassword}
+          />,
+          document.getElementById("topLayout") as HTMLElement
+        )}
     </>
   );
 };
