@@ -3,7 +3,7 @@ package com.barcode.honeykeep.account.service;
 import com.barcode.honeykeep.account.dto.AccountDetailResponse;
 import com.barcode.honeykeep.account.dto.AccountResponse;
 import com.barcode.honeykeep.account.entity.Account;
-import com.barcode.honeykeep.account.repository.AccountRepsository;
+import com.barcode.honeykeep.account.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,16 +13,16 @@ import java.util.stream.Collectors;
 @Service
 public class AccountService {
 
-    private final AccountRepsository accountRepsository;
+    private final AccountRepository accountRepository;
 
-    public AccountService(AccountRepsository accountRepsository) {
-        this.accountRepsository = accountRepsository;
+    public AccountService(AccountRepository accountRepsository) {
+        this.accountRepository = accountRepsository;
     }
 
     //TODO: 포켓 정보 추가
     //TODO: Exception 추가
     public List<AccountResponse> getAccountsByUserId(Long userId) {
-        List<Account> accounts = accountRepsository.findByUser_Id(userId);
+        List<Account> accounts = accountRepository.findByUser_Id(userId);
 
         return accounts.stream().map(account -> {
             return AccountResponse.builder()
@@ -35,7 +35,7 @@ public class AccountService {
      }
 
     public AccountDetailResponse getAccountDetailById(Long id, Long userId) {
-        Optional<Account> optionalAccount = accountRepsository.findById(id);
+        Optional<Account> optionalAccount = accountRepository.findById(id);
 
         //TODO: 계좌 존재하는지 확인
         Account account = optionalAccount.get();

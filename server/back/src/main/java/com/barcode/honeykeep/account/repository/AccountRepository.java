@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AccountRepsository extends JpaRepository<Account, Long> {
+public interface AccountRepository extends JpaRepository<Account, Long> {
 
     //계좌 목록 조회
     List<Account> findByUser_Id(Long userId);
