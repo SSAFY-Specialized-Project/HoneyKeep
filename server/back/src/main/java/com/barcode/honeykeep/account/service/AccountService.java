@@ -3,22 +3,22 @@ package com.barcode.honeykeep.account.service;
 import com.barcode.honeykeep.account.dto.AccountDetailResponse;
 import com.barcode.honeykeep.account.dto.AccountResponse;
 import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
+import com.barcode.honeykeep.common.exception.CustomException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class AccountService {
 
     private final AccountRepository accountRepository;
-
-    public AccountService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
 
     //TODO: 포켓 정보 추가
     //TODO: Exception 추가

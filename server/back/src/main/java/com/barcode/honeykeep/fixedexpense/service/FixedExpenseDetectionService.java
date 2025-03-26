@@ -38,7 +38,7 @@ public class FixedExpenseDetectionService {
 
         for (Long userId : userIds) {
             // 사용자의 모든 거래내역 조회
-            List<Transaction> transactions = transactionRepository.findByAccount_User_IdAndTransactionDateAfter(userId, sixMonthsAgo);
+            List<Transaction> transactions = transactionRepository.findByAccount_User_IdAndDateAfter(userId, sixMonthsAgo);
 
             // 계좌 ID별로 거래내역 그룹화
             Map<Long, List<Transaction>> accountTransactions = transactions.stream()
