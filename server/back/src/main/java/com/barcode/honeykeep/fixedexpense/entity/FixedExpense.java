@@ -28,7 +28,6 @@ public class FixedExpense extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    //TODO: FixedExpense 관련해서, DTO들 다 수정해야할듯 하다. 프론트에 출금 계좌 정보까지 넘겨주는게 적절.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id")
     private Account account;

@@ -29,7 +29,6 @@ public class DetectedFixedExpense extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // TODO: 마찬가지로 detectedFixedExpense의 dto들도 수정해야할듯 함(출금 계좌 정보까지 넘겨주는게 적절).
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id")
     private Account account;
