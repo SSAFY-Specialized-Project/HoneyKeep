@@ -2,14 +2,11 @@
 package com.barcode.honeykeep.pocket.dto;
 
 import lombok.Builder;
-import java.time.LocalDateTime;
 
 @Builder
 public record PocketStatusResponse(
     Long id,
     String name,
-    String previousType,
-    String currentType,
-    Long savedAmount,
-    LocalDateTime updatedAt
-) {}
+    String type,
+    Long savedAmount
+) {} 

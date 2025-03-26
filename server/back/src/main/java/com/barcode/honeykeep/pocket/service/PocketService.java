@@ -134,7 +134,8 @@ public class PocketService {
      * 포켓 즐겨찾기 설정/해제
      */
     @Transactional
-    public PocketFavoriteResponse toggleFavoritePocket(Long userId, Long pocketId, PocketFavoriteRequest request) {
+    public PocketFavoriteResponse setFavoritePocket(Long userId, Long pocketId, PocketFavoriteRequest request) {
+        // 기존 코드는 동일하게 유지
         Pocket pocket = getPocketById(pocketId);
         // 계좌 소유자 확인 - 보안상 추가
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
@@ -207,7 +208,8 @@ public class PocketService {
         // 계좌 소유자 확인 - 보안상 추가
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
         
-        pocketRepository.delete(pocket);
+        // 물리적 삭제 대신 논리적 삭제 사용
+        pocket.delete("사용자에 의한 삭제");
     }
 
     /**
@@ -216,30 +218,17 @@ public class PocketService {
     @Transactional
     public PocketStatusResponse usePocket(Long userId, Long pocketId) {
         Pocket pocket = getPocketById(pocketId);
-        // 계좌 소유자 확인 - 보안상 추가
+        // 계좌 소유자 확인
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
         
         String previousType = pocket.getType().getType();
         
-        // 상태 변경: GATHERING → USING
-        Pocket updatedPocket = Pocket.builder()
-                .id(pocket.getId())
-                .account(pocket.getAccount())
-                .category(pocket.getCategory())
-                .name(pocket.getName())
-                .productName(pocket.getProductName())
-                .totalAmount(pocket.getTotalAmount())
-                .savedAmount(pocket.getSavedAmount())
-                .link(pocket.getLink())
-                .startDate(pocket.getStartDate())
-                .endDate(pocket.getEndDate())
-                .isFavorite(pocket.getIsFavorite())
-                .type(PocketType.USING)
-                .build();
+        // Builder 대신 메서드 호출
+        pocket.changeType(PocketType.USING);
         
-        pocketRepository.save(updatedPocket);
+        pocketRepository.save(pocket);
         
-        return mapToPocketStatusResponse(updatedPocket, previousType);
+        return mapToPocketStatusResponse(pocket, previousType);
     }
 
     /**
@@ -310,7 +299,7 @@ public class PocketService {
      * ID로 포켓 조회하는 헬퍼 메서드
      */
     private Pocket getPocketById(Long pocketId) {
-        return pocketRepository.findById(pocketId)
+        return pocketRepository.findByIdAndIsDeletedFalse(pocketId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 포켓을 찾을 수 없습니다: " + pocketId));
     }
     
@@ -401,10 +390,9 @@ public class PocketService {
         return PocketStatusResponse.builder()
                 .id(pocket.getId())
                 .name(pocket.getName())
-                .previousType(previousType)
-                .currentType(pocket.getType().getType())
+                .type(pocket.getType().getType())  // currentType이 type으로 변경됨
                 .savedAmount(pocket.getSavedAmount().getAmount())
-                .updatedAt(pocket.getUpdatedAt())
+                // previousType과 updatedAt 필드는 제거됨
                 .build();
     }
 

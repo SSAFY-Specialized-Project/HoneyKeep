@@ -101,13 +101,13 @@ public class PocketController {
      */
     @Transactional
     @PatchMapping("/{pocketId}/favorite")
-    public ResponseEntity<ApiResponse<PocketFavoriteResponse>> toggleFavoritePocket(
-            @AuthenticationPrincipal UserId userId,
-            @PathVariable Long pocketId,
-            @RequestBody PocketFavoriteRequest pocketFavoriteRequest) {
+    public ResponseEntity<ApiResponse<PocketFavoriteResponse>> setFavoritePocket(
+        @AuthenticationPrincipal UserId userId,
+        @PathVariable Long pocketId,
+        @RequestBody PocketFavoriteRequest pocketFavoriteRequest) {
         return ResponseEntity.ok()
-                .body(ApiResponse.success(pocketService.toggleFavoritePocket(userId.value(), pocketId, pocketFavoriteRequest)));
-    }
+        .body(ApiResponse.success(pocketService.setFavoritePocket(userId.value(), pocketId, pocketFavoriteRequest)));
+}
 
     /**
      * 포켓 수정
@@ -134,12 +134,11 @@ public class PocketController {
      */
     @Transactional
     @DeleteMapping("/{pocketId}")
-    public ResponseEntity<ApiResponse<Void>> deletePocket(
+    public ResponseEntity<Void> deletePocket(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long pocketId) {
         pocketService.deletePocket(userId.value(), pocketId);
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
     /**
