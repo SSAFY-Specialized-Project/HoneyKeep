@@ -59,21 +59,21 @@ public class SecurityConfig {
         return http.build();
     }
 
-//    @Bean
-//    public WebMvcConfigurer corsConfigurer() {
-//        return new WebMvcConfigurer() {
-//            @Override
-//            public void addCorsMappings(CorsRegistry registry) {
-//                registry.addMapping("/**")
-//                        .allowedOrigins("https://www.adte.site", "http://localhost:5173")
-//                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-//                        .allowedHeaders("*")
-//                        .exposedHeaders("Set-Cookie")  // ✅ 쿠키 헤더 노출
-//                        .allowCredentials(true)
-//                        .maxAge(3600);
-//            }
-//        };
-//    }
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("https://j12a405.p.ssafy.io", "http://localhost:5173")
+                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .exposedHeaders("Set-Cookie")  // ✅ 쿠키 헤더 노출
+                        .allowCredentials(true)
+                        .maxAge(3600);
+            }
+        };
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {

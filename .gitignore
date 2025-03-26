@@ -27,3 +27,6 @@
 /.idea
 /.vscode
 /server/.env
+
+**/venv/
+__pycache__/
