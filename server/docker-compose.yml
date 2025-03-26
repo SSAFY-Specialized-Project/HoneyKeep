@@ -69,6 +69,8 @@ services:
         condition: service_healthy
       mongodb:
         condition: service_healthy
+      ml-service:
+        condition: service_healthy
     ports:
       - "8080:8080"
     networks:
@@ -104,11 +106,33 @@ services:
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
 
+      ML_SERVICE_URL: http://ml-service:5000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  ml-service:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: ml-service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ml:/app
+      - ./ml/model:/app/model
+    networks:
+      - my-network
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s  # 시간 늘림
+      timeout: 10s   # 시간 늘림
+      retries: 3
+      start_period: 20s  # 시작 지연 시간 추가
 
 networks:
   my-network:

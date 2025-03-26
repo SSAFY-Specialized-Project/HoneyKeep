@@ -24,6 +24,7 @@ import com.barcode.honeykeep.fixedexpense.entity.DetectedFixedExpense;
 import com.barcode.honeykeep.fixedexpense.type.DetectionStatus;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import com.barcode.honeykeep.user.exception.UserErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,15 +39,8 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * DetectedFixedExpenseService 와 다르게, 이 서비스 클래스는 고정지출을 감지하는 배치 작업만을 처리함.
- * <br/><br/>
- * <h3>2025-03-26</h3>
- * <br/>
- * 현재 점수 자체는 잘 뽑아내지만... 좀 날짜에 대한 일관성이 부족한 애들도 고정지출이라고 판단해버린다.
- * <br/>그래서 날짜에 대해 좀더 엄격한 기준이 필요한가...? 싶기도?? 아니면 총 가중치 점수 높이거나.
- * <br/>날짜 일관성은 +-2일 까지(주말 등 지연 이체 고려). 0.3, 0.3, 0.4 이렇게 가도 ㄱㅊ을 것 같다.
- * <p>
- * <br/>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FixedExpenseDetectionService {
@@ -55,6 +49,7 @@ public class FixedExpenseDetectionService {
     private final UserService userService;
     private final AuthRepository authRepository;
     private final AccountRepository accountRepository;
+    private final MLFixedExpenseClient mlClient;
 
     private Map<Long, Map<Long, List<Transaction>>> userAccountTransactions;
 
@@ -63,6 +58,10 @@ public class FixedExpenseDetectionService {
     public void detectMonthlyFixedExpenses() {
         // 가져오기
         getUserAccountTransactions();
+
+        // ML 서비스 가용성 확인
+        boolean mlServiceAvailable = mlClient.isServiceAvailable();
+        log.info("ML 서비스 가용성: {}", mlServiceAvailable);
 
         // 계산
         for (Map.Entry<Long, Map<Long, List<Transaction>>> userEntry : userAccountTransactions.entrySet()) {
@@ -74,7 +73,7 @@ public class FixedExpenseDetectionService {
                 List<Transaction> transactions = accountEntry.getValue();
 
                 // 가맹점별로 그룹화하여 분석
-                analyzeMerchantTransactions(userId, accountId, transactions);
+                analyzeMerchantTransactions(userId, accountId, transactions, mlServiceAvailable);
             }
         }
     }
@@ -99,13 +98,16 @@ public class FixedExpenseDetectionService {
         }
     }
 
-    private void analyzeMerchantTransactions(Long userId, Long accountId, List<Transaction> transactions) {
+    private void analyzeMerchantTransactions(Long userId, Long accountId, List<Transaction> transactions, boolean mlServiceAvailable) {
         // 가맹점별로 거래 그룹화
         Map<String, List<Transaction>> merchantTransactions = transactions.stream()
                 .collect(Collectors.groupingBy(Transaction::getName));
 
         // 고정지출 후보를 담을 리스트 생성
         List<FixedExpenseCandidate> fixedExpenseCandidates = new ArrayList<>();
+        
+        // ML 학습을 위한 데이터 수집
+        List<Map<String, Object>> mlTrainingData = new ArrayList<>();
 
         // 각 가맹점별로 고정지출 여부 판단
         for (Map.Entry<String, List<Transaction>> entry : merchantTransactions.entrySet()) {
@@ -137,8 +139,64 @@ public class FixedExpenseDetectionService {
             // 종합 점수
             double totalScore = amountScore + dateScore + persistenceScore;
 
-            // 일정 점수 이상이면 고정지출로 감지
-            if (totalScore >= 0.75) {
+            // 평균 거래 간격 계산 (ML 모델 특성으로 사용)
+            List<LocalDate> dates = merchantTxs.stream()
+                    .map(t -> t.getDate().toLocalDate())
+                    .sorted()
+                    .toList();
+
+            double avgInterval = 0;
+            if (merchantTxs.size() > 1) {
+                long totalDays = 0;
+                for (int i = 1; i < dates.size(); i++) {
+                    totalDays += ChronoUnit.DAYS.between(dates.get(i-1), dates.get(i));
+                }
+                avgInterval = (double) totalDays / (dates.size() - 1);
+            }
+
+            // 규칙 기반 고정지출 판단
+            boolean ruleBasedResult = totalScore >= 0.75;
+
+            // ML 서비스 예측
+            boolean mlPrediction = false;
+            if (mlServiceAvailable) {
+                Map<String, Object> features = new HashMap<>();
+                features.put("amountScore", amountScore);
+                features.put("dateScore", dateScore);
+                features.put("persistenceScore", persistenceScore);
+                features.put("transactionCount", merchantTxs.size());
+                features.put("avgInterval", avgInterval);
+
+                mlPrediction = mlClient.predictIsFixedExpense(features);
+
+                // ML 학습 데이터 수집
+                Map<String, Object> trainingData = new HashMap<>(features);
+                trainingData.put("isFixedExpense", ruleBasedResult); // 초기에는 규칙 기반 결과로 학습
+                mlTrainingData.add(trainingData);
+            }
+
+            // 하이브리드 판단 (초기에는 규칙 기반에 더 높은 비중)
+            boolean isFixedExpense;
+            if (mlServiceAvailable) {
+                // 규칙 기반과 ML 예측이 모두 동의하면 확실한 고정지출
+                if (ruleBasedResult && mlPrediction) {
+                    isFixedExpense = true;
+                }
+                // 둘 중 하나만 긍정이면 규칙 기반에 더 높은 가중치 부여
+                else if (ruleBasedResult || mlPrediction) {
+                    isFixedExpense = ruleBasedResult; // 초기에는 규칙 기반 결과 우선
+                }
+                // 둘 다 부정이면 고정지출이 아님
+                else {
+                    isFixedExpense = false;
+                }
+            } else {
+                // ML 서비스 사용 불가 시 규칙 기반만 사용
+                isFixedExpense = ruleBasedResult;
+            }
+
+            // 고정지출로 판단되면 후보 리스트에 추가
+            if (isFixedExpense) {
                 fixedExpenseCandidates.add(
                         new FixedExpenseCandidate(
                                 userId,
@@ -153,6 +211,13 @@ public class FixedExpenseDetectionService {
                 );
             }
         }
+        
+        // ML 모델 학습 데이터 전송 (충분한 데이터가 있는 경우)
+        if (mlServiceAvailable && !mlTrainingData.isEmpty()) {
+            mlClient.trainModel(mlTrainingData);
+        }
+        
+        // 고정지출 후보 처리
         createDetectedFixedExpense(fixedExpenseCandidates);
     }
 
