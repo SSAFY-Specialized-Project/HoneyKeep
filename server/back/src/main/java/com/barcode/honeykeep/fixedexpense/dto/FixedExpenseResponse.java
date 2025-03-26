@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 
 public record FixedExpenseResponse(
         Long id,
-        Account account,
+        String bankName,
+        String accountName,
         String name,
         Money money,
         LocalDate startDate,

@@ -6,7 +6,8 @@ import lombok.Builder;
 @Builder
 public record DetectedFixedExpenseResponse(
         Long id,
-        Account account,
+        String bankName,
+        String accountName,
         String name,
         String averageAmount,
         Integer averageDay,

@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record FixedExpenseRequest(
-        Account account,
+        String accountNumber,
         String name,
         Money money,
         LocalDate startDate,

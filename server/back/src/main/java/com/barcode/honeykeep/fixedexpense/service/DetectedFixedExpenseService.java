@@ -3,6 +3,9 @@ package com.barcode.honeykeep.fixedexpense.service;
 import java.util.Comparator;
 import java.util.List;
 
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.exception.AccountErrorCode;
+import com.barcode.honeykeep.account.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DetectedFixedExpenseService {
 
     private final DetectedFixedExpenseRepository detectedFixedExpenseRepository;
+    private final AccountRepository accountRepository;
 
     public List<DetectedFixedExpenseResponse> getAllDetectedFixedExpenses(Long userId) {
         List<DetectedFixedExpense> detectedFixedExpenses = detectedFixedExpenseRepository.findByUser_IdAndStatus(userId, DetectionStatus.DETECTED);
@@ -33,7 +37,8 @@ public class DetectedFixedExpenseService {
                 .sorted(Comparator.comparing(DetectedFixedExpense::getDetectionScore).reversed())
                 .map(d -> DetectedFixedExpenseResponse.builder()
                         .id(d.getId())
-                        .account(d.getAccount())
+                        .bankName(d.getAccount().getBank().getName())
+                        .accountName(d.getAccount().getAccountName())
                         .name(d.getName())
                         .averageAmount(d.getAverageAmount().toString())
                         .averageDay(d.getAverageDay())
@@ -52,8 +57,11 @@ public class DetectedFixedExpenseService {
             throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
         }
 
+        Account account = accountRepository.findByAccountNumber(request.accountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
         detectedFixedExpense.update(
-                request.account(),
+                account,
                 request.name(),
                 request.averageAmount(),
                 request.averageDay()
@@ -61,7 +69,8 @@ public class DetectedFixedExpenseService {
 
         return DetectedFixedExpenseResponse.builder()
                 .id(detectedFixedExpense.getId())
-                .account(detectedFixedExpense.getAccount())
+                .bankName(detectedFixedExpense.getAccount().getBank().getName())
+                .accountName(detectedFixedExpense.getAccount().getAccountName())
                 .name(detectedFixedExpense.getName())
                 .averageAmount(detectedFixedExpense.getAverageAmount().toString())
                 .averageDay(detectedFixedExpense.getAverageDay())
