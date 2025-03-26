@@ -16,6 +16,15 @@ const registerUserAPI = async (
       body: JSON.stringify(data)
     });
 
+    if(!response.ok){
+
+      const responseData:ResponseErrorDTO = await response.json();
+
+      const error = new Error(responseData.message) as Error;
+
+      throw error;
+    }
+
     const responseData: ResponseDTO<RegisterUserResponse> = await response.json();
 
     return responseData;

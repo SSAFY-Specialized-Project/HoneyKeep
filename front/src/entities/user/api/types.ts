@@ -43,7 +43,7 @@ export interface LoginUserRequset {
 }
 
 export interface LoginUserResponse {
-  accssTokne: string;
+  accessToken: string;
 }
 
 // 비밀번호 인증

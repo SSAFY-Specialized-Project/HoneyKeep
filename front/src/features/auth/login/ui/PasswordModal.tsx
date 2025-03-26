@@ -2,11 +2,12 @@ import { Dispatch, SetStateAction } from "react";
 
 interface Props {
   isOpen: boolean;
+  passwordCheck: boolean;
   value: string;
   setValue: Dispatch<SetStateAction<string>>;
 }
 
-const PasswordModal = ({ isOpen, value, setValue }: Props) => {
+const PasswordModal = ({ isOpen, value, passwordCheck, setValue }: Props) => {
   const handleAddPassword = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (value.length == 6) return;
     const num = e.currentTarget.dataset.value;
@@ -19,8 +20,12 @@ const PasswordModal = ({ isOpen, value, setValue }: Props) => {
     >
       <div className="w-full p-2.5 flex flex-col items-center gap-2.5">
         <h2 className="text-title-xl font-bold text-gray-900">비밀번호 인증</h2>
-        <span className="text-title-sm font-semibold text-gray-600">
-          비밀번호 6자리를 입력해주세요.
+        <span
+          className={`text-title-sm font-semibold ${passwordCheck ? "text-gray-600" : "text-warning"}`}
+        >
+          {passwordCheck
+            ? "비밀번호 6자리를 입력해주세요."
+            : "비밀번호가 틀렸습니다."}
         </span>
       </div>
       <div className="w-full p-10 flex gap-2 justify-center">

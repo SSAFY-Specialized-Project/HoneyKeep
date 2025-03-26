@@ -1,10 +1,10 @@
 import { apiURL } from "@/shared/lib";
-import { LoginUserRequset } from "./types";
+import { LoginUserRequset, LoginUserResponse } from "./types";
 import { ResponseDTO, ResponseErrorDTO } from "@/shared/api/types";
 
 const loginUserAPI = async (
   data: LoginUserRequset
-):Promise<ResponseDTO<LoginUserRequset>> => {
+):Promise<ResponseDTO<LoginUserResponse>> => {
 
   try{
 
@@ -28,7 +28,7 @@ const loginUserAPI = async (
       throw error;
     }
 
-    const responseData:ResponseDTO<LoginUserRequset> = await response.json();
+    const responseData:ResponseDTO<LoginUserResponse> = await response.json();
 
     return responseData;
 

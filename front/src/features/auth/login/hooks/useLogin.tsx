@@ -46,6 +46,7 @@ const useLogin = () => {
 
   // 비밀번호 state
   const [password, setPassword] = useState<string>("");
+  const [passwordCheck, setPasswordCheck] = useState<boolean>(true);
   const [isPasswordOpen, setPasswordOpen] = useState<boolean>(false);
 
   // 로그인이냐 회원가입이냐 state
@@ -206,12 +207,48 @@ const useLogin = () => {
 
   const loginUserMutation = useMutation({
     mutationFn: loginUserAPI,
+    onSuccess: (response) => {
+      const accessToken = response.data.accessToken;
+      localStorage.setItem("accessToken", accessToken);
+    },
+    onError: (error: ResponseErrorDTO) => {
+      if (error.status == 401) {
+        setPasswordCheck(false);
+      }
+    },
   });
 
   const registerUserMutation = useMutation({
     mutationFn: registerUserAPI,
-    onSuccess: () => {},
+    onSuccess: () => {
+      loginUserMutation.mutate({ email, password });
+    },
   });
+
+  useEffect(() => {
+    if (password.length == 6) {
+      if (isAlready) {
+        // 로그인
+        console.log("로그인 호출됨");
+        loginUserMutation.mutate({ email, password });
+      } else {
+        // 회원가입
+        console.log("회원가입 호출됨");
+        registerUserMutation.mutate({
+          name,
+          identityNumber: registerFirst + "-" + registerSecond,
+          phoneNumber:
+            phone.slice(0, 3) +
+            "-" +
+            phone.slice(3, 7) +
+            "-" +
+            phone.slice(7, 11),
+          email,
+          password,
+        });
+      }
+    }
+  }, [password]);
 
   return {
     name,
@@ -234,6 +271,7 @@ const useLogin = () => {
     isModalOpen,
     isPasswordOpen,
     password,
+    passwordCheck,
     setPassword,
     setModalOpen,
     setPasswordOpen,
