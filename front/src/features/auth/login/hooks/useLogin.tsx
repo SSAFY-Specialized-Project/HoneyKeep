@@ -7,8 +7,10 @@ import { ResponseErrorDTO } from "@/shared/api/types";
 import { useCountdownTimer } from "@/shared/hooks";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 
 const useLogin = () => {
+  const navigate = useNavigate();
   const { formatTime, startTimer, pauseTimer, resetTimer } = useCountdownTimer({
     time: 180,
     onTimeUp: () => {},
@@ -158,6 +160,7 @@ const useLogin = () => {
       if (response.data) {
         console.log("로그인!");
         setAlready(true);
+        setCertificationCheck(true);
       } else {
         console.log("회원가입!");
         setAlready(false);
@@ -210,9 +213,11 @@ const useLogin = () => {
     onSuccess: (response) => {
       const accessToken = response.data.accessToken;
       localStorage.setItem("accessToken", accessToken);
+      navigate("/home");
     },
     onError: (error: ResponseErrorDTO) => {
       if (error.status == 401) {
+        console.log("로그인 실패");
         setPasswordCheck(false);
       }
     },
@@ -247,6 +252,8 @@ const useLogin = () => {
           password,
         });
       }
+    } else {
+      setPasswordCheck(true);
     }
   }, [password]);
 

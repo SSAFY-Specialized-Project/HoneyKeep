@@ -67,7 +67,7 @@ const BasicInput = ({
             type="button"
             disabled={disabled}
             onClick={onClick}
-            className="absolute cursor-pointer right-6 top-1/2 disabled:bg-gray-100 disabled:text-gray-400 -translate-y-1/2 px-3 py-2 rounded-md font-semibold text-gray-900 bg-brand-primary-300 hover:bg-brand-primary-500"
+            className="absolute cursor-pointer disabled:cursor-default right-6 top-1/2 disabled:bg-gray-100 disabled:text-gray-400 -translate-y-1/2 px-3 py-2 rounded-md font-semibold text-gray-900 bg-brand-primary-300 hover:bg-brand-primary-500"
           >
             {buttonText}
           </button>

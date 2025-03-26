@@ -26,6 +26,7 @@ const LoginForm = () => {
     isModalOpen,
     isPasswordOpen,
     password,
+    passwordCheck,
     setPassword,
     setModalOpen,
     setPasswordOpen,
@@ -81,7 +82,7 @@ const LoginForm = () => {
             type="email"
             label="이메일"
             buttonText={emailText}
-            disabled={!emailCheck}
+            disabled={!emailCheck || certificationCheck}
             timer={formatTime()}
             onClick={sendEmailCode}
             value={email}
@@ -96,7 +97,7 @@ const LoginForm = () => {
             type="certification"
             label="인증번호"
             buttonText={certificationText}
-            disabled={certification.length < 6}
+            disabled={certification.length < 6 || certificationCheck}
             value={certification}
             onClick={verifyEmailCode}
             onChange={handleCertificationInput}
@@ -139,6 +140,7 @@ const LoginForm = () => {
             isOpen={isPasswordOpen}
             value={password}
             setValue={setPassword}
+            passwordCheck={passwordCheck}
           />,
           document.getElementById("topLayout") as HTMLElement
         )}
