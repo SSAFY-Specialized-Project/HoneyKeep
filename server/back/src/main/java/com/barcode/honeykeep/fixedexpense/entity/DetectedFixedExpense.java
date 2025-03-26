@@ -1,5 +1,6 @@
 package com.barcode.honeykeep.fixedexpense.entity;
 
+import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.common.entity.BaseEntity;
 import com.barcode.honeykeep.common.vo.Money;
@@ -28,6 +29,11 @@ public class DetectedFixedExpense extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
+    // TODO: 마찬가지로 detectedFixedExpense의 dto들도 수정해야할듯 함(출금 계좌 정보까지 넘겨주는게 적절).
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
+
     private String name;
 
     private String originName;
@@ -52,8 +58,9 @@ public class DetectedFixedExpense extends BaseEntity {
     private Double persistenceScore;
 
     @Builder
-    protected DetectedFixedExpense(User user, String name, String originName, Money averageAmount, Integer averageDay, DetectionStatus status, LocalDate lastTransactionDate, Integer transactionCount, Double detectionScore, Double merchantScore, Double amountScore, Double dateScore, Double persistenceScore) {
+    protected DetectedFixedExpense(User user, Account account, String name, String originName, Money averageAmount, Integer averageDay, DetectionStatus status, LocalDate lastTransactionDate, Integer transactionCount, Double detectionScore, Double merchantScore, Double amountScore, Double dateScore, Double persistenceScore) {
         this.user = user;
+        this.account = account;
         this.name = name;
         this.originName = originName;
         this.averageAmount = averageAmount;
@@ -68,11 +75,12 @@ public class DetectedFixedExpense extends BaseEntity {
         this.persistenceScore = persistenceScore;
     }
 
-    public void update(String name, String averageAmount, Integer averageDay) {
+    public void update(Account account, String name, String averageAmount, Integer averageDay) {
         if (this.originName == null && !this.name.equals(name)) {
             this.originName = this.name;
         }
 
+        if (account != null) this.account = account;
         if (name != null) this.name = name;
         if (averageAmount != null) this.averageAmount = new Money(new BigDecimal(averageAmount));
         if (averageDay != null) this.averageDay = averageDay;

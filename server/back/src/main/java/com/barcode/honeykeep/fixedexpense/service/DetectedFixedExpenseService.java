@@ -33,6 +33,7 @@ public class DetectedFixedExpenseService {
                 .sorted(Comparator.comparing(DetectedFixedExpense::getDetectionScore).reversed())
                 .map(d -> DetectedFixedExpenseResponse.builder()
                         .id(d.getId())
+                        .account(d.getAccount())
                         .name(d.getName())
                         .averageAmount(d.getAverageAmount().toString())
                         .averageDay(d.getAverageDay())
@@ -52,6 +53,7 @@ public class DetectedFixedExpenseService {
         }
 
         detectedFixedExpense.update(
+                request.account(),
                 request.name(),
                 request.averageAmount(),
                 request.averageDay()
@@ -59,6 +61,7 @@ public class DetectedFixedExpenseService {
 
         return DetectedFixedExpenseResponse.builder()
                 .id(detectedFixedExpense.getId())
+                .account(detectedFixedExpense.getAccount())
                 .name(detectedFixedExpense.getName())
                 .averageAmount(detectedFixedExpense.getAverageAmount().toString())
                 .averageDay(detectedFixedExpense.getAverageDay())

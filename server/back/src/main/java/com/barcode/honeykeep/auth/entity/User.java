@@ -48,12 +48,6 @@ public class User extends BaseEntity {
     private List<Account> accounts = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
-    private List<FixedExpense> fixedExpenses = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    private List<DetectedFixedExpense> detectedFixedExpenses = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
     private List<PushSetting> pushSettings = new ArrayList<>();
 
     @OneToOne(mappedBy = "user")
@@ -71,8 +65,6 @@ public class User extends BaseEntity {
         this.phoneNumber = phoneNumber;
         this.notifications = new ArrayList<>();
         this.accounts = new ArrayList<>();
-        this.fixedExpenses = new ArrayList<>();
-        this.detectedFixedExpenses = new ArrayList<>();
         this.pushSettings = new ArrayList<>();
         this.cert = cert;
     }

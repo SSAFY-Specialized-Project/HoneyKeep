@@ -51,6 +51,7 @@ public class FixedExpenseService {
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         FixedExpense fixedExpense = FixedExpense.builder()
+                .account(fixedExpenseRequest.account())
                 .user(user)
                 .name(fixedExpenseRequest.name())
                 .money(fixedExpenseRequest.money())
@@ -74,6 +75,7 @@ public class FixedExpenseService {
         }
 
         fixedExpense.update(
+                fixedExpenseRequest.account(),
                 fixedExpenseRequest.name(),
                 fixedExpenseRequest.money(),
                 fixedExpenseRequest.startDate(),
@@ -103,6 +105,7 @@ public class FixedExpenseService {
     private FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpense) {
         return FixedExpenseResponse.builder()
                 .id(fixedExpense.getId())
+                .account(fixedExpense.getAccount())
                 .name(fixedExpense.getName())
                 .money(fixedExpense.getMoney())
                 .startDate(fixedExpense.getStartDate())
