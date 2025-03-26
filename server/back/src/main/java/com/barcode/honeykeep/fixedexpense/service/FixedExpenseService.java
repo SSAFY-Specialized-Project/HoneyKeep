@@ -1,5 +1,8 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.exception.AccountErrorCode;
+import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
 import com.barcode.honeykeep.auth.repository.AuthRepository;
@@ -25,9 +28,10 @@ import java.util.stream.Collectors;
 public class FixedExpenseService {
     private final FixedExpenseRepository fixedExpenseRepository;
     private final AuthRepository authRepository;
+    private final AccountRepository accountRepository;
 
     public List<FixedExpenseResponse> getAllFixedExpenses(Long userId) {
-        List<FixedExpense> expenses = fixedExpenseRepository.findByUserId(userId);
+        List<FixedExpense> expenses = fixedExpenseRepository.findByUser_Id(userId);
 
         return expenses.stream()
                 .map(this::mapFixedExpensesResponse)
@@ -50,7 +54,11 @@ public class FixedExpenseService {
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
+        Account account = accountRepository.findByAccountNumber(fixedExpenseRequest.accountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
         FixedExpense fixedExpense = FixedExpense.builder()
+                .account(account)
                 .user(user)
                 .name(fixedExpenseRequest.name())
                 .money(fixedExpenseRequest.money())
@@ -73,7 +81,11 @@ public class FixedExpenseService {
             throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
         }
 
+        Account account = accountRepository.findByAccountNumber(fixedExpenseRequest.accountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
         fixedExpense.update(
+                account,
                 fixedExpenseRequest.name(),
                 fixedExpenseRequest.money(),
                 fixedExpenseRequest.startDate(),
@@ -103,6 +115,8 @@ public class FixedExpenseService {
     private FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpense) {
         return FixedExpenseResponse.builder()
                 .id(fixedExpense.getId())
+                .bankName(fixedExpense.getAccount().getBank().getName())
+                .accountName(fixedExpense.getAccount().getAccountName())
                 .name(fixedExpense.getName())
                 .money(fixedExpense.getMoney())
                 .startDate(fixedExpense.getStartDate())
