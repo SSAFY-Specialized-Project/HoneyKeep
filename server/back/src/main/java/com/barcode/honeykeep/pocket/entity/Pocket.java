@@ -98,4 +98,20 @@ public class Pocket extends BaseEntity {
     public void updateSavedAmount(Money newAmount) {
         this.savedAmount = newAmount;
     }
+
+    /**
+     * 포켓 정보 일괄 업데이트
+     */
+    public void update(Account account, Category category, String name, String productName, Money totalAmount, Money savedAmount, String link, LocalDateTime startDate, LocalDateTime endDate, Boolean isFavorite) {
+        if (account != null) this.account = account;
+        if (category != null) this.category = category;
+        if (name != null) this.name = name;
+        if (productName != null) this.productName = productName;
+        if (totalAmount != null) this.totalAmount = totalAmount;
+        if (savedAmount != null) this.savedAmount = savedAmount;
+        if (link != null) this.link = link;
+        if (startDate != null) this.startDate = startDate;
+        if (endDate != null) this.endDate = endDate;
+        if (isFavorite != null) this.isFavorite = isFavorite;
+    }
 }

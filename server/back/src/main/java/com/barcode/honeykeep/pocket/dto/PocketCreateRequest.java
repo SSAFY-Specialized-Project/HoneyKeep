@@ -13,5 +13,6 @@ public record PocketCreateRequest(
     LocalDateTime endDate,
     Account account,
     Money totalAmount,
-    Money savedAmount
+    Money savedAmount,
+    Boolean isFavorite
 ) {}

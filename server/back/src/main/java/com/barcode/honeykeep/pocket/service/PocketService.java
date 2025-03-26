@@ -2,8 +2,6 @@ package com.barcode.honeykeep.pocket.service;
 
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.service.AccountService;
-import com.barcode.honeykeep.auth.entity.User;
-import com.barcode.honeykeep.auth.service.AuthService;
 import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.category.service.CategoryService;
 import com.barcode.honeykeep.common.vo.Money;
@@ -26,7 +24,6 @@ import java.util.stream.Collectors;
 public class PocketService {
     
     private final PocketRepository pocketRepository;
-    private final AuthService authService;
     private final AccountService accountService;
     private final CategoryService categoryService;
 
@@ -35,8 +32,6 @@ public class PocketService {
      */
     @Transactional
     public PocketCreateResponse createPocket(Long userId, PocketCreateRequest request) {
-        // 유저 조회 - AuthService 활용
-        User user = authService.getUserById(userId);
 
         // 계좌 조회 - AccountService 활용
         Account account = accountService.getAccountById(request.account().getId());
@@ -44,13 +39,13 @@ public class PocketService {
         // 포켓 생성
         Pocket pocket = Pocket.builder()
                 .account(account)
-                .name(request.account().getName()) // 계좌명을 기본 이름으로 설정
+                .name(account.getAccountName()) // 계좌명을 기본 이름으로 설정
                 .totalAmount(request.totalAmount())
-                .savedAmount(request.savedAmount() != null ? request.savedAmount() : new Money(0L))
+                .savedAmount(request.savedAmount() != null ? request.savedAmount() : Money.zero())
                 .link(request.link())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
-                .isFavorite(request.isFavorite() != null ? request.isFavorite() : false)
+                .isFavorite(false)
                 .type(PocketType.GATHERING) // 초기 상태는 항상 GATHERING(모으는 중)
                 .build();
         
@@ -70,31 +65,16 @@ public class PocketService {
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
         
         // 이전 금액 저장
-        Long previousAmount = pocket.getSavedAmount().getAmount();
-        Long addedAmount = request.savedAmount().getAmount();
+        Long previousAmount = pocket.getSavedAmount().getAmountAsLong();
+        Long addedAmount = request.savedAmount().getAmountAsLong();
         
         // 저장 금액 업데이트
-        Money newSavedAmount = new Money(previousAmount + addedAmount);
+        Money newSavedAmount = Money.of(previousAmount + addedAmount);
+        pocket.updateSavedAmount(newSavedAmount);
         
-        // 새로운 포켓 객체 생성 (업데이트)
-        Pocket updatedPocket = Pocket.builder()
-                .id(pocket.getId())
-                .account(pocket.getAccount())
-                .category(pocket.getCategory())
-                .name(pocket.getName())
-                .productName(pocket.getProductName())
-                .totalAmount(pocket.getTotalAmount())
-                .savedAmount(newSavedAmount)
-                .link(pocket.getLink())
-                .startDate(pocket.getStartDate())
-                .endDate(pocket.getEndDate())
-                .isFavorite(pocket.getIsFavorite())
-                .type(pocket.getType())
-                .build();
+        pocketRepository.save(pocket);
         
-        pocketRepository.save(updatedPocket);
-        
-        return mapToPocketGatherResponse(updatedPocket, previousAmount, addedAmount);
+        return mapToPocketGatherResponse(pocket, previousAmount, addedAmount);
     }
 
     /**
@@ -135,30 +115,16 @@ public class PocketService {
      */
     @Transactional
     public PocketFavoriteResponse setFavoritePocket(Long userId, Long pocketId, PocketFavoriteRequest request) {
-        // 기존 코드는 동일하게 유지
         Pocket pocket = getPocketById(pocketId);
         // 계좌 소유자 확인 - 보안상 추가
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
         
-        // 즐겨찾기 상태 업데이트
-        Pocket updatedPocket = Pocket.builder()
-                .id(pocket.getId())
-                .account(pocket.getAccount())
-                .category(pocket.getCategory())
-                .name(pocket.getName())
-                .productName(pocket.getProductName())
-                .totalAmount(pocket.getTotalAmount())
-                .savedAmount(pocket.getSavedAmount())
-                .link(pocket.getLink())
-                .startDate(pocket.getStartDate())
-                .endDate(pocket.getEndDate())
-                .isFavorite(request.isFavorite())
-                .type(pocket.getType())
-                .build();
+        // 즐겨찾기 상태 설정 (Builder 패턴 대신 메서드 호출)
+        pocket.setFavorite(request.isFavorite());
         
-        pocketRepository.save(updatedPocket);
+        pocketRepository.save(pocket);
         
-        return mapToPocketFavoriteResponse(updatedPocket);
+        return mapToPocketFavoriteResponse(pocket);
     }
 
     /**
@@ -178,25 +144,30 @@ public class PocketService {
             accountService.validateAccountOwner(account.getId(), userId);
         }
         
+        // 카테고리 변경 시 조회
+        Category category = pocket.getCategory();
+        if (request.category() != null) {
+            category = categoryService.getCategoryById(request.category().getId());
+        }
+        
         // 포켓 정보 업데이트
-        Pocket updatedPocket = Pocket.builder()
-                .id(pocket.getId())
-                .account(account)
-                .category(pocket.getCategory())
-                .name(pocket.getName())
-                .productName(pocket.getProductName())
-                .totalAmount(request.totalAmount() != null ? request.totalAmount() : pocket.getTotalAmount())
-                .savedAmount(request.savedAmount() != null ? request.savedAmount() : pocket.getSavedAmount())
-                .link(request.link() != null ? request.link() : pocket.getLink())
-                .startDate(request.startDate() != null ? request.startDate() : pocket.getStartDate())
-                .endDate(request.endDate() != null ? request.endDate() : pocket.getEndDate())
-                .isFavorite(request.isFavorite() != null ? request.isFavorite() : pocket.getIsFavorite())
-                .type(pocket.getType())
-                .build();
+        pocket.update(
+            account,
+            category,
+            request.name(),
+            request.productName(),
+            request.totalAmount(),
+            request.savedAmount(),
+            request.link(),
+            request.startDate(),
+            request.endDate(),
+            request.isFavorite()
+        );
         
-        pocketRepository.save(updatedPocket);
+        // 변경된 객체 저장
+        pocketRepository.save(pocket);
         
-        return mapToPocketUpdateResponse(updatedPocket);
+        return mapToPocketUpdateResponse(pocket);
     }
 
     /**
@@ -231,7 +202,7 @@ public class PocketService {
         return mapToPocketStatusResponse(pocket, previousType);
     }
 
-    /**
+   /**
      * 포켓 사용완료 처리 (상태 변경: USING → COMPLETED)
      */
     @Transactional
@@ -242,25 +213,12 @@ public class PocketService {
         
         String previousType = pocket.getType().getType();
         
-        // 상태 변경: USING → COMPLETED
-        Pocket updatedPocket = Pocket.builder()
-                .id(pocket.getId())
-                .account(pocket.getAccount())
-                .category(pocket.getCategory())
-                .name(pocket.getName())
-                .productName(pocket.getProductName())
-                .totalAmount(pocket.getTotalAmount())
-                .savedAmount(pocket.getSavedAmount())
-                .link(pocket.getLink())
-                .startDate(pocket.getStartDate())
-                .endDate(pocket.getEndDate())
-                .isFavorite(pocket.getIsFavorite())
-                .type(PocketType.COMPLETED)
-                .build();
+        // Builder 대신 메서드 호출
+        pocket.changeType(PocketType.COMPLETED);
         
-        pocketRepository.save(updatedPocket);
+        pocketRepository.save(pocket);
         
-        return mapToPocketStatusResponse(updatedPocket, previousType);
+        return mapToPocketStatusResponse(pocket, previousType);
     }
 
     /**
@@ -274,25 +232,12 @@ public class PocketService {
         
         String previousType = pocket.getType().getType();
         
-        // 상태 변경: COMPLETED → USING
-        Pocket updatedPocket = Pocket.builder()
-                .id(pocket.getId())
-                .account(pocket.getAccount())
-                .category(pocket.getCategory())
-                .name(pocket.getName())
-                .productName(pocket.getProductName())
-                .totalAmount(pocket.getTotalAmount())
-                .savedAmount(pocket.getSavedAmount())
-                .link(pocket.getLink())
-                .startDate(pocket.getStartDate())
-                .endDate(pocket.getEndDate())
-                .isFavorite(pocket.getIsFavorite())
-                .type(PocketType.USING)
-                .build();
+        // Builder 대신 메서드 호출
+        pocket.changeType(PocketType.USING);
         
-        pocketRepository.save(updatedPocket);
+        pocketRepository.save(pocket);
         
-        return mapToPocketStatusResponse(updatedPocket, previousType);
+        return mapToPocketStatusResponse(pocket, previousType);
     }
     
     /**
@@ -310,13 +255,13 @@ public class PocketService {
         return PocketDetailResponse.builder()
                 .id(pocket.getId())
                 .accountId(pocket.getAccount().getId())
-                .accountName(pocket.getAccount().getName())
+                .accountName(pocket.getAccount().getAccountName())
                 .categoryId(pocket.getCategory() != null ? pocket.getCategory().getId() : null)
                 .categoryName(pocket.getCategory() != null ? pocket.getCategory().getName() : null)
                 .name(pocket.getName())
                 .productName(pocket.getProductName())
-                .totalAmount(pocket.getTotalAmount().getAmount())
-                .savedAmount(pocket.getSavedAmount().getAmount())
+                .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .link(pocket.getLink())
                 .startDate(pocket.getStartDate())
                 .endDate(pocket.getEndDate())
@@ -334,9 +279,9 @@ public class PocketService {
         return PocketSummaryResponse.builder()
                 .id(pocket.getId())
                 .name(pocket.getName())
-                .accountName(pocket.getAccount().getName())
-                .totalAmount(pocket.getTotalAmount().getAmount())
-                .savedAmount(pocket.getSavedAmount().getAmount())
+                .accountName(pocket.getAccount().getAccountName())
+                .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .type(pocket.getType().getType())
                 .isFavorite(pocket.getIsFavorite())
                 .endDate(pocket.getEndDate())
@@ -351,9 +296,9 @@ public class PocketService {
                 .id(pocket.getId())
                 .name(pocket.getName())
                 .accountId(pocket.getAccount().getId())
-                .accountName(pocket.getAccount().getName())
-                .totalAmount(pocket.getTotalAmount().getAmount())
-                .savedAmount(pocket.getSavedAmount().getAmount())
+                .accountName(pocket.getAccount().getAccountName())
+                .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .link(pocket.getLink())
                 .startDate(pocket.getStartDate())
                 .endDate(pocket.getEndDate())
@@ -371,9 +316,9 @@ public class PocketService {
                 .id(pocket.getId())
                 .name(pocket.getName())
                 .accountId(pocket.getAccount().getId())
-                .accountName(pocket.getAccount().getName())
-                .totalAmount(pocket.getTotalAmount().getAmount())
-                .savedAmount(pocket.getSavedAmount().getAmount())
+                .accountName(pocket.getAccount().getAccountName())
+                .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .link(pocket.getLink())
                 .startDate(pocket.getStartDate())
                 .endDate(pocket.getEndDate())
@@ -390,9 +335,8 @@ public class PocketService {
         return PocketStatusResponse.builder()
                 .id(pocket.getId())
                 .name(pocket.getName())
-                .type(pocket.getType().getType())  // currentType이 type으로 변경됨
-                .savedAmount(pocket.getSavedAmount().getAmount())
-                // previousType과 updatedAt 필드는 제거됨
+                .type(pocket.getType().getType())
+                .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .build();
     }
 
@@ -411,8 +355,8 @@ public class PocketService {
      * Pocket 엔티티를 PocketGatherResponse DTO로 변환 (이전 금액 정보 필요)
      */
     private PocketGatherResponse mapToPocketGatherResponse(Pocket pocket, Long previousAmount, Long addedAmount) {
-        Long currentAmount = pocket.getSavedAmount().getAmount();
-        Long totalAmount = pocket.getTotalAmount().getAmount();
+        Long currentAmount = pocket.getSavedAmount().getAmountAsLong();
+        Long totalAmount = pocket.getTotalAmount().getAmountAsLong();
         Double progressPercentage = totalAmount > 0 ? (double) currentAmount / totalAmount * 100 : 0;
         
         return PocketGatherResponse.builder()

@@ -1,6 +1,7 @@
 package com.barcode.honeykeep.pocket.dto;
 
 import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.common.vo.Money;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,8 @@ public record PocketModifyRequest(
     LocalDateTime startDate,
     LocalDateTime endDate,
     Account account,
+    Category category,
     Money totalAmount,
-    Money savedAmount
+    Money savedAmount,
+    Boolean isFavorite
 ) {}
