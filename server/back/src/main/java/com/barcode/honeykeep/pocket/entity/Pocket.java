@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.List;
 @Table(name = "pockets")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("is_deleted = false")
 public class Pocket extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

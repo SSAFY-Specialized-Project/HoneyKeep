@@ -4,11 +4,13 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.common.entity.BaseEntity;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.transaction.type.TransactionType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +18,7 @@ import java.time.LocalDateTime;
 @Table(name = "transactions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Transaction extends BaseEntity {
+public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,13 +43,17 @@ public class Transaction extends BaseEntity {
 
     private LocalDateTime date;
 
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
+
     @Builder
-    protected Transaction(Account account, Pocket pocket, String name, Money amount, Money balance, LocalDateTime date) {
+    protected Transaction(Account account, Pocket pocket, String name, Money amount, Money balance, LocalDateTime date, TransactionType type) {
         this.account = account;
         this.pocket = pocket;
         this.name = name;
         this.amount = amount;
         this.balance = balance;
         this.date = date;
+        this.type = type;
     }
 }
