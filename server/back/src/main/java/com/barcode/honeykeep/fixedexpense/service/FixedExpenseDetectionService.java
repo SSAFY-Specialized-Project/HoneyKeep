@@ -130,32 +130,32 @@ public class FixedExpenseDetectionService {
         // 같은 가맹점(거래처)에서 반복적으로 발생하는 거래 패턴 분석
         Map<String, Long> merchantCounts = transactions.stream()
                 .collect(Collectors.groupingBy(Transaction::getName, Collectors.counting()));
-        
+
         // 가장 빈도가 높은 가맹점 찾기
         Optional<Long> maxCount = merchantCounts.values()
                 .stream()
                 .max(Long::compareTo);
 
         if (maxCount.isEmpty() || transactions.isEmpty()) return 0.0;
-        
+
         // 가맹점 일치 점수 = 최다 발생 가맹점 거래 수 / 전체 거래 수
         return (double) maxCount.get() / transactions.size() * 0.3;
     }
-    
+
     private double calculateAmountScore(List<Transaction> transactions) {
         // 거래 금액의 일관성 분석
         if (transactions.isEmpty()) return 0.0;
-        
+
         // 모든 거래 금액 추출
         List<BigDecimal> amounts = transactions.stream()
                 .map(t -> t.getAmount().getAmount())
                 .toList();
-        
+
         // 평균 금액 계산
         BigDecimal avgAmount = amounts.stream()
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(BigDecimal.valueOf(amounts.size()), 2, RoundingMode.HALF_UP);
-        
+
         // 표준편차 계산
         double variance = amounts.stream()
                 .map(amount -> amount.subtract(avgAmount).pow(2))
@@ -163,51 +163,51 @@ public class FixedExpenseDetectionService {
                 .divide(BigDecimal.valueOf(amounts.size()), 2, RoundingMode.HALF_UP)
                 .doubleValue();
         double stdDev = Math.sqrt(variance);
-        
+
         // 변동계수(CV) = 표준편차 / 평균
         double cv = stdDev / avgAmount.doubleValue();
-        
+
         // 금액 일관성 점수 (CV가 낮을수록 일관성이 높음)
         return Math.max(0, (1 - Math.min(cv, 1))) * 0.2;
     }
-    
+
     private double calculateDateScore(List<Transaction> transactions) {
         // 거래 날짜의 일관성 분석
         if (transactions.size() < 2) return 0.0;
-        
+
         // 거래일자 추출 및 정렬
         List<LocalDate> dates = transactions.stream()
                 .map(t -> t.getDate().toLocalDate())
                 .sorted()
                 .collect(Collectors.toList());
-        
+
         // 각 거래일의 일(day) 추출
         List<Integer> days = dates.stream()
                 .map(LocalDate::getDayOfMonth)
                 .collect(Collectors.toList());
-        
+
         // 일(day)별 발생 빈도 계산
         Map<Integer, Long> dayFrequency = days.stream()
                 .collect(Collectors.groupingBy(d -> d, Collectors.counting()));
-        
+
         // 가장 빈도가 높은 날짜(일) 찾기
         Optional<Long> maxFreq = dayFrequency.values().stream().max(Long::compareTo);
         if (maxFreq.isEmpty()) return 0.0;
-        
+
         // 날짜 일관성 점수 = 최다 발생 일자의 거래 수 / 전체 거래 수
         return (double) maxFreq.get() / transactions.size() * 0.2;
     }
-    
+
     private double calculatePersistenceScore(List<Transaction> transactions) {
         // 거래의 지속성 분석
         if (transactions.isEmpty()) return 0.0;
-        
+
         // 첫 거래와 마지막 거래 사이의 개월 수 계산
         LocalDate firstDate = transactions.stream()
                 .map(t -> t.getDate().toLocalDate())
                 .min(LocalDate::compareTo)
                 .orElse(LocalDate.now());
-        
+
         LocalDate lastDate = transactions.stream()
                 .map(t -> t.getDate().toLocalDate())
                 .max(LocalDate::compareTo)
@@ -226,7 +226,7 @@ public class FixedExpenseDetectionService {
                 .map(t -> YearMonth.from(t.getDate().toLocalDate()))
                 .distinct()
                 .count();
-        
+
         // 지속성 점수 = 실제 발생 횟수 / 예상 발생 횟수
         return Math.min(1.0, (double) actualOccurrences / expectedOccurrences) * 0.3;
     }

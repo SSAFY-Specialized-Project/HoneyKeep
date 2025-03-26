@@ -3,6 +3,7 @@ package com.barcode.honeykeep.account.controller;
 import com.barcode.honeykeep.account.dto.AccountDetailResponse;
 import com.barcode.honeykeep.account.dto.AccountResponse;
 import com.barcode.honeykeep.account.service.AccountService;
+import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,16 +26,16 @@ public class AccountController {
 
     //나의 계좌 목록 조회
     @GetMapping("/")
-    public ResponseEntity<List<AccountResponse>> getMyAccounts(@AuthenticationPrincipal UserId userId) {
+    public ResponseEntity<ApiResponse<List<AccountResponse>>> getMyAccounts(@AuthenticationPrincipal UserId userId) {
         List<AccountResponse> accountResponseList = accountService.getAccountsByUserId(userId.value());
-        return ResponseEntity.ok(accountResponseList);
+        return ResponseEntity.ok().body(ApiResponse.success(accountResponseList));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AccountDetailResponse> getAccountDetails(@PathVariable("id") Long id,
+    public ResponseEntity<ApiResponse<AccountDetailResponse>> getAccountDetails(@PathVariable("id") Long id,
                                                           @AuthenticationPrincipal UserId userId) {
         AccountDetailResponse accountDetailResponse = accountService.getAccountDetailById(id, userId.value());
-        return ResponseEntity.ok(accountDetailResponse);
+        return ResponseEntity.ok().body(ApiResponse.success(accountDetailResponse));
     }
 
 
