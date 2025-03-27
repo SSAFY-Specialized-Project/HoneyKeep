@@ -1,6 +1,7 @@
 package com.barcode.honeykeep.mydataConnect.dto;
 
-public record BankAuthRequest(
-        String bankCode,
+public record BankAuthForMydataResponse(
+        String transactionUniqueNo,
         String accountNo
 ) {}
+

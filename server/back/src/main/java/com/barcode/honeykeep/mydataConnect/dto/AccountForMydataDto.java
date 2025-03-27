@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
-public record AccountDto(
+public record AccountForMydataDto(
         String bankCode,
         String bankName,
         String userName,
@@ -25,8 +25,8 @@ public record AccountDto(
 ) {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    public static AccountDto from(Map<String, Object> rec) {
-        return new AccountDto(
+    public static AccountForMydataDto from(Map<String, Object> rec) {
+        return new AccountForMydataDto(
                 (String) rec.get("bankCode"),
                 (String) rec.get("bankName"),
                 (String) rec.get("userName"),

@@ -1,5 +1,8 @@
 package com.barcode.honeykeep.mydataConnect.service;
 
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.entity.Bank;
+import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
 import com.barcode.honeykeep.auth.repository.AuthRepository;
@@ -8,13 +11,10 @@ import com.barcode.honeykeep.common.external.BankApiClient;
 import com.barcode.honeykeep.common.external.dto.ConnectableBankDto;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.mydataConnect.dto.*;
-import com.barcode.honeykeep.mydataConnect.entity.Account;
-import com.barcode.honeykeep.mydataConnect.entity.Bank;
 import com.barcode.honeykeep.mydataConnect.entity.LinkedInstitution;
 import com.barcode.honeykeep.mydataConnect.entity.UserBankToken;
 import com.barcode.honeykeep.mydataConnect.exception.MydataErrorCode;
-import com.barcode.honeykeep.mydataConnect.repository.AccountRepository;
-import com.barcode.honeykeep.mydataConnect.repository.BankRepository;
+import com.barcode.honeykeep.mydataConnect.repository.BankForMydataRepository;
 import com.barcode.honeykeep.mydataConnect.repository.LinkedInstitutionRepository;
 import com.barcode.honeykeep.mydataConnect.repository.UserBankTokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,11 +41,12 @@ public class MydataConnectService {
     private final LinkedInstitutionRepository linkedInstitutionRepository;
     private final UserBankTokenRepository userBankTokenRepository;
     private final AuthRepository authRepository;
-    private final BankRepository bankRepository;
-    private final AccountRepository accountRepository;
+    private final BankForMydataRepository bankForMydataRepository;
+    private final AccountRepository accountForMydataRepository;
 
-    public List<BankListResponse> getBankListWithStatus(Long userId) {
+    public List<BankListForMydataResponse> getBankListWithStatus(Long userId) {
         List<ConnectableBankDto> banks = bankApiClient.getBankCodes();
+        System.out.println("--------------------------------" + banks.size());
 
         Set<String> linkedCodes = linkedInstitutionRepository.findByUserId(userId).stream()
                 .map(LinkedInstitution::getBankCode)
@@ -56,12 +57,12 @@ public class MydataConnectService {
                 .toList();
     }
 
-    private Function<ConnectableBankDto, BankListResponse> toBankListResponse(Set<String> linkedCodes) {
+    private Function<ConnectableBankDto, BankListForMydataResponse> toBankListResponse(Set<String> linkedCodes) {
         return bank -> mapToBankListResponse(bank, linkedCodes);
     }
 
-    private BankListResponse mapToBankListResponse(ConnectableBankDto bank, Set<String> linkedCodes) {
-        return BankListResponse.builder()
+    private BankListForMydataResponse mapToBankListResponse(ConnectableBankDto bank, Set<String> linkedCodes) {
+        return BankListForMydataResponse.builder()
                 .bankCode(bank.bankCode())
                 .bankName(bank.bankName())
                 .isLinked(linkedCodes.contains(bank.bankCode()))
@@ -85,22 +86,22 @@ public class MydataConnectService {
     }
 
     // todo : userKey를 db 말고 @AuthenticationPrincipal에서 받아오도록 변경
-    public List<AccountResponse> getAccounts(Long userId, String accessToken) {
+    public List<AccountForMydataResponse> getAccounts(Long userId, String accessToken) {
         UserBankToken token = userBankTokenRepository.findByUserIdAndAccessToken(userId, accessToken)
                 .orElseThrow(() -> new CustomException(MydataErrorCode.TOKEN_NOT_FOUND));
 
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
-        List<AccountDto> allAccounts = bankApiClient.getAccounts(user.getUserKey());
+        List<AccountForMydataDto> allAccounts = bankApiClient.getAccounts(user.getUserKey());
         return allAccounts.stream()
                 .filter(a -> a.bankCode().equals(token.getBankCode()))
                 .map(this::mapToAccountResponse)
                 .toList();
     }
 
-    private AccountResponse mapToAccountResponse(AccountDto dto) {
-        return AccountResponse.builder()
+    private AccountForMydataResponse mapToAccountResponse(AccountForMydataDto dto) {
+        return AccountForMydataResponse.builder()
                 .accountNumber(dto.accountNo())
                 .bankName(dto.bankName())
                 .balance(Long.parseLong(dto.accountBalance()))
@@ -108,7 +109,7 @@ public class MydataConnectService {
     }
 
     @Transactional
-    public BankAuthResponse requestAccountAuth(Long userId, String accountNo) {
+    public BankAuthForMydataResponse requestAccountAuth(Long userId, String accountNo) {
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
@@ -116,7 +117,7 @@ public class MydataConnectService {
     }
 
     @Transactional
-    public void verifyAccountAuth(Long userId, AccountVerifyRequest request) {
+    public void verifyAccountAuth(Long userId, AccountVerifyForMydataRequest request) {
         // 인증번호 검증
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
@@ -130,14 +131,14 @@ public class MydataConnectService {
         }
 
         // 계좌 단건 조회
-        AccountDto dto = bankApiClient.getAccount(user.getUserKey(), request.accountNo());
-        Bank bank = bankRepository.findById(dto.bankCode())
+        AccountForMydataDto dto = bankApiClient.getAccount(user.getUserKey(), request.accountNo());
+        Bank bankForMydata = bankForMydataRepository.findById(dto.bankCode())
                 .orElseThrow(() -> new CustomException(MydataErrorCode.BANK_NOT_FOUND));
 
         // 연동한 계좌 저장
-        Account account = Account.builder()
+        Account accountForMydata = Account.builder()
                 .user(user)
-                .bank(bank)
+                .bank(bankForMydata)
                 .accountName(dto.accountName())
                 .accountNumber(dto.accountNo())
                 .accountExpiryDate(LocalDate.parse(dto.accountExpiryDate(),
@@ -148,8 +149,37 @@ public class MydataConnectService {
                 .lastTransactionDate(parseNullableDate(dto.lastTransactionDate()))
                 .build();
 
-        accountRepository.save(account);
+        accountForMydataRepository.save(accountForMydata);
     }
+
+    @Transactional(readOnly = true)
+    public TransactionHistoryResponse inquireTransactionHistory(Long userId, TransactionHistoryRequest request) {
+        // 유저 조회
+        User user = authRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
+
+        // 외부 API 호출 (BankApiClient)
+        Map<String, Object> rec = bankApiClient.getTransactionHistory(
+                user.getUserKey(),
+                request.accountNo(),
+                request.transactionUniqueNo()
+        );
+
+        // 응답 매핑
+        return new TransactionHistoryResponse(
+                (String) rec.get("transactionUniqueNo"),
+                (String) rec.get("transactionDate"),
+                (String) rec.get("transactionTime"),
+                (String) rec.get("transactionType"),
+                (String) rec.get("transactionTypeName"),
+                (String) rec.get("transactionAccountNo"),
+                (String) rec.get("transactionBalance"),
+                (String) rec.get("transactionAfterBalance"),
+                (String) rec.get("transactionSummary"),
+                (String) rec.get("transactionMemo")
+        );
+    }
+
 
     private LocalDate parseNullableDate(String dateStr) {
         if (dateStr == null || dateStr.isBlank()) return null;

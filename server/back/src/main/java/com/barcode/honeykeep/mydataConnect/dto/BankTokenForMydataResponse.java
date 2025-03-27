@@ -1,6 +1,6 @@
 package com.barcode.honeykeep.mydataConnect.dto;
 
-public record BankTokenResponse(
+public record BankTokenForMydataResponse(
         String accessToken,
         String tokenType,
         int expiresIn,

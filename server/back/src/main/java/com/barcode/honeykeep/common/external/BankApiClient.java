@@ -2,23 +2,24 @@ package com.barcode.honeykeep.common.external;
 
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.external.dto.ConnectableBankDto;
-import com.barcode.honeykeep.common.vo.Money;
-import com.barcode.honeykeep.mydataConnect.dto.AccountDto;
-import com.barcode.honeykeep.mydataConnect.dto.AccountListResponse;
-import com.barcode.honeykeep.mydataConnect.dto.BankAuthResponse;
+import com.barcode.honeykeep.mydataConnect.dto.AccountForMydataDto;
+import com.barcode.honeykeep.mydataConnect.dto.AccountListForMydataResponse;
+import com.barcode.honeykeep.mydataConnect.dto.BankAuthForMydataResponse;
 import com.barcode.honeykeep.mydataConnect.exception.MydataErrorCode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -35,9 +36,6 @@ public class BankApiClient {
     @Value("${external.bank.api-key}")
     private String apiKey;
 
-    private static final String BANK_LIST_URI = "/edu/bank/inquireBankCodes";
-    private static final String ACCOUNT_LIST_URI = "/edu/account/inquireAccountList";
-
     public List<ConnectableBankDto> getBankCodes() {
         Map<String, Object> header = createHeader(
                 "inquireBankCodes",
@@ -46,33 +44,47 @@ public class BankApiClient {
         );
 
         return externalBankWebClient.post()
-                .uri(BANK_LIST_URI)
+                .uri("/edu/bank/inquireBankCodes")
                 .bodyValue(wrapHeader(header))
-                .retrieve()
-                .bodyToFlux(ConnectableBankDto.class)
-                .collectList()
+                .exchangeToMono(response ->
+                        response.bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                                .map(this::extractBankListFromResponse)
+                )
                 .block();
     }
 
-    public List<AccountDto> getAccounts(String userKey) {
+    // 응답 JSON에서 REC 추출 후 DTO 리스트로 변환
+    private List<ConnectableBankDto> extractBankListFromResponse(Map<String, Object> map) {
+        List<?> rawList = (List<?>) map.get("REC");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new ParameterNamesModule());
+
+        return rawList.stream()
+                .map(item -> objectMapper.convertValue(item, ConnectableBankDto.class))
+                .collect(Collectors.toList());
+    }
+
+
+    public List<AccountForMydataDto> getAccounts(String userKey) {
         Map<String, Object> header = createHeader(
                 "inquireDemandDepositAccountList",
                 "inquireDemandDepositAccountList",
                 userKey
         );
 
-        AccountListResponse response = externalBankWebClient.post()
-                .uri(ACCOUNT_LIST_URI)
+        AccountListForMydataResponse response = externalBankWebClient.post()
+                .uri("/edu/demandDeposit/inquireDemandDepositAccountList")
                 .bodyValue(wrapHeader(header))
                 .retrieve()
-                .bodyToMono(AccountListResponse.class)
+                .bodyToMono(AccountListForMydataResponse.class)
                 .block();
 
         return response != null ? response.REC() : Collections.emptyList();
 
     }
 
-    public BankAuthResponse requestAccountAuth(String userKey, String accountNo) {
+    public BankAuthForMydataResponse requestAccountAuth(String userKey, String accountNo) {
         Map<String, Object> header = createHeader(
                 "openAccountAuth", "openAccountAuth", userKey
         );
@@ -83,7 +95,7 @@ public class BankApiClient {
         body.put("authText", "SSAFY");
 
         Map<String, Object> response = externalBankWebClient.post()
-                .uri("/edu/account/openAccountAuth")
+                .uri("/edu/accountAuth/openAccountAuth")
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
@@ -94,7 +106,7 @@ public class BankApiClient {
         }
 
         Map<String, Object> rec = (Map<String, Object>) response.get("REC");
-        return new BankAuthResponse(
+        return new BankAuthForMydataResponse(
                 rec.get("transactionUniqueNo").toString(),
                 rec.get("accountNo").toString()
         );
@@ -138,16 +150,18 @@ public class BankApiClient {
         );
 
         Map<String, Object> response = externalBankWebClient.post()
-                .uri("/edu/account/checkAuthCode")
+                .uri("/edu/accountAuth/checkAuthCode")
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .block();
 
+        System.out.println("----------------" + getHeaderValue(response, "responseCode"));
+
         return (Map<String, Object>) response.get("REC");
     }
 
-    public AccountDto getAccount(String userKey, String accountNo) {
+    public AccountForMydataDto getAccount(String userKey, String accountNo) {
         Map<String, Object> header = createHeader(
                 "inquireDemandDepositAccount",
                 "inquireDemandDepositAccount",
@@ -160,7 +174,7 @@ public class BankApiClient {
         );
 
         Map<String, Object> response = externalBankWebClient.post()
-                .uri("/edu/account/inquireAccount")
+                .uri("/edu/demandDeposit/inquireDemandDepositAccount")
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
@@ -172,7 +186,7 @@ public class BankApiClient {
 
         Map<String, Object> rec = (Map<String, Object>) response.get("REC");
 
-        return new AccountDto(
+        return new AccountForMydataDto(
                 (String) rec.get("bankCode"),
                 (String) rec.get("bankName"),
                 (String) rec.get("userName"),
@@ -190,6 +204,34 @@ public class BankApiClient {
         );
 
     }
+
+    public Map<String, Object> getTransactionHistory(String userKey, String accountNo, String transactionUniqueNo) {
+        Map<String, Object> header = createHeader(
+                "inquireTransactionHistory",
+                "inquireTransactionHistory",
+                userKey
+        );
+
+        Map<String, Object> body = Map.of(
+                "Header", header,
+                "accountNo", accountNo,
+                "transactionUniqueNo", transactionUniqueNo
+        );
+
+        Map<String, Object> response = externalBankWebClient.post()
+                .uri("/edu/demandDeposit/inquireTransactionHistory")
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .block();
+
+        if (response == null || !"H0000".equals(getHeaderValue(response, "responseCode"))) {
+            throw new CustomException(MydataErrorCode.TRANSACTION_FETCH_FAILED);
+        }
+
+        return (Map<String, Object>) response.get("REC");
+    }
+
 
     // 응답 헤더에서 값 가져오기
     private String getHeaderValue(Map<String, Object> response, String key) {

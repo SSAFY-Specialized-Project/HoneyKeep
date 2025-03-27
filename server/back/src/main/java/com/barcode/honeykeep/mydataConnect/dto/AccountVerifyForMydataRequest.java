@@ -1,6 +1,6 @@
 package com.barcode.honeykeep.mydataConnect.dto;
 
-public record AccountVerifyRequest(
+public record AccountVerifyForMydataRequest(
         String accountNo,
         String authCode
 ) {}

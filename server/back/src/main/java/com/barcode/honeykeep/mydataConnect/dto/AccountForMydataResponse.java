@@ -2,11 +2,11 @@ package com.barcode.honeykeep.mydataConnect.dto;
 
 import lombok.Builder;
 
-public record AccountResponse(
+public record AccountForMydataResponse(
         String accountNumber,
         String bankName,
         long balance
 ) {
     @Builder
-    public AccountResponse {}
+    public AccountForMydataResponse {}
 }
