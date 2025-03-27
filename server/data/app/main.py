@@ -1,13 +1,12 @@
 from fastapi import FastAPI
 import uvicorn
-import config
+from app.config import Config
+from app.routes import chatbot
 
-Config = config.get_config()
 app = FastAPI()
 
-@app.get("/")
-async def main():
-    return {}
+# 챗봇 라우터를 "/chatbot" 경로로 등록
+app.include_router(chatbot.router, prefix="/chatbot")
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host=Config.HOST, port=Config.PORT, reload=True)
+    uvicorn.run("app.main:app", host=Config.HOST, port=Config.PORT, reload=True)
