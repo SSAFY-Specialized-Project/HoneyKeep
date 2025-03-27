@@ -103,4 +103,12 @@ public class Money {
             return false;
         }
     }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public Long getAmountAsLong() {
+        return amount.longValue();
+    }
 }

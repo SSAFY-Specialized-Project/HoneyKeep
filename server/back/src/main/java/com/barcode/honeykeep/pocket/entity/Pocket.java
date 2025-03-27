@@ -47,10 +47,6 @@ public class Pocket extends BaseEntity {
     @AttributeOverride(name = "amount", column = @Column(name = "saved_amount"))
     private Money savedAmount;
 
-    @Embedded
-    @AttributeOverride(name = "amount", column = @Column(name = "used_amount"))
-    private Money usedAmount;
-
     private String link;
 
     private LocalDateTime startDate;
@@ -61,23 +57,64 @@ public class Pocket extends BaseEntity {
 
     private PocketType type;
 
+    private String imgUrl;
+
     @OneToMany(mappedBy = "pocket")
     private List<Transaction> transactions = new ArrayList<>();
 
     @Builder
-    protected Pocket(Account account, Category category, String name, String productName, Money totalAmount, Money savedAmount, Money usedAmount, String link, LocalDateTime startDate, LocalDateTime endDate, Boolean isFavorite, PocketType type) {
+    protected Pocket(Account account, Category category, String name, String productName,
+                     Money totalAmount, Money savedAmount, String link, LocalDateTime startDate,
+                     LocalDateTime endDate, Boolean isFavorite, PocketType type, String imgUrl) {
         this.account = account;
         this.category = category;
         this.name = name;
         this.productName = productName;
         this.totalAmount = totalAmount;
         this.savedAmount = savedAmount;
-        this.usedAmount = usedAmount;
         this.link = link;
         this.startDate = startDate;
         this.endDate = endDate;
         this.isFavorite = isFavorite;
         this.type = type;
+        this.imgUrl = imgUrl;
         this.transactions = new ArrayList<>();
+    }
+
+    /**
+     * 포켓 논리적 삭제
+     * @param reason 삭제 이유
+     */
+    @Override
+    public void delete(String reason) {
+        // 부모 클래스(BaseEntity)의 delete 메소드 호출
+        super.delete(reason);
+    }
+
+    public void setFavorite(Boolean isFavorite) {
+        this.isFavorite = isFavorite;
+    }
+
+    public void updateSavedAmount(Money newAmount) {
+        this.savedAmount = newAmount;
+    }
+
+    /**
+     * 포켓 정보 일괄 업데이트
+     */
+    public void update(Account account, Category category, String name, String productName,
+                       Money totalAmount, Money savedAmount, String link, LocalDateTime startDate,
+                       LocalDateTime endDate, Boolean isFavorite, String imgUrl) {
+        if (account != null) this.account = account;
+        if (category != null) this.category = category;
+        if (name != null) this.name = name;
+        if (productName != null) this.productName = productName;
+        if (totalAmount != null) this.totalAmount = totalAmount;
+        if (savedAmount != null) this.savedAmount = savedAmount;
+        if (link != null) this.link = link;
+        if (startDate != null) this.startDate = startDate;
+        if (endDate != null) this.endDate = endDate;
+        if (isFavorite != null) this.isFavorite = isFavorite;
+        if (imgUrl != null) this.imgUrl = imgUrl;
     }
 }
