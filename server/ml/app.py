@@ -1,18 +1,11 @@
 from flask import Flask, request, jsonify
 import pandas as pd
 import numpy as np
-import pickle
-import os
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from fixed_expense_detector import FixedExpenseDetector, get_model, save_model, MODEL_TRAINED, train
 
 app = Flask(__name__)
 
-MODEL_PATH = 'model/fixed_expense_model.pkl'
-MODEL_TRAINED = os.path.exists(MODEL_PATH)
-
-# app.py 최상단에 설정 추가
+# 모델 파라미터 설정
 DEFAULT_MODEL_PARAMS = {
     'n_estimators': 100, 
     'random_state': 42,
@@ -23,11 +16,9 @@ DEFAULT_MODEL_PARAMS = {
 # 모델 로드 또는 새로 생성
 def get_model():
     global MODEL_TRAINED
-    if os.path.exists(MODEL_PATH):
-        with open(MODEL_PATH, 'rb') as f:
-            MODEL_TRAINED = True
-            return pickle.load(f)
-    MODEL_TRAINED = False
+    if MODEL_TRAINED:
+        return get_model()
+    MODEL_TRAINED = True
     return RandomForestClassifier(**DEFAULT_MODEL_PARAMS)
 
 # 모델 저장
@@ -40,6 +31,25 @@ def save_model(model):
 @app.route('/health')
 def health():
     return "OK"
+
+# 고정지출 감지 엔드포인트
+@app.route('/detect-fixed-expenses', methods=['POST'])
+def detect_fixed_expenses():
+    try:
+        data = request.json
+        if 'transactions' not in data:
+            return jsonify({'error': '트랜잭션 데이터가 없습니다'}), 400
+
+        transactions = pd.DataFrame(data['transactions'])
+
+        detector = FixedExpenseDetector()
+        candidates = detector.detect(transactions)
+
+        return jsonify({
+            'candidates': candidates
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # 예측 API
 @app.route('/predict', methods=['POST'])
@@ -91,71 +101,11 @@ def predict():
 
 # 학습 API
 @app.route('/train', methods=['POST'])
-def train():
+def train_api():
     try:
         data = request.json
-        df = pd.DataFrame(data['transactions'])
-        
-        # 데이터 형식 검증
-        required_columns = ['amountScore', 'dateScore', 'persistenceScore', 
-                          'transactionCount', 'avgInterval', 'isFixedExpense']
-        
-        if not all(col in df.columns for col in required_columns):
-            return jsonify({
-                'error': '필수 열이 누락되었습니다',
-                'required': required_columns,
-                'provided': list(df.columns)
-            }), 400
-        
-        # 데이터 준비
-        X = df[['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 'avgInterval']]
-        y = df['isFixedExpense'].astype(bool)
-        
-        # 데이터가 충분한지 확인
-        if len(df) < 10:
-            return jsonify({
-                'status': 'insufficient_data',
-                'message': '학습을 위한 데이터가 충분하지 않습니다.',
-                'samples': len(df)
-            })
-        
-        # 모델 로드 또는 새로 생성
-        model = get_model()
-        
-        # 데이터 분할 비율 조정
-        test_size = 0.1 if len(df) < 50 else 0.2
-        
-        # 테스트 데이터 분리 (데이터가 충분한 경우)
-        if len(df) >= 20:
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=test_size, random_state=42
-            )
-            
-            # 모델 학습
-            model.fit(X_train, y_train)
-            
-            # 모델 평가
-            accuracy = model.score(X_test, y_test)
-            y_pred = model.predict(X_test)
-            report = classification_report(y_test, y_pred, output_dict=True)
-        else:
-            # 데이터가 적으면 전체 데이터로 학습
-            model.fit(X, y)
-            accuracy = None
-            report = None
-        
-        # 모델 저장
-        save_model(model)
-        
-        # 특성 중요도 계산
-        feature_importance = dict(zip(X.columns, model.feature_importances_))
-        
-        return jsonify({
-            'status': 'success', 
-            'accuracy': accuracy,
-            'feature_importance': feature_importance,
-            'training_samples': len(df)
-        })
+        result = train(data)
+        return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

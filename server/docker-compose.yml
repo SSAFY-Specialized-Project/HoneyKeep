@@ -121,7 +121,6 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./ml:/app
       - ./ml/model:/app/model
     networks:
       - my-network
