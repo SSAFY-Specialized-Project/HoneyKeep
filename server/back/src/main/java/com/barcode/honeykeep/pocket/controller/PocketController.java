@@ -44,7 +44,7 @@ public class PocketController {
      * @return
      */
     @Transactional
-    @PutMapping("/{pocketId}/add")
+    @PatchMapping("/{pocketId}/add")
     public ResponseEntity<ApiResponse<PocketGatherResponse>> gatherPocket(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long pocketId,
@@ -134,11 +134,12 @@ public class PocketController {
      */
     @Transactional
     @DeleteMapping("/{pocketId}")
-    public ResponseEntity<Void> deletePocket(
+    public ResponseEntity<ApiResponse<Void>> deletePocket(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long pocketId) {
         pocketService.deletePocket(userId.value(), pocketId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("포켓이 성공적으로 삭제되었습니다.", null));
     }
 
     /**

@@ -32,25 +32,33 @@ public class PocketService {
      */
     @Transactional
     public PocketCreateResponse createPocket(Long userId, PocketCreateRequest request) {
-
         // 계좌 조회 - AccountService 활용
         Account account = accountService.getAccountById(request.account().getId());
+
+        // 카테고리 조회 - 필드가 있는 경우에만
+        Category category = null;
+        if (request.categoryId() != null) {
+            category = categoryService.getCategoryById(request.categoryId());
+        }
 
         // 포켓 생성
         Pocket pocket = Pocket.builder()
                 .account(account)
-                .name(account.getAccountName()) // 계좌명을 기본 이름으로 설정
+                .category(category)
+                .name(request.name())
+                .productName(request.productName())
                 .totalAmount(request.totalAmount())
                 .savedAmount(request.savedAmount() != null ? request.savedAmount() : Money.zero())
                 .link(request.link())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .isFavorite(false)
-                .type(PocketType.GATHERING) // 초기 상태는 항상 GATHERING(모으는 중)
+                .type(PocketType.GATHERING)
+                .imgUrl(request.imgUrl())
                 .build();
-        
+
         Pocket savedPocket = pocketRepository.save(pocket);
-        
+
         return mapToPocketCreateResponse(savedPocket);
     }
 
@@ -161,7 +169,8 @@ public class PocketService {
             request.link(),
             request.startDate(),
             request.endDate(),
-            request.isFavorite()
+            request.isFavorite(),
+                request.imgUrl()
         );
         
         // 변경된 객체 저장
@@ -263,6 +272,7 @@ public class PocketService {
                 .totalAmount(pocket.getTotalAmount().getAmountAsLong())
                 .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .link(pocket.getLink())
+                .imgUrl(pocket.getImgUrl())
                 .startDate(pocket.getStartDate())
                 .endDate(pocket.getEndDate())
                 .isFavorite(pocket.getIsFavorite())
@@ -284,6 +294,7 @@ public class PocketService {
                 .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .type(pocket.getType().getType())
                 .isFavorite(pocket.getIsFavorite())
+                .imgUrl(pocket.getImgUrl())
                 .endDate(pocket.getEndDate())
                 .build();
     }
@@ -297,9 +308,12 @@ public class PocketService {
                 .name(pocket.getName())
                 .accountId(pocket.getAccount().getId())
                 .accountName(pocket.getAccount().getAccountName())
+                .categoryId(pocket.getCategory().getId())
+                .categoryName(pocket.getCategory().getName())
                 .totalAmount(pocket.getTotalAmount().getAmountAsLong())
                 .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .link(pocket.getLink())
+                .imgUrl(pocket.getImgUrl())
                 .startDate(pocket.getStartDate())
                 .endDate(pocket.getEndDate())
                 .isFavorite(pocket.getIsFavorite())

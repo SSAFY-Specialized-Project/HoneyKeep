@@ -98,4 +98,9 @@ public interface PocketRepository extends JpaRepository<Pocket, Long> {
      * 특정 기간 내에 종료하는 포켓 조회
      */
     List<Pocket> findByAccountUserIdAndEndDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
+     * 특정 카테고리에 해당하는 모든 포켓 조회
+     */
+    List<Pocket> findByAccountUserIdAndCategory_IdAndIsDeletedFalse(Long userId, Long categoryId);
 }

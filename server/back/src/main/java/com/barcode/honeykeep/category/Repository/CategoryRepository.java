@@ -1,6 +1,7 @@
 package com.barcode.honeykeep.category.repository;
 
 import com.barcode.honeykeep.category.entity.Category;
+import com.barcode.honeykeep.pocket.entity.Pocket;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

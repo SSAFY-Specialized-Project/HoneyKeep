@@ -16,6 +16,7 @@ public record PocketDetailResponse(
     Long totalAmount,
     Long savedAmount,
     String link,
+    String imgUrl,
     LocalDateTime startDate,
     LocalDateTime endDate,
     Boolean isFavorite,

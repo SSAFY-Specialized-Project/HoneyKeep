@@ -7,6 +7,7 @@ import com.barcode.honeykeep.category.dto.CategoryUpdateResponse;
 import com.barcode.honeykeep.category.service.CategoryService;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
+import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,20 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<List<CategoryCreateResponse>>> getAllCategories(@AuthenticationPrincipal UserId userId) {
         return ResponseEntity.ok()
                 .body(ApiResponse.success(categoryService.getAllCategories(userId.value())));
+    }
+
+    /**
+     * 카테고리별 포켓 목록 조회
+     * @param userId 인증된 사용자
+     * @param categoryId 카테고리 ID
+     * @return 포켓 목록
+     */
+    @GetMapping("/{categoryId}/pockets")
+    public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> getPocketsByCategory(
+            @AuthenticationPrincipal UserId userId,
+            @PathVariable Long categoryId) {
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(categoryService.getPocketsByCategory(userId.value(), categoryId)));
     }
 
     /**
@@ -79,7 +94,7 @@ public class CategoryController {
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long categoryId) {
         categoryService.deleteCategory(userId.value(), categoryId);
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("카테고리가 성공적으로 삭제되었습니다.", null));
     }
 }

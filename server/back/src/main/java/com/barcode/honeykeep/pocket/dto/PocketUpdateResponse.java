@@ -13,6 +13,7 @@ public record PocketUpdateResponse(
     Long totalAmount, 
     Long savedAmount,
     String link,
+    String imgUrl,
     LocalDateTime startDate,
     LocalDateTime endDate,
     Boolean isFavorite,

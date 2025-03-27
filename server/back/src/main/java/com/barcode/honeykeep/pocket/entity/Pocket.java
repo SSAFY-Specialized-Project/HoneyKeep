@@ -57,11 +57,15 @@ public class Pocket extends BaseEntity {
 
     private PocketType type;
 
+    private String imgUrl;
+
     @OneToMany(mappedBy = "pocket")
     private List<Transaction> transactions = new ArrayList<>();
 
     @Builder
-    protected Pocket(Account account, Category category, String name, String productName, Money totalAmount, Money savedAmount, String link, LocalDateTime startDate, LocalDateTime endDate, Boolean isFavorite, PocketType type) {
+    protected Pocket(Account account, Category category, String name, String productName,
+                     Money totalAmount, Money savedAmount, String link, LocalDateTime startDate,
+                     LocalDateTime endDate, Boolean isFavorite, PocketType type, String imgUrl) {
         this.account = account;
         this.category = category;
         this.name = name;
@@ -73,6 +77,7 @@ public class Pocket extends BaseEntity {
         this.endDate = endDate;
         this.isFavorite = isFavorite;
         this.type = type;
+        this.imgUrl = imgUrl;
         this.transactions = new ArrayList<>();
     }
 
@@ -102,7 +107,9 @@ public class Pocket extends BaseEntity {
     /**
      * 포켓 정보 일괄 업데이트
      */
-    public void update(Account account, Category category, String name, String productName, Money totalAmount, Money savedAmount, String link, LocalDateTime startDate, LocalDateTime endDate, Boolean isFavorite) {
+    public void update(Account account, Category category, String name, String productName,
+                       Money totalAmount, Money savedAmount, String link, LocalDateTime startDate,
+                       LocalDateTime endDate, Boolean isFavorite, String imgUrl) {
         if (account != null) this.account = account;
         if (category != null) this.category = category;
         if (name != null) this.name = name;
@@ -113,5 +120,6 @@ public class Pocket extends BaseEntity {
         if (startDate != null) this.startDate = startDate;
         if (endDate != null) this.endDate = endDate;
         if (isFavorite != null) this.isFavorite = isFavorite;
+        if (imgUrl != null) this.imgUrl = imgUrl;
     }
 }

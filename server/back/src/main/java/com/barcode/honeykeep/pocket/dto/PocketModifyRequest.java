@@ -16,5 +16,6 @@ public record PocketModifyRequest(
     Category category,
     Money totalAmount,
     Money savedAmount,
-    Boolean isFavorite
+    Boolean isFavorite,
+    String imgUrl
 ) {}
