@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,16 +33,14 @@ public class PocketService {
      */
     @Transactional
     public PocketCreateResponse createPocket(Long userId, PocketCreateRequest request) {
-        // 계좌 조회 - AccountService 활용
-        Account account = accountService.getAccountById(request.account().getId());
 
-        // 카테고리 조회 - 필드가 있는 경우에만
+        Account account = accountService.getAccountById(request.account().getId());
         Category category = null;
+
         if (request.categoryId() != null) {
             category = categoryService.getCategoryById(request.categoryId());
         }
 
-        // 포켓 생성
         Pocket pocket = Pocket.builder()
                 .account(account)
                 .category(category)
@@ -68,10 +67,10 @@ public class PocketService {
     @Transactional
     public PocketGatherResponse gatherPocket(Long userId, Long pocketId, PocketGatherRequest request) {
         Pocket pocket = getPocketById(pocketId);
-        
+
         // 계좌 소유자 확인 - 보안상 추가
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
-        
+
         // 이전 금액 저장
         Long previousAmount = pocket.getSavedAmount().getAmountAsLong();
         Long addedAmount = request.savedAmount().getAmountAsLong();
@@ -90,7 +89,6 @@ public class PocketService {
      */
     public List<PocketSummaryResponse> getAllPockets(Long userId) {
         List<Pocket> pockets = pocketRepository.findByAccountUserId(userId);
-        
         return pockets.stream()
                 .map(this::mapToPocketSummaryResponse)
                 .collect(Collectors.toList());
@@ -101,7 +99,6 @@ public class PocketService {
      */
     public List<PocketSummaryResponse> searchPockets(Long userId, String name) {
         List<Pocket> pockets = pocketRepository.findByAccountUserIdAndNameContaining(userId, name);
-        
         return pockets.stream()
                 .map(this::mapToPocketSummaryResponse)
                 .collect(Collectors.toList());
@@ -114,7 +111,6 @@ public class PocketService {
         Pocket pocket = getPocketById(pocketId);
         // 계좌 소유자 확인 - 보안상 추가
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
-        
         return mapToPocketDetailResponse(pocket);
     }
 
@@ -126,8 +122,7 @@ public class PocketService {
         Pocket pocket = getPocketById(pocketId);
         // 계좌 소유자 확인 - 보안상 추가
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
-        
-        // 즐겨찾기 상태 설정 (Builder 패턴 대신 메서드 호출)
+
         pocket.setFavorite(request.isFavorite());
         
         pocketRepository.save(pocket);
@@ -157,8 +152,7 @@ public class PocketService {
         if (request.category() != null) {
             category = categoryService.getCategoryById(request.category().getId());
         }
-        
-        // 포켓 정보 업데이트
+
         pocket.update(
             account,
             category,
@@ -172,8 +166,7 @@ public class PocketService {
             request.isFavorite(),
                 request.imgUrl()
         );
-        
-        // 변경된 객체 저장
+
         pocketRepository.save(pocket);
         
         return mapToPocketUpdateResponse(pocket);
@@ -185,75 +178,56 @@ public class PocketService {
     @Transactional
     public void deletePocket(Long userId, Long pocketId) {
         Pocket pocket = getPocketById(pocketId);
-        // 계좌 소유자 확인 - 보안상 추가
         accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
-        
-        // 물리적 삭제 대신 논리적 삭제 사용
         pocket.delete("사용자에 의한 삭제");
     }
 
     /**
-     * 포켓 사용하기 (상태 변경: GATHERING → USING)
+     * 포켓 필터링 조회 (날짜 범위 포함)
      */
-    @Transactional
-    public PocketStatusResponse usePocket(Long userId, Long pocketId) {
-        Pocket pocket = getPocketById(pocketId);
-        // 계좌 소유자 확인
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
-        
-        String previousType = pocket.getType().getType();
-        
-        // Builder 대신 메서드 호출
-        pocket.changeType(PocketType.USING);
-        
-        pocketRepository.save(pocket);
-        
-        return mapToPocketStatusResponse(pocket, previousType);
-    }
+    public List<PocketSummaryResponse> getFilteredPockets(Long userId, PocketFilterRequest filterRequest) {
+        // 기본 필터 적용 (카테고리, 타입, 즐겨찾기)
+        List<Pocket> pockets = pocketRepository.findPocketsByBasicFilters(
+                userId,
+                filterRequest.categoryId(),
+                filterRequest.type(),
+                filterRequest.isFavorite()
+        );
 
-   /**
-     * 포켓 사용완료 처리 (상태 변경: USING → COMPLETED)
-     */
-    @Transactional
-    public PocketStatusResponse completePocket(Long userId, Long pocketId) {
-        Pocket pocket = getPocketById(pocketId);
-        // 계좌 소유자 확인 - 보안상 추가
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
-        
-        String previousType = pocket.getType().getType();
-        
-        // Builder 대신 메서드 호출
-        pocket.changeType(PocketType.COMPLETED);
-        
-        pocketRepository.save(pocket);
-        
-        return mapToPocketStatusResponse(pocket, previousType);
-    }
+        // 날짜 필터 적용 (Java 코드에서 처리)
+        List<Pocket> filteredPockets = pockets;
 
-    /**
-     * 포켓 사용완료 취소 (상태 변경: COMPLETED → USING)
-     */
-    @Transactional
-    public PocketStatusResponse revertCompletionPocket(Long userId, Long pocketId) {
-        Pocket pocket = getPocketById(pocketId);
-        // 계좌 소유자 확인 - 보안상 추가
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
-        
-        String previousType = pocket.getType().getType();
-        
-        // Builder 대신 메서드 호출
-        pocket.changeType(PocketType.USING);
-        
-        pocketRepository.save(pocket);
-        
-        return mapToPocketStatusResponse(pocket, previousType);
+        // 두 날짜가 모두 제공된 경우에만 필터링
+        if (filterRequest.startDate() != null && filterRequest.endDate() != null) {
+            filteredPockets = pockets.stream()
+                    .filter(pocket -> {
+                        // 두 날짜 범위가 겹치는지 확인
+                        LocalDateTime pocketStart = pocket.getStartDate();
+                        LocalDateTime pocketEnd = pocket.getEndDate();
+
+                        // null 체크
+                        if (pocketStart == null || pocketEnd == null) {
+                            return true; // 날짜가 없는 포켓은 포함
+                        }
+
+                        // 날짜 범위 겹침 확인
+                        return !filterRequest.endDate().isBefore(pocketStart) &&
+                                !filterRequest.startDate().isAfter(pocketEnd);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // DTO로 변환
+        return filteredPockets.stream()
+                .map(this::mapToPocketSummaryResponse)
+                .collect(Collectors.toList());
     }
     
     /**
      * ID로 포켓 조회하는 헬퍼 메서드
      */
     private Pocket getPocketById(Long pocketId) {
-        return pocketRepository.findByIdAndIsDeletedFalse(pocketId)
+        return pocketRepository.findById(pocketId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 포켓을 찾을 수 없습니다: " + pocketId));
     }
     
@@ -339,18 +313,6 @@ public class PocketService {
                 .isFavorite(pocket.getIsFavorite())
                 .type(pocket.getType().getType())
                 .updatedAt(pocket.getUpdatedAt())
-                .build();
-    }
-
-    /**
-     * Pocket 엔티티를 PocketStatusResponse DTO로 변환 (이전 상태 정보 필요)
-     */
-    private PocketStatusResponse mapToPocketStatusResponse(Pocket pocket, String previousType) {
-        return PocketStatusResponse.builder()
-                .id(pocket.getId())
-                .name(pocket.getName())
-                .type(pocket.getType().getType())
-                .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .build();
     }
 

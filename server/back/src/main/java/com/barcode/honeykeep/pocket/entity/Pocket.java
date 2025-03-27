@@ -91,11 +91,6 @@ public class Pocket extends BaseEntity {
         super.delete(reason);
     }
 
-    // Pocket 엔티티에 추가
-    public void changeType(PocketType newType) {
-        this.type = newType;
-    }
-
     public void setFavorite(Boolean isFavorite) {
         this.isFavorite = isFavorite;
     }

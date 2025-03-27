@@ -47,10 +47,7 @@ public class Category extends BaseEntity {
      */
     @Override
     public void delete(String reason) {
-        // 부모 클래스의 delete 메소드 호출
         super.delete(reason);
-        
-        // 연관된 모든 포켓도 삭제 처리
         if (this.pockets != null) {
             for (Pocket pocket : this.pockets) {
                 if (!pocket.getIsDeleted()) {
