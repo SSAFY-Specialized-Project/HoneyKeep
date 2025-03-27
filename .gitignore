@@ -21,8 +21,12 @@
 /server/back/.env
 /server/back/.env.*
 /server/back/.vscode
+/server/.idea/*
 !/back/.env.example
 
 /.idea
 /.vscode
-/.env
+/server/.env
+
+**/venv/
+__pycache__/

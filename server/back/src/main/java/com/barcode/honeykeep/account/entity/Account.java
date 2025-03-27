@@ -3,6 +3,7 @@ package com.barcode.honeykeep.account.entity;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.common.entity.BaseEntity;
 import com.barcode.honeykeep.common.vo.Money;
+import com.barcode.honeykeep.fixedexpense.entity.FixedExpense;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.entity.Transaction;
 import jakarta.persistence.*;
@@ -10,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import java.util.List;
 @Table(name = "accounts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("is_deleted = false")
 public class Account extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,6 +61,9 @@ public class Account extends BaseEntity {
     @OneToMany(mappedBy = "account")
     List<Transaction> transactions = new ArrayList<>();
 
+    @OneToMany(mappedBy = "account")
+    List<FixedExpense> fixedExpenses = new ArrayList<>();
+
     @Builder
     protected Account(User user, Bank bank, String accountName, String accountNumber, LocalDate accountExpiryDate, Money accountBalance, Money dailyTransferLimit, Money oneTimeTransferLimit, LocalDate lastTransactionDate) {
         this.user = user;
@@ -71,5 +77,6 @@ public class Account extends BaseEntity {
         this.lastTransactionDate = lastTransactionDate;
         this.pockets = new ArrayList<>();
         this.transactions = new ArrayList<>();
+        this.fixedExpenses = new ArrayList<>();
     }
 }

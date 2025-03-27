@@ -22,7 +22,7 @@ public class RateLimitService {
     public enum ApiCategory {
         NORMAL_QUERY(30, Duration.ofMinutes(1)),
         FINANCIAL_TRANSACTION(5, Duration.ofMinutes(1)),
-        AUTHENTICATION(5, Duration.ofMinutes(1)),
+        AUTHENTICATION(3, Duration.ofSeconds(10)),
         PAYMENT(5, Duration.ofMinutes(1));
 
         private final int limit;

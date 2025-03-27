@@ -1,5 +1,8 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.exception.AccountErrorCode;
+import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
 import com.barcode.honeykeep.auth.repository.AuthRepository;
@@ -25,13 +28,14 @@ import java.util.stream.Collectors;
 public class FixedExpenseService {
     private final FixedExpenseRepository fixedExpenseRepository;
     private final AuthRepository authRepository;
+    private final AccountRepository accountRepository;
 
     public List<FixedExpenseResponse> getAllFixedExpenses(Long userId) {
-        List<FixedExpense> expenses = fixedExpenseRepository.findByUserId(userId);
+        List<FixedExpense> expenses = fixedExpenseRepository.findByUser_Id(userId);
 
         return expenses.stream()
-                .map(toFixedExpensesResponse())
-                .collect(Collectors.toList());
+                .map(this::mapFixedExpensesResponse)
+                .toList();
     }
 
     public FixedExpenseResponse getFixedExpenses(Long userId, Long id) {
@@ -47,11 +51,14 @@ public class FixedExpenseService {
 
     @Transactional
     public FixedExpenseResponse createFixedExpenses(Long userId, FixedExpenseRequest fixedExpenseRequest) {
-        // 유저 조회
         User user = authRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
+        Account account = accountRepository.findByAccountNumber(fixedExpenseRequest.accountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
         FixedExpense fixedExpense = FixedExpense.builder()
+                .account(account)
                 .user(user)
                 .name(fixedExpenseRequest.name())
                 .money(fixedExpenseRequest.money())
@@ -70,13 +77,15 @@ public class FixedExpenseService {
         FixedExpense fixedExpense = fixedExpenseRepository.findById(id)
                 .orElseThrow(() -> new CustomException(FixedExpenseErrorCode.FIXED_EXPENSE_NOT_FOUND));
 
-        // 2. 본인 고정지출인지 확인
         if (!fixedExpense.getUser().getId().equals(userId)) {
             throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
         }
 
-        // 3. 수정
+        Account account = accountRepository.findByAccountNumber(fixedExpenseRequest.accountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
         fixedExpense.update(
+                account,
                 fixedExpenseRequest.name(),
                 fixedExpenseRequest.money(),
                 fixedExpenseRequest.startDate(),
@@ -96,16 +105,18 @@ public class FixedExpenseService {
             throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
         }
 
-        fixedExpenseRepository.delete(fixedExpense);
-    }
-
-    private Function<FixedExpense, FixedExpenseResponse> toFixedExpensesResponse() {
-        return this::mapFixedExpensesResponse;
+        /**
+         * is_deleted = true로 변경
+         * 이후 더티 체킹 -> 업데이트 됨.
+         */
+        fixedExpense.delete("");
     }
 
     private FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpense) {
         return FixedExpenseResponse.builder()
                 .id(fixedExpense.getId())
+                .bankName(fixedExpense.getAccount().getBank().getName())
+                .accountName(fixedExpense.getAccount().getAccountName())
                 .name(fixedExpense.getName())
                 .money(fixedExpense.getMoney())
                 .startDate(fixedExpense.getStartDate())
