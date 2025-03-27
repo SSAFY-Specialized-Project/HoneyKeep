@@ -7,20 +7,21 @@ import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class AccountService {
 
     private final AccountRepository accountRepository;
 
-    public AccountService(AccountRepository accountRepsository) {
-        this.accountRepository = accountRepsository;
-    }
-
     //TODO: 포켓 정보 추가
+    //TODO: Exception 추가
     public List<AccountResponse> getAccountsByUserId(Long userId) {
         List<Account> accounts = accountRepository.findByUser_Id(userId);
 
@@ -32,19 +33,14 @@ public class AccountService {
                     .bankName(account.getBank().getName())
                     .build();
         }).collect(Collectors.toList());
-     }
+    }
 
-    // 계좌 상세 조회 (계좌 ID로 조회)
+    //TODO: 계좌 존재하는지 확인
+    //TODO: 계좌 소유자 검증
     public AccountDetailResponse getAccountDetailById(Long id, Long userId) {
-
-        //해당 Id의 계좌 없으면 예외 던짐
-        Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
-
-        //계좌 소유자 검증
-        if(!account.getUser().getId().equals(userId)) {
-            throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
-        }
+        // 개선: 새로 추가된 메서드 활용
+        Account account = getAccountById(id);
+        validateAccountOwner(id, userId);
 
         return AccountDetailResponse.builder()
                 .accountNumber(account.getAccountNumber())
@@ -52,6 +48,23 @@ public class AccountService {
                 .bankName(account.getBank().getName())
                 .accountName(account.getAccountName())
                 .build();
+    }
 
-     }
+    /**
+     * ID로 계좌 조회
+     */
+    public Account getAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 계좌를 찾을 수 없습니다: " + accountId));
+    }
+
+    /**
+     * 계좌 소유자 검증
+     */
+    public void validateAccountOwner(Long accountId, Long userId) {
+        Account account = getAccountById(accountId);
+        if (!account.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("계좌에 대한 권한이 없습니다.");
+        }
+    }
 }
