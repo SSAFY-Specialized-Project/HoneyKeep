@@ -26,7 +26,7 @@ public class AccountResponse {
 
 
     // 계좌에 연결된 모든 포켓들의 총 금액 (포켓의 totalAmount 합산)
-    //private BigDecimal totalPocketAmount;
+    private BigDecimal totalPocketAmount;
     // 연동된 포켓들의 개수
-    //private int pocketCount;
+    private int pocketCount;
 }

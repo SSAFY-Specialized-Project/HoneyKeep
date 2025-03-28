@@ -5,7 +5,6 @@ import lombok.Getter;
 @Getter
 public enum PocketType {
     GATHERING("GATHERING"),     // 모으는 중
-    PENDING("PENDING"),         // 대기 중
     USING("USING"),             // 사용 중
     COMPLETED("COMPLETED")      // 완료됨
     ;
