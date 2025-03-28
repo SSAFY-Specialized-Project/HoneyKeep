@@ -79,4 +79,11 @@ public class Account extends BaseEntity {
         this.transactions = new ArrayList<>();
         this.fixedExpenses = new ArrayList<>();
     }
+
+    /**
+     * 잔액을 업데이트 한다.
+     */
+    public void updateBalance(Money newBalance) {
+        this.accountBalance = newBalance;
+    }
 }

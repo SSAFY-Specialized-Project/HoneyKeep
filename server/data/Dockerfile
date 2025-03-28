@@ -9,10 +9,10 @@ COPY ../requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # (4) 애플리케이션 소스 복사 (예: app 폴더)
-COPY ../app ./app
+COPY app ./app
 
 # (5) documents.txt 복사 (필요하다면)
-COPY document/documents.txt ./
+COPY document ./document
 
 # (6) 애플리케이션 실행
 CMD ["python", "-m", "app.main"]
