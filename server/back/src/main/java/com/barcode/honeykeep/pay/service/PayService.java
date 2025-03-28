@@ -1,8 +1,10 @@
 package com.barcode.honeykeep.pay.service;
 
+import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pay.cache.QrUuid;
 import com.barcode.honeykeep.pay.dto.PayRequest;
+import com.barcode.honeykeep.pay.exception.PayErrorCode;
 import com.barcode.honeykeep.pay.repository.PayRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,19 +26,18 @@ public class PayService {
     private final PayRepository payRepository;
 
     public String createQr() {
-        // UUID 생성
+        log.info("QR 코드 생성 요청");
         String uuid = UUID.randomUUID().toString();
 
-        // qruuid 생성
         QrUuid qrUuid = QrUuid.builder()
                 .uuid(uuid)
                 .createdAt(new Date())
                 .isUsed(false)
                 .build();
 
-        // 생성된 UUID 값을 key로 Redis에 생성 시간 및 사용 여부 저장
         redisTemplate.opsForValue().set(uuid, qrUuid, TTL_SECONDS, TimeUnit.SECONDS);
-        
+
+        log.info("QR 코드 생성 완료, UUID: {}", uuid);
         return uuid;
     }
 
@@ -45,33 +46,32 @@ public class PayService {
      * 2. 유효한 QR로 결제를 했으면 Repository에서 데이터 수정
      */
     public boolean pay(UserId userId, PayRequest payRequest) {
-        // Redis에서 uuid에 저장된 값 가져오기
+        log.info("결제 요청 시작, userId: {}, QR UUID: {}", userId, payRequest.getUuid());
+
+        // Redis에서 QR UUID 조회
         Object value = redisTemplate.opsForValue().get(payRequest.getUuid());
 
-        // TTL이 만료되거나 애초에 저장하지 않았던 UUID라면 return false
-        if(value == null) {
-            return false;
+        if (value == null) {
+            log.error("유효하지 않은 QR 코드 요청: {}", payRequest.getUuid());
+            throw new CustomException(PayErrorCode.INVALID_QR);
         }
 
-        // 값이 존재하면 JSON 배열로 변환
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            // Object → QrUuid 변환
             QrUuid qrUuid = objectMapper.convertValue(value, QrUuid.class);
-
-            // isUsed 값 확인
-            boolean isUsed = qrUuid.isUsed();
-
-            // 이미 사용된 QR이면 실패
-            if (isUsed) {
-                return false;
-            } 
-            // 사용하지 않은 QR이면 결제 정상 처리
-            else {
-                return payRepository.payment(userId, payRequest);
+            if (qrUuid.isUsed()) {
+                log.error("이미 사용된 QR 코드: {}", payRequest.getUuid());
+                throw new CustomException(PayErrorCode.ALREADY_USED_QR);
             }
+            else {
+                log.info("유효한 QR 코드 확인: {}", payRequest.getUuid());
+                boolean result = payRepository.payment(userId, payRequest);
 
+                log.info("결제 처리 결과: {}", result ? "성공" : "실패");
+                return result;
+            }
         } catch (IllegalArgumentException e) {
+            log.error("QR 코드 변환 중 에러 발생: {}", e.getMessage());
             return false;
         }
     }
