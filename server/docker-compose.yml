@@ -69,7 +69,7 @@ services:
         condition: service_healthy
       mongodb:
         condition: service_healthy
-      ml-service:
+      ml-server:
         condition: service_healthy
     ports:
       - "8080:8080"
@@ -106,7 +106,7 @@ services:
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
 
-      ML_SERVICE_URL: http://ml-service:5000
+      ML_SERVER_URL: http://ml-server:5000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
@@ -116,7 +116,7 @@ services:
   ai-server:
     build:
       context: ./data
-      dockerfile: .dockerfile
+      dockerfile: Dockerfile
     container_name: ai-server
     depends_on:
       redis:
@@ -140,11 +140,11 @@ services:
       timeout: 5s
       retries: 5
 
-  ml-service:
+  ml-server:
     build:
       context: ./ml
       dockerfile: Dockerfile
-    container_name: ml-service
+    container_name: ml-server
     ports:
       - "5000:5000"
     volumes:
