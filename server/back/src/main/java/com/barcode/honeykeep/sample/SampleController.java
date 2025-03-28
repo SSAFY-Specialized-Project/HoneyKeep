@@ -1,6 +1,8 @@
 package com.barcode.honeykeep.sample;
 
 import com.barcode.honeykeep.common.vo.UserId;
+import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseResponse;
+import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseCandidate;
 import com.barcode.honeykeep.fixedexpense.service.FixedExpenseDetectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,7 +35,13 @@ public class SampleController {
     }
 
     @GetMapping("/test2")
-    public ResponseEntity<String> test2(@AuthenticationPrincipal UserId userId) {
+    public ResponseEntity<?> test2(@AuthenticationPrincipal UserId userId) {
+        List<FixedExpenseCandidate> response = service.detectMonthlyFixedExpenses();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/test3")
+    public ResponseEntity<String> test3(@AuthenticationPrincipal UserId userId) {
         service.detectMonthlyFixedExpenses();
         return ResponseEntity.ok("dd");
     }

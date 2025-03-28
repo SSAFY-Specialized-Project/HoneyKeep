@@ -3,7 +3,7 @@ import numpy as np
 from scipy.fft import fft
 import pickle
 import os
-
+import re  # 정규식 모듈 추가
 
 # 전역 변수 및 설정
 MODEL_PATH = 'model/fixed_expense_model.pkl'
@@ -19,10 +19,11 @@ def get_model():
     from sklearn.ensemble import RandomForestClassifier
     MODEL_TRAINED = False
     DEFAULT_MODEL_PARAMS = {
-        'n_estimators': 100, 
+        'n_estimators': 200,
         'random_state': 42,
-        'max_depth': None,
-        'min_samples_split': 2
+        'max_depth': 10,
+        'min_samples_split': 4,
+        'class_weight': 'balanced'
     }
     return RandomForestClassifier(**DEFAULT_MODEL_PARAMS)
 
@@ -37,35 +38,31 @@ def train(data):
     import pandas as pd
     from sklearn.model_selection import train_test_split
     
-    df = pd.DataFrame(data['transactions'])
+    # 트랜잭션 데이터를 데이터프레임으로 변환
+    df = pd.DataFrame(data['detectedFixedExpenses'])
     
-    # 데이터 준비
-    X = df[['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 'avgInterval']]
-    y = df['isFixedExpense'].astype(bool)
-    
-    # 데이터가 충분한지 확인
+    # 피드백 데이터가 부족한 경우 처리
     if len(df) < 10:
         return {'status': 'insufficient_data', 'samples': len(df)}
+    
+    # 모델 학습에 필요한 특성 선택
+    X = df[['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 'avgInterval']]
+    # 타겟 값 (고정지출 여부)
+    y = df['isFixedExpense']
     
     # 모델 로드 또는 새로 생성
     model = get_model()
     
-    # 데이터 분할 비율 조정
-    test_size = 0.1 if len(df) < 50 else 0.2
-    
-    # 테스트 데이터 분리 (데이터가 충분한 경우)
-    if len(df) >= 20:
+    # 데이터 분할 및 학습 로직 간소화
+    # 데이터가 충분히 많은 경우에만 테스트 분할
+    if len(df) >= 50:
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=42
+            X, y, test_size=0.2, random_state=42, stratify=y
         )
-        
-        # 모델 학습
         model.fit(X_train, y_train)
-        
-        # 모델 평가
         accuracy = model.score(X_test, y_test)
     else:
-        # 데이터가 적으면 전체 데이터로 학습
+        # 데이터가 적으면 전체 데이터로 학습하고 정확도는 계산하지 않음
         model.fit(X, y)
         accuracy = None
     
@@ -75,30 +72,39 @@ def train(data):
     # 특성 중요도 계산
     feature_importance = dict(zip(X.columns, model.feature_importances_))
     
+    # 학습 결과 반환
     return {
-        'status': 'success', 
+        'status': 'success',
         'accuracy': accuracy,
         'feature_importance': feature_importance,
-        'training_samples': len(df)
+        'training_samples': len(df),
+        'feedback_approved': int(df[df['status'] == 'APPROVED'].shape[0]),
+        'feedback_rejected': int(df[df['status'] == 'REJECTED'].shape[0])
     }
 
 # FixedExpenseDetector 클래스 구현
 class FixedExpenseDetector:
-    def __init__(self, amount_weight=0.25, date_weight=0.25,
-                 persistence_weight=0.4, periodicity_weight=0.1):
+    def __init__(self, amount_weight=0.15, date_weight=0.25,
+                 persistence_weight=0.4, periodicity_weight=0.2):
         self.amount_weight = amount_weight
         self.date_weight = date_weight
         self.persistence_weight = persistence_weight
         self.periodicity_weight = periodicity_weight
 
-    def detect(self, transactions_df):
+    def detect(self, transactions_df, ml_enabled_user_ids=None):
+        """
+        고정지출 감지 함수
+        
+        Args:
+            transactions_df: 거래 데이터
+            ml_enabled_user_ids: ML 모델을 적용할 수 있는 사용자 ID 목록
+        """
         # 입력 데이터 전처리
         df = self._preprocess(transactions_df)
 
         # 가맹점별 그룹화
         merchant_groups = df.groupby('merchant')
         candidates = []
-        ml_training_data = []
 
         for merchant, group in merchant_groups:
             # 최소 3회 이상 거래만 분석
@@ -109,8 +115,8 @@ class FixedExpenseDetector:
             group['month'] = group['date'].dt.to_period('M')
             monthly_counts = group.groupby('month').size()
 
-            # 월별 평균 거래 횟수가 1.34 초과면 제외
-            if len(group) / len(monthly_counts) > 1.34:
+            # 월별 평균 거래 횟수가 1.5 초과면 제외
+            if len(group) / len(monthly_counts) > 1.5:
                 continue
 
             # 각 점수 계산
@@ -125,9 +131,17 @@ class FixedExpenseDetector:
                           persistence_score * self.persistence_weight +
                           periodicity_score * self.periodicity_weight)
 
+            # 사용자 ID 추출
+            user_id = int(group['userId'].iloc[0]) if 'userId' in group.columns else None
+            
+            # 거래 ID 생성 (가맹점명 + 계좌ID 조합)
+            account_id = int(group['accountId'].iloc[0]) if 'accountId' in group.columns else 'unknown'
+            transaction_id = f"{merchant}_{account_id}"
+            
             # ML 모델 사용 가능한 경우
             ml_prediction = False
             ml_confidence = 0.0
+            use_ml_model = False
 
             # ML 모델 입력 특성
             features = {
@@ -135,30 +149,43 @@ class FixedExpenseDetector:
                 'dateScore': date_score,
                 'persistenceScore': persistence_score,
                 'transactionCount': len(group),
-                'avgInterval': self._calculate_avg_interval(group)
+                'avgInterval': self._calculate_avg_interval(group),
+                'transactionId': transaction_id,
+                'userId': user_id,
+                'accountId': account_id
             }
 
-            # ML 모델 예측 시도
+            # ML 모델 예측 시도 - 사용자별 피드백이 10개 이상인 경우에만
             try:
                 model = get_model()
-                if MODEL_TRAINED:
-                    X = pd.DataFrame([features])
+                # 해당 사용자에게 ML 모델 적용 가능 여부 확인
+                # 자바에서 전달한 ML 적용 가능 사용자 목록 사용
+                if MODEL_TRAINED and user_id and ml_enabled_user_ids and user_id in ml_enabled_user_ids:
+                    use_ml_model = True
+                    X = pd.DataFrame([{k: v for k, v in features.items() 
+                                      if k not in ['transactionId', 'userId', 'accountId', 'status']}])
                     ml_prediction = bool(model.predict(X)[0])
                     proba = model.predict_proba(X)[0]
                     ml_confidence = float(proba[1] if ml_prediction else proba[0])
                 else:
-                    ml_prediction = rule_score >= 0.7
+                    ml_prediction = rule_score >= 0.65
             except Exception as e:
                 print(f"ML 예측 오류: {e}")
-                ml_prediction = rule_score >= 0.7
-
-            # ML 학습 데이터 수집
-            training_data = dict(features)
-            training_data['isFixedExpense'] = rule_score >= 0.7
-            ml_training_data.append(training_data)
-
-            # 최종 판단 (하이브리드 접근)
-            is_fixed_expense = ml_prediction if MODEL_TRAINED else (rule_score >= 0.7)
+                ml_prediction = rule_score >= 0.65
+            
+            # 규칙 기반 점수를 0~1 사이로 정규화
+            rule_probability = min(1.0, rule_score)
+            
+            # 조합된 확률 계산
+            if use_ml_model:
+                ml_weight = 0.7  # ML 모델의 가중치
+                rule_weight = 0.3  # 규칙 기반의 가중치
+                combined_probability = (ml_confidence * ml_weight) + (rule_probability * rule_weight)
+            else:
+                combined_probability = rule_probability
+            
+            # 최종 판단
+            is_fixed_expense = combined_probability >= 0.55
 
             if is_fixed_expense:
                 # 기본 정보 계산
@@ -168,6 +195,7 @@ class FixedExpenseDetector:
 
                 candidates.append({
                     'merchant': merchant,
+                    'transactionId': transaction_id,
                     'amountScore': float(amount_score),
                     'dateScore': float(date_score),
                     'persistenceScore': float(persistence_score),
@@ -178,17 +206,12 @@ class FixedExpenseDetector:
                     'averageDay': avg_day,
                     'transactionCount': int(len(group)),
                     'latestDate': latest_date.isoformat(),
-                    'userId': int(group['userId'].iloc[0]) if 'userId' in group.columns else None,
-                    'accountId': int(group['accountId'].iloc[0]) if 'accountId' in group.columns else None
+                    'userId': user_id,
+                    'accountId': account_id,
+                    'status': 'DETECTED',
+                    'features': features,
+                    'usingMlModel': use_ml_model
                 })
-
-        # ML 모델 학습 데이터가 충분하면 학습 실행
-        if len(ml_training_data) >= 10:
-            try:
-                train_data = {'transactions': ml_training_data}
-                train(train_data)
-            except Exception as e:
-                print(f"ML 학습 오류: {e}")
 
         return candidates
 
@@ -221,7 +244,7 @@ class FixedExpenseDetector:
         for day in days:
             found = False
             for cluster_day in list(day_clusters.keys()):
-                if abs(day - cluster_day) <= 5:
+                if abs(day - cluster_day) <= 3:
                     day_clusters[cluster_day] += 1
                     found = True
                     break
@@ -277,11 +300,11 @@ class FixedExpenseDetector:
             period_days = 1 / abs(fft_freqs[max_idx])
             periodicity_strength = fft_result[max_idx] / len(df)
 
-            # 월간 주기 (25~35일)인지 확인
-            is_monthly = 25 <= period_days <= 35
+            # 월간 주기 (27~33일)인지 확인
+            is_monthly = 27 <= period_days <= 33
 
             # 월간 주기면 가산점
-            bonus = 0.2 if is_monthly else 0
+            bonus = 0.3 if is_monthly else 0
 
             return min(1.0, periodicity_strength + bonus)
         else:

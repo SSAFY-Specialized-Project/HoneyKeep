@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pandas as pd
 from typing import List, Dict, Any, Optional
-from fixed_expense_detector import FixedExpenseDetector, get_model, MODEL_TRAINED, train
+from fixed_expense_detector import FixedExpenseDetector, train
 
 app = FastAPI()
 
@@ -24,6 +24,7 @@ def health():
 # 요청 데이터 모델 정의
 class TransactionData(BaseModel):
     transactions: List[Dict[str, Any]]
+    ml_enabled_user_ids: Optional[List[int]] = None
 
 
 # 고정지출 감지 엔드포인트
@@ -32,53 +33,12 @@ def detect_fixed_expenses(data: TransactionData):
     try:
         transactions = pd.DataFrame(data.transactions)
         detector = FixedExpenseDetector()
-        candidates = detector.detect(transactions)
+        
+        # 자바 측에서 전달한 ML 적용 가능 사용자 ID 목록 사용
+        candidates = detector.detect(transactions, data.ml_enabled_user_ids)
         return {"candidates": candidates}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# 예측 요청 데이터 모델
-class PredictRequest(BaseModel):
-    amountScore: float
-    dateScore: float
-    persistenceScore: float
-    transactionCount: int
-    avgInterval: float
-
-
-# 예측 API
-@app.post('/predict')
-def predict(data: PredictRequest):
-    # 입력 데이터 형식 검증
-    required_features = ['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 'avgInterval']
-
-    # 데이터프레임 변환
-    features = pd.DataFrame([data.dict()])
-
-    # 모델 로드 및 예측
-    model = get_model()
-
-    # 모델이 학습되지 않았으면 규칙 기반 결과 반환
-    if not MODEL_TRAINED:
-        # 규칙 기반 점수 계산
-        total_score = float(data['amountScore']) + float(data['dateScore']) + float(data['persistenceScore'])
-        return {
-            'is_fixed_expense': total_score >= 0.75,
-            'score': total_score,
-            'model_status': 'not_trained'
-        }
-
-    # 학습된 모델로 예측
-    prediction = bool(model.predict(features)[0])
-    probabilities = model.predict_proba(features)[0]
-    confidence = float(probabilities[1] if prediction else probabilities[0])
-
-    return {
-        'is_fixed_expense': prediction,
-        'confidence': confidence,
-        'model_status': 'trained'
-    }
 
 
 # 학습 API
@@ -89,11 +49,16 @@ class TrainRequest(BaseModel):
 @app.post('/train')
 def train_api(data: TrainRequest):
     try:
-        result = train(data)
+        # 요청 데이터 로깅
+        expenses_count = len(data.data.get('detectedFixedExpenses', []))
+        print(f"학습 요청 데이터 수신: {expenses_count}개 트랜잭션")
+
+        # 자바에서 이미 APPROVED나 REJECTED 상태인 데이터만 보내고 있다고 가정
+        print(f"자바에서 필터링된 피드백 데이터: {expenses_count}개")
+
+        # 모델 학습 실행
+        result = train(data.data)
         return result
     except Exception as e:
+        print(f"학습 중 오류 발생: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)

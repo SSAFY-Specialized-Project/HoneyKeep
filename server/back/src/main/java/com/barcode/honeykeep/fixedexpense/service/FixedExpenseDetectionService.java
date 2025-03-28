@@ -4,15 +4,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseResponse;
+import com.barcode.honeykeep.fixedexpense.dto.TransactionSummaryDto;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +30,6 @@ import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import com.barcode.honeykeep.user.exception.UserErrorCode;
-import com.barcode.honeykeep.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,9 +47,14 @@ public class FixedExpenseDetectionService {
     private final AccountRepository accountRepository;
     private final MLFixedExpenseClient mlClient;
 
+
+
+    /**
+     * 고정지출 감지. 매월 1일
+     */
     @Scheduled(cron = "0 0 0 1 * ?")
     @Transactional
-    public void detectMonthlyFixedExpenses() {
+    public List<FixedExpenseCandidate> detectMonthlyFixedExpenses() {
         log.info("고정지출 감지 배치 작업 시작");
 
         // ML 서비스 가용성 확인
@@ -61,7 +63,7 @@ public class FixedExpenseDetectionService {
 
         if (!mlServiceAvailable) {
             log.error("ML 서비스 사용 불가로 고정지출 감지 배치 작업 중단");
-            return;
+            return null;
         }
 
         // 최근 6개월 모든 사용자의 거래내역을 들고온다.
@@ -69,17 +71,60 @@ public class FixedExpenseDetectionService {
         List<Transaction> allTransactions = transactionRepository.findByTypeAndDateAfter(TransactionType.WITHDRAWAL, sixMonthsAgo);
         if (allTransactions.isEmpty()) {
             log.info("분석할 거래내역이 없습니다");
-            return;
+            return null;
         }
 
-        // ML 서비스에 고정지출 감지 요청
-        List<FixedExpenseCandidate> candidates = mlClient.detectFixedExpenses(allTransactions);
+        // ML 적용 가능한 사용자 ID 목록 조회
+        List<Long> mlEnabledUserIds = getMlEnabledUserIds();
+        log.info("ML 모델 적용 가능 사용자 수: {}", mlEnabledUserIds.size());
+
+        // ML 서비스에 고정지출 감지 요청 (ML 적용 가능 사용자 ID 목록 포함)
+        List<FixedExpenseCandidate> candidates = mlClient.detectFixedExpenses(allTransactions, mlEnabledUserIds);
         log.info("감지된 고정지출 후보: {}개", candidates.size());
 
         // 감지된 고정지출 저장
         createDetectedFixedExpenses(candidates);
 
         log.info("고정지출 감지 배치 작업 완료");
+
+        return candidates;
+    }
+
+    /**
+     * 매일 새벽 3시에 ML 모델 학습 실행
+     * 누적된 피드백 데이터로 모델을 일괄 학습시킴
+     */
+    @Scheduled(cron = "0 0 3 * * 3")
+    public void scheduledModelTraining() {
+        log.info("ML 모델 학습 배치 작업 시작");
+        
+        // ML 서비스 가용성 확인
+        boolean mlServiceAvailable = mlClient.isServiceAvailable();
+        if (!mlServiceAvailable) {
+            log.error("ML 서비스 사용 불가로 모델 학습 작업 중단");
+            return;
+        }
+        
+        try {
+            // 피드백이 있는 고정지출 데이터 조회 (APPROVED 또는 REJECTED 상태)
+            List<DetectedFixedExpense> feedbackExpenses = detectedFixedExpenseRepository
+                    .findByStatusIn(List.of(DetectionStatus.APPROVED, DetectionStatus.REJECTED));
+            
+            log.info("학습에 사용할 피드백 데이터: {}개", feedbackExpenses.size());
+            
+            if (feedbackExpenses.isEmpty()) {
+                log.info("학습에 사용할 피드백 데이터가 없습니다");
+                return;
+            }
+            
+            // 모델 학습 요청
+            Map<String, Object> result = mlClient.trainModel(feedbackExpenses);
+            log.info("ML 모델 학습 결과: {}", result);
+        } catch (Exception e) {
+            log.error("ML 모델 학습 중 오류 발생: {}", e.getMessage(), e);
+        }
+        
+        log.info("ML 모델 학습 배치 작업 완료");
     }
 
     /**
@@ -164,7 +209,7 @@ public class FixedExpenseDetectionService {
     private BigDecimal calculateAverageAmount(FixedExpenseCandidate fec) {
         if (!fec.transactions().isEmpty()) {
             return fec.transactions().stream()
-                    .map(t -> t.getAmount().getAmount())
+                    .map(TransactionSummaryDto::amount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add)
                     .divide(BigDecimal.valueOf(fec.transactions().size()), 2, RoundingMode.HALF_UP);
         }
@@ -183,7 +228,7 @@ public class FixedExpenseDetectionService {
     private int calculateAverageDayOfMonth(FixedExpenseCandidate fec) {
         if (!fec.transactions().isEmpty()) {
             double avgDay = fec.transactions().stream()
-                    .mapToInt(t -> t.getDate().toLocalDate().getDayOfMonth())
+                    .mapToInt(t -> t.date().getDayOfMonth())
                     .average()
                     .orElse(0);
             return (int) Math.round(avgDay);
@@ -199,13 +244,34 @@ public class FixedExpenseDetectionService {
     private LocalDate getLatestTransactionDate(FixedExpenseCandidate fec) {
         if (!fec.transactions().isEmpty()) {
             return fec.transactions().stream()
-                    .map(t -> t.getDate().toLocalDate())
+                    .map(t->t.date().toLocalDate())
                     .max(LocalDate::compareTo)
                     .orElse(LocalDate.now());
         }
 
         // 데이터 없으면 현재 날짜 반환
         return LocalDate.now();
+    }
+
+        /**
+     * ML 모델 적용 가능한 사용자 ID 목록 조회
+     * 피드백(APPROVED 또는 REJECTED) 10개 이상인 사용자만 반환
+     */
+    private List<Long> getMlEnabledUserIds() {
+        // 사용자별 피드백 수 계산
+        Map<Long, Long> userFeedbackCounts = detectedFixedExpenseRepository
+                .findByStatusIn(List.of(DetectionStatus.APPROVED, DetectionStatus.REJECTED))
+                .stream()
+                .collect(Collectors.groupingBy(
+                        expense -> expense.getUser().getId(),
+                        Collectors.counting()
+                ));
+        
+        // 피드백 10개 이상인 사용자 ID 추출
+        return userFeedbackCounts.entrySet().stream()
+                .filter(entry -> entry.getValue() >= 10)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
 }

@@ -1,17 +1,22 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseCandidate;
-import com.barcode.honeykeep.transaction.entity.Transaction;
-import com.barcode.honeykeep.transaction.repository.TransactionRepository;
+import com.barcode.honeykeep.fixedexpense.dto.TransactionSummaryDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseCandidate;
+import com.barcode.honeykeep.fixedexpense.entity.DetectedFixedExpense;
+import com.barcode.honeykeep.transaction.entity.Transaction;
+import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,16 +53,20 @@ public class MLFixedExpenseClient {
     /**
      * 고정지출을 pandas 기반으로 감지하는 파이썬 기능 요청
      *
-     * @param transactions
-     * @return
+     * @param transactions 거래 내역 목록
+     * @param mlEnabledUserIds ML 모델 적용 가능한 사용자 ID 목록 (피드백 10개 이상)
+     * @return 감지된 고정지출 후보 목록
      */
-    public List<FixedExpenseCandidate> detectFixedExpenses(List<Transaction> transactions) {
+    public List<FixedExpenseCandidate> detectFixedExpenses(List<Transaction> transactions, List<Long> mlEnabledUserIds) {
         try {
             // 트랜잭션 데이터를 JSON으로 변환
             Map<String, Object> request = new HashMap<>();
             request.put("transactions", transactions.stream()
                     .map(this::convertTransactionToMap)
                     .toList());
+            
+            // ML 적용 가능한 사용자 ID 목록 추가
+            request.put("ml_enabled_user_ids", mlEnabledUserIds);
 
             return (List<FixedExpenseCandidate>) webClient.post()
                     .uri(mlServiceUrl + "/detect-fixed-expenses")
@@ -85,55 +94,32 @@ public class MLFixedExpenseClient {
     }
 
     /**
-     * ML 서비스에 고정지출 예측 요청
+     * 모델 학습을 위해 감지된 고정지출 데이터 전송 (비동기)
      *
-     * @param features
-     * @return
+     * @param detectedExpenses 감지된 고정지출 목록 (피드백 상태 포함)
+     * @return 학습 결과
      */
-    public boolean predictIsFixedExpense(Map<String, Object> features) {
+    public Map<String, Object> trainModel(List<DetectedFixedExpense> detectedExpenses) {
         try {
-            return Boolean.TRUE.equals(webClient.post()
-                    .uri(mlServiceUrl + "/predict")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(features)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .map(response -> Boolean.TRUE.equals(response.get("is_fixed_expense")))
-                    .onErrorReturn(false)
-                    .block()); // 동기식 결과 반환을 위해 필요
-        } catch (Exception e) {
-            log.error("ML 서비스 예측 오류", e);
-            // ML 서비스 실패 시 규칙 기반 결과 사용
-            double totalScore =
-                    ((Number) features.getOrDefault("amountScore", 0.0)).doubleValue() +
-                            ((Number) features.getOrDefault("dateScore", 0.0)).doubleValue() +
-                            ((Number) features.getOrDefault("persistenceScore", 0.0)).doubleValue();
-            return totalScore >= 0.75;
-        }
-    }
+            // DetectedFixedExpense를 학습 데이터 형식으로 변환
+            List<Map<String, Object>> trainingData = detectedExpenses.stream()
+                    .map(this::convertDetectedExpenseToTrainingData)
+                    .toList();
 
-    /**
-     * 모델 학습을 위해 거래 데이터 전송 (비동기)
-     *
-     * @param transactions
-     */
-    public void trainModel(List<Map<String, Object>> transactions) {
-        try {
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("transactions", transactions);
+            requestBody.put("data", Map.of("detectedFixedExpenses", trainingData));
 
-            webClient.post()
+            return webClient.post()
                     .uri(mlServiceUrl + "/train")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(Map.class)
-                    .doOnSuccess(response -> log.info("ML 모델 학습 요청 성공: {}", response))
-                    .doOnError(error -> log.error("ML 모델 학습 요청 실패", error))
-                    .onErrorComplete()
-                    .subscribe(); // 비동기 실행
+                    .onErrorReturn(Map.of("status", "error", "message", "ML service error"))
+                    .block(); // 동기식 호출
         } catch (Exception e) {
-            log.error("ML 모델 학습 요청 실패", e);
+            log.error("감지된 고정지출 데이터로 모델 학습 요청 실패", e);
+            return Map.of("status", "error", "message", e.getMessage());
         }
     }
 
@@ -169,8 +155,7 @@ public class MLFixedExpenseClient {
         Long userId = ((Number) map.get("userId")).longValue();
         Long accountId = ((Number) map.get("accountId")).longValue();
 
-        // 트랜잭션 목록은 현재 없음 - 필요하면 별도 API 호출로 가져올 수 있음
-        List<Transaction> transactions = transactionRepository.findByAccount_IdAndName(accountId, merchantName);
+        List<TransactionSummaryDto> transactions = transactionRepository.findTransactionSummariesByAccountAndName(accountId, merchantName);
 
         return new FixedExpenseCandidate(
                 userId,
@@ -182,5 +167,31 @@ public class MLFixedExpenseClient {
                 persistenceScore,
                 totalScore
         );
+    }
+
+    /**
+     * DetectedFixedExpense를 학습 데이터 형식으로 변환
+     */
+    private Map<String, Object> convertDetectedExpenseToTrainingData(DetectedFixedExpense expense) {
+        Map<String, Object> data = new HashMap<>();
+        
+        // 학습에 필요한 특성들
+        data.put("transactionId", expense.getOriginName() + "_" + expense.getAccount().getId());
+        data.put("amountScore", expense.getAmountScore());
+        data.put("dateScore", expense.getDateScore());
+        data.put("persistenceScore", expense.getPersistenceScore());
+        data.put("transactionCount", expense.getTransactionCount());
+        data.put("userId", expense.getUser().getId());
+        data.put("accountId", expense.getAccount().getId());
+        data.put("merchant", expense.getOriginName());
+        
+        // APPROVED/REJECTED 상태를 isFixedExpense로 변환
+        data.put("status", expense.getStatus().toString());
+        data.put("isFixedExpense", expense.getStatus().toString().equals("APPROVED"));
+        
+        // 평균 거래 간격은 없으므로 기본값 추가
+        data.put("avgInterval", 30.0); // 기본값으로 한 달 (30일)
+        
+        return data;
     }
 }
