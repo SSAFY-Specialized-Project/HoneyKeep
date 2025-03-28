@@ -13,4 +13,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByAccount_User_IdAndTypeAndDateAfter(Long userId, TransactionType type, LocalDateTime startDate);
 
+    // 특정 계좌의 모든 거래내역 조회 (최신순)
+    List<Transaction> findByAccountIdOrderByDateDesc(Long accountId);
+
 }
