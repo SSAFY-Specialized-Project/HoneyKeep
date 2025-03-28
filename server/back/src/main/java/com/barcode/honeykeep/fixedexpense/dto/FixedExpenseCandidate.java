@@ -9,7 +9,7 @@ public record FixedExpenseCandidate(
         Long userId,
         Long accountId,
         String merchantName,
-        List<Transaction> transactions,
+        List<TransactionSummaryDto> transactions,
         Double amountScore,
         Double dateScore,
         Double persistenceScore,
