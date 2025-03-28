@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ../app ./app
 
 # (5) documents.txt 복사 (필요하다면)
-COPY ../documents.txt ./
+COPY document/documents.txt ./
 
 # (6) 애플리케이션 실행
 CMD ["python", "-m", "app.main"]
