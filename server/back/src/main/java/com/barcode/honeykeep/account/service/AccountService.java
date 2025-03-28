@@ -2,11 +2,14 @@ package com.barcode.honeykeep.account.service;
 
 import com.barcode.honeykeep.account.dto.AccountDetailResponse;
 import com.barcode.honeykeep.account.dto.AccountResponse;
+import com.barcode.honeykeep.account.dto.TransferValidationRequest;
+import com.barcode.honeykeep.account.dto.TransferValidationResponse;
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +21,90 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Slf4j
 public class AccountService {
 
     private final AccountRepository accountRepository;
 
-    //TODO: 포켓 정보 추가
+
+    //이체 하기 전 실행 로직
+    //출금 계좌와 입금 계좌를 단순 조회하여 정보를 반환
+    public TransferValidationResponse validateTransfer(TransferValidationRequest request, Long userId) {
+
+        //출금 계좌 조회
+        Account withdrawalAccount = accountRepository.findById(request.getWithdrawAccountId())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+        //출금 계좌 소유자 검증
+        if(!withdrawalAccount.getUser().getId().equals(userId)) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
+        }
+
+        //입금 계좌 조회
+        Account depositAccount = accountRepository.findByAccountNumber(request.getDepositAccountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+        return TransferValidationResponse.builder()
+                .withdrawAccountId(withdrawalAccount.getId())
+                .withdrawAccountName(withdrawalAccount.getAccountName())
+                .withdrawAccountBalance(withdrawalAccount.getAccountBalance().getAmount())
+                .depositAccountId(depositAccount.getId())
+                .depositAccountName(depositAccount.getAccountName())
+                .depositAccountBalance(depositAccount.getAccountBalance().getAmount())
+                .depositAccountUserName(depositAccount.getUser().getName())
+                .build();
+    }
+
+    //TODO : 이체 로직 구현
+    /**
+     * 실제 계좌 이체 로직 실행
+     * - Pessimistic Lock을 사용하여 출금 계좌와 입금 계좌를 동시에 업데이트합니다.
+     * - 출금 계좌의 잔액이 충분한지 체크한 후 금액 차감 및 입금 처리를 진행합니다.
+     * - @Transactional 어노테이션을 사용하여 ACID를 보장합니다.
+     */
+//    @Transactional
+//    public TransferExecutionResponse executeTransfer(TransferExecutionRequest request, Long userId) {
+//        // 출금 계좌 잠금 조회
+//        Account withdrawAccount = transferRepository.findAccountForUpdate(request.getWithdrawAccountId())
+//                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+//
+//        // 소유자 검증
+//        if (!withdrawAccount.getUser().getId().equals(userId)) {
+//            throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
+//        }
+//
+//        // 입금 계좌 잠금 조회 (계좌번호 기준)
+//        Account depositAccount = transferRepository.findAccountForUpdateByAccountNumber(request.getDepositAccountNumber())
+//                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+//
+//        BigDecimal transferAmount = request.getTransferAmount();
+//
+//        // 잔액 부족 체크
+//        if (withdrawAccount.getAccountBalance().getAmount().compareTo(transferAmount) < 0) {
+//            throw new CustomException(AccountErrorCode.INSUFFICIENT_FUNDS);
+//        }
+//
+//        // 출금 계좌에서 금액 차감
+//        BigDecimal newWithdrawBalance = withdrawAccount.getAccountBalance().getAmount().subtract(transferAmount);
+//        withdrawAccount.updateBalance(new Money(newWithdrawBalance));
+//
+//        // 입금 계좌에 금액 추가
+//        BigDecimal newDepositBalance = depositAccount.getAccountBalance().getAmount().add(transferAmount);
+//        depositAccount.updateBalance(new Money(newDepositBalance));
+//
+//        // 추가적으로, Transaction 엔티티를 생성하여 거래내역을 저장할 수 있습니다.
+//
+//        return TransferExecutionResponse.builder()
+//                .withdrawAccountId(withdrawAccount.getId())
+//                .withdrawAccountNewBalance(newWithdrawBalance)
+//                .depositAccountId(depositAccount.getId())
+//                .depositAccountNewBalance(newDepositBalance)
+//                .message("Transfer successful")
+//                .build();
+//    }
+
+
+
     public List<AccountResponse> getAccountsByUserId(Long userId) {
         List<Account> accounts = accountRepository.findByUser_Id(userId);
 
@@ -53,6 +135,7 @@ public class AccountService {
                 .accountName(account.getAccountName())
                 .totalPocketAmount(calculateTotalPocketAmount(account))
                 .pocketCount(account.getPockets().size())
+                .transactionList(account.getTransactions())
                 .pocketList(account.getPockets())
                 .build();
     }
