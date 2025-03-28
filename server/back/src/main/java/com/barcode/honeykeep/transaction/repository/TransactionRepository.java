@@ -13,4 +13,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByTypeAndDateAfter(TransactionType type, LocalDateTime startDate);
 
+    List<Transaction> findByAccount_IdAndName(Long accountId, String name);
 }
