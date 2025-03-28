@@ -21,7 +21,7 @@ const AccountPocketInfo = ({
   pocketCount,
 }: Props) => {
   return (
-    <li className="w-full shadow-sm list-none rounded-[1.25rem]">
+    <li className="w-full shadow-custom list-none rounded-[1.25rem]">
       <Link
         to={`/accountDetail/${id}`}
         className="w-full flex flex-col gap-2.5 p-4"

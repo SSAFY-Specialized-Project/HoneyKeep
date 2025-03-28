@@ -5,3 +5,4 @@ export { default as RegisterInput } from "./RegisterInput/RegisterInput";
 export { default as Checkbox } from "./Checkbox/Checkbox";
 export { default as BankIcon } from "./BankIcon/BankIcon";
 export { default as ContentAddBox } from "./ContentAddBox/ContentAddBox";
+export { default as NavItem } from "./NavItem/NavItem";

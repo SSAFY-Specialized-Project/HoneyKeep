@@ -18,7 +18,7 @@ const AccountInfo = ({
   onClickSend,
 }: Props) => {
   return (
-    <li className="list-none w-full shadow-sm rounded-[1.25rem]">
+    <li className="list-none w-full shadow-custom rounded-[1.25rem]">
       <button
         type="button"
         onClick={onClick}

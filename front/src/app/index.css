@@ -34,4 +34,5 @@
   --text-text-md: 1rem;
   --text-text-sm: 0.875rem;
 
+  --shadow-custom: 0px 4px 20px 0px rgba(0, 0, 0, 0.06);
 }
