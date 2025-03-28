@@ -1,0 +1,1 @@
+export { default as AuthProtectedRoute } from "./AuthProtectedRoute";

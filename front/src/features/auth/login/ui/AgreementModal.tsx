@@ -85,7 +85,7 @@ const AgreementModal = ({ isOpen, setIsOpen, setPasswordOpen }: Props) => {
         </div>
         <Button
           text="동의하고 진행하기"
-          size="big"
+          // size="big"
           onClick={() => {
             setIsOpen(false);
             setPasswordOpen(true);

@@ -1,52 +1,181 @@
-import { Login } from "@/pages";
+import {
+  AccountConnect,
+  AccountDetail,
+  AccountList,
+  AccountTransfer,
+  Certification,
+  MyAgree,
+} from "@/pages/account";
+import {
+  FixedPayCreate,
+  FixedPayDetail,
+  FixedPayList,
+  FixedPayUpdate,
+} from "@/pages/fixedPay";
+import { Alarm, Chatbot, Error, Home } from "@/pages/general";
+import { Payment, QRPayment, QRSuccess } from "@/pages/payment";
+import {
+  PocketCalendar,
+  PocketCreate,
+  PocketDetail,
+  PocketList,
+} from "@/pages/pocket";
+import { Login } from "@/pages/user";
 import { Layout } from "@/shared/ui";
 import { createBrowserRouter } from "react-router";
+import AuthWrapper from "./AuthWrapper";
 
 const AppRouter = createBrowserRouter([
   {
+    // 상단 바랑 네비게이션 없는 레이아웃
     element: <Layout />,
     children: [
       {
-        path: "/",
+        // 로그인
+        path: "/login",
         element: <Login />,
+      },
+      {
+        element: <AuthWrapper />,
+        children: [
+          {
+            // 결제
+            path: "/payment",
+            element: <Payment />,
+          },
+          {
+            // QR 결제
+            path: "/qrPayment",
+            element: <QRPayment />,
+          },
+          {
+            // QR 결제 완료
+            path: "/qrSuccess",
+            element: <QRSuccess />,
+          },
+        ],
       },
     ],
   },
   {
-    // 헤더랑 네비게이션 바 있는 상태
+    // 상단 바랑 네비게이션 바 있는 레이아웃
     element: <Layout />,
     children: [
       {
-        // 홈
-        path: "/home",
-        element: <Login />,
-      },
-      {
-        // 알람 설정
-        path: "/alarm",
-        element: <Login />,
+        element: <AuthWrapper />,
+        children: [
+          {
+            // 홈
+            path: "/",
+            element: <Home />,
+          },
+          {
+            // 홈
+            path: "/home",
+            element: <Home />,
+          },
+          {
+            // 알람 설정
+            path: "/alarm",
+            element: <Alarm />,
+          },
+          {
+            // 포켓 목록
+            path: "/pocket/list",
+            element: <PocketList />,
+          },
+          {
+            // 포켓 캘린더
+            path: "/pocket/calendar",
+            element: <PocketCalendar />,
+          },
+          {
+            // 고정 지출
+            path: "/fixedPay/list",
+            element: <FixedPayList />,
+          },
+          {
+            // 고정 지출 생성
+            path: "/fixedPay/create",
+            element: <FixedPayCreate />,
+          },
+          {
+            // 고정 지출 수정
+            path: "/fixedPay/update",
+            element: <FixedPayUpdate />,
+          },
+          {
+            // 고정 지출 상세
+            path: "/fixedPay/:id",
+            element: <FixedPayDetail />,
+          },
+        ],
       },
     ],
   },
   {
-    // 뒤로가기가 있는 상태
+    // 뒤로가기만 있는 레이아웃
     element: <Layout />,
     children: [
-      // 계좌 연결 부분
       {
-        // 마이데이터 약관 동의
-        path: "/myAgree",
-        element: <Login />,
-      },
-      {
-        // 자체 인증서
-        path: "/certification",
-        element: <Login />,
-      },
-      {
-        // 연결 은행 선택
-        path: "/accountConnect",
-        element: <Login />,
+        element: <AuthWrapper />,
+        children: [
+          // 계좌 연결
+          {
+            // 마이데이터 약관 동의
+            path: "/myAgree",
+            element: <MyAgree />,
+          },
+          {
+            // 자체 인증서
+            path: "/certification",
+            element: <Certification />,
+          },
+          {
+            // 연결 은행 선택
+            path: "/accountConnect",
+            element: <AccountConnect />,
+          },
+
+          // 계좌 상세
+          {
+            // 내 게좌 목록
+            path: "/accountList",
+            element: <AccountList />,
+          },
+          {
+            // 내 계좌 상세
+            path: "/accountDetail/:account",
+            element: <AccountDetail />,
+          },
+          {
+            // 계좌 이체
+            path: "/accountTransfer/:account",
+            element: <AccountTransfer />,
+          },
+
+          // 포켓
+          {
+            // 포켓 생성
+            path: "/pocket/create",
+            element: <PocketCreate />,
+          },
+          {
+            // 포켓 상세
+            path: "/pocket/detail",
+            element: <PocketDetail />,
+          },
+
+          // 챗봇
+          {
+            path: "/chatbot",
+            element: <Chatbot />,
+          },
+          {
+            path: "*",
+            element: <Error />,
+          },
+        ],
       },
     ],
   },

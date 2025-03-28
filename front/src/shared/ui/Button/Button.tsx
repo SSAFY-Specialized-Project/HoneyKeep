@@ -1,7 +1,7 @@
 interface Props {
   text: string;
   type?: "button" | "submit";
-  size?: "big" | "normal" | "small";
+  // size?: "big" | "normal" | "small";
   disabled?: boolean;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onSubmit?: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -10,16 +10,16 @@ interface Props {
 const Button = ({
   text,
   type = "button",
-  size = "normal",
+  // size = "normal",
   disabled = true,
   onClick,
   onSubmit,
 }: Props) => {
-  const BUTTON_SIZE_STYLE = {
-    big: "py-5 text-title-md",
-    normal: "",
-    small: "",
-  };
+  // const BUTTON_SIZE_STYLE = {
+  //   big: "py-5 text-title-md",
+  //   normal: "",
+  //   small: "",
+  // };
 
   return (
     <button
