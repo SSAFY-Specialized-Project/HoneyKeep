@@ -3,6 +3,12 @@ import {
   AccountPocketInfo,
   AccountSimpleInfo,
 } from "@/entities/account/ui";
+import {
+  FixedExpenseInfo,
+  FixedExpenseTotal,
+  FixedExpenseFound,
+  FixedChoiceTab,
+} from "@/entities/fixedExpense/ui";
 import { ContentAddBox } from "@/shared/ui";
 import { BasicHeader } from "@/widgets";
 
@@ -17,6 +23,26 @@ const Home = () => {
         remainingAmount={820000}
         onClick={() => {}}
         onClickSend={() => {}}
+      />
+      <FixedExpenseTotal count={5} totalAmount={100000} />
+      <FixedChoiceTab />
+      <FixedExpenseInfo
+        title="유튜브 프리미엄"
+        paymentDate="23"
+        amount={10900}
+        monthCount={4}
+        onClick={() => {}}
+        onDelete={() => {}}
+      />
+      <FixedExpenseFound
+        title="유튜브 프리미엄"
+        paymentDate="23"
+        amount={10900}
+        monthCount={4}
+        selectedAction={null}
+        onRegister={() => {}}
+        onModify={() => {}}
+        onDelete={() => {}}
       />
       <AccountPocketInfo
         id="1"
