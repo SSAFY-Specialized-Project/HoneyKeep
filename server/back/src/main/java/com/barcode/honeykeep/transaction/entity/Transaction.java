@@ -1,7 +1,6 @@
 package com.barcode.honeykeep.transaction.entity;
 
 import com.barcode.honeykeep.account.entity.Account;
-import com.barcode.honeykeep.common.entity.BaseEntity;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.type.TransactionType;
@@ -10,7 +9,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -46,6 +44,8 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
+    private String memo;
+
     @Builder
     protected Transaction(Account account, Pocket pocket, String name, Money amount, Money balance, LocalDateTime date, TransactionType type) {
         this.account = account;
@@ -55,5 +55,9 @@ public class Transaction {
         this.balance = balance;
         this.date = date;
         this.type = type;
+    }
+
+    public void updateMemo(String memo) {
+        this.memo = memo;
     }
 }
