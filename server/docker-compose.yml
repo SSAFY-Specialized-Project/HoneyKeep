@@ -110,6 +110,33 @@ services:
       timeout: 5s
       retries: 5
 
+ai-server:
+    build:
+      context: ./data
+      dockerfile: Dockerfile
+    container_name: ai-server
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8081:8081"  # 실제 서비스 포트에 맞게 수정하세요.
+    networks:
+      - my-network
+    environment:
+      DATA_HOST=${DATA_HOST}
+      DOCUMENT_PATH=${DOCUMENT_PATH}
+      REDIS_HOST=${REDIS_HOST}
+      REDIS_PORT=${REDIS_PORT}
+      REDIS_DB=${REDIS_DB}
+      REDIS_PASSWORD=${REDIS_PASSWORD}
+      OPENAI_API_KEY=${OPENAI_API_KEY}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   my-network:
     name: my-network
