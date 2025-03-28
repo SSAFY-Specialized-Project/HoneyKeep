@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseCandidate;
 import com.barcode.honeykeep.transaction.entity.Transaction;
+import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -19,8 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class MLFixedExpenseClient {
-    
+
     private final WebClient webClient;
+    private final TransactionRepository transactionRepository;
 
     @Value("${ml.service.url:http://localhost:5000}")
     private String mlServiceUrl;
@@ -45,6 +47,7 @@ public class MLFixedExpenseClient {
 
     /**
      * 고정지출을 pandas 기반으로 감지하는 파이썬 기능 요청
+     *
      * @param transactions
      * @return
      */
@@ -61,7 +64,8 @@ public class MLFixedExpenseClient {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, List<Map<String, Object>>>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, List<Map<String, Object>>>>() {
+                    })
                     .map(response -> {
                         List<Map<String, Object>> candidates = response.get("candidates");
                         if (candidates == null) {
@@ -82,6 +86,7 @@ public class MLFixedExpenseClient {
 
     /**
      * ML 서비스에 고정지출 예측 요청
+     *
      * @param features
      * @return
      */
@@ -109,6 +114,7 @@ public class MLFixedExpenseClient {
 
     /**
      * 모델 학습을 위해 거래 데이터 전송 (비동기)
+     *
      * @param transactions
      */
     public void trainModel(List<Map<String, Object>> transactions) {
@@ -133,6 +139,7 @@ public class MLFixedExpenseClient {
 
     /**
      * Transaction 엔티티를 Map으로 변환
+     *
      * @param tx
      * @return
      */
@@ -149,6 +156,7 @@ public class MLFixedExpenseClient {
 
     /**
      * Map을 FixedExpenseCandidate로 변환
+     *
      * @param map
      * @return
      */
@@ -162,7 +170,7 @@ public class MLFixedExpenseClient {
         Long accountId = ((Number) map.get("accountId")).longValue();
 
         // 트랜잭션 목록은 현재 없음 - 필요하면 별도 API 호출로 가져올 수 있음
-        List<Transaction> transactions = new ArrayList<>();
+        List<Transaction> transactions = transactionRepository.findByAccount_IdAndName(accountId, merchantName);
 
         return new FixedExpenseCandidate(
                 userId,

@@ -6,10 +6,12 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.pocket.entity.Pocket;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +23,6 @@ public class AccountService {
     private final AccountRepository accountRepository;
 
     //TODO: 포켓 정보 추가
-    //TODO: Exception 추가
     public List<AccountResponse> getAccountsByUserId(Long userId) {
         List<Account> accounts = accountRepository.findByUser_Id(userId);
 
@@ -31,22 +32,28 @@ public class AccountService {
                     .accountBalance(account.getAccountBalance().getAmount())
                     .accountName(account.getAccountName())
                     .bankName(account.getBank().getName())
+                    .totalPocketAmount(calculateTotalPocketAmount(account))
+                    .pocketCount(account.getPockets().size())
                     .build();
         }).collect(Collectors.toList());
     }
 
-    //TODO: 계좌 존재하는지 확인
-    //TODO: 계좌 소유자 검증
+
     public AccountDetailResponse getAccountDetailById(Long id, Long userId) {
         // 개선: 새로 추가된 메서드 활용
         Account account = getAccountById(id);
-        validateAccountOwner(id, userId);
+        //소유자인지 검증
+        validateAccountOwner(account, userId);
+
 
         return AccountDetailResponse.builder()
                 .accountNumber(account.getAccountNumber())
                 .accountBalance(account.getAccountBalance().getAmount())
                 .bankName(account.getBank().getName())
                 .accountName(account.getAccountName())
+                .totalPocketAmount(calculateTotalPocketAmount(account))
+                .pocketCount(account.getPockets().size())
+                .pocketList(account.getPockets())
                 .build();
     }
 
@@ -55,16 +62,26 @@ public class AccountService {
      */
     public Account getAccountById(Long accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 계좌를 찾을 수 없습니다: " + accountId));
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
     }
 
     /**
      * 계좌 소유자 검증
      */
-    public void validateAccountOwner(Long accountId, Long userId) {
-        Account account = getAccountById(accountId);
+    public void validateAccountOwner(Account account, Long userId) {
         if (!account.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("계좌에 대한 권한이 없습니다.");
+            throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
         }
     }
+
+    //포켓들 금액 합 계산
+    private BigDecimal calculateTotalPocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            total = total.add(pocket.getSavedAmount().getAmount());
+        }
+        return total;
+    }
+
 }

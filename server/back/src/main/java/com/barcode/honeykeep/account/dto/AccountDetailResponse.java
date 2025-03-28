@@ -1,11 +1,13 @@
 package com.barcode.honeykeep.account.dto;
 
+import com.barcode.honeykeep.pocket.entity.Pocket;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Builder
 @Getter
@@ -25,7 +27,10 @@ public class AccountDetailResponse {
     private String accountName;
 
     // 계좌에 연결된 모든 포켓들의 총 금액 (포켓의 totalAmount 합산)
-    //private BigDecimal totalPocketAmount;
+    private BigDecimal totalPocketAmount;
     // 연동된 포켓들의 개수
-    //private int pocketCount;
+    private int pocketCount;
+
+    //연동된 포켓 목록
+    private List<Pocket> pocketList;
 }

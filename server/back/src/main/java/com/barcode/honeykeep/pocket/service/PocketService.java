@@ -69,7 +69,7 @@ public class PocketService {
         Pocket pocket = getPocketById(pocketId);
 
         // 계좌 소유자 확인 - 보안상 추가
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
+        accountService.validateAccountOwner(pocket.getAccount(), userId);
 
         // 이전 금액 저장
         Long previousAmount = pocket.getSavedAmount().getAmountAsLong();
@@ -110,7 +110,7 @@ public class PocketService {
     public PocketDetailResponse getPocketDetail(Long userId, Long pocketId) {
         Pocket pocket = getPocketById(pocketId);
         // 계좌 소유자 확인 - 보안상 추가
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
+        accountService.validateAccountOwner(pocket.getAccount(), userId);
         return mapToPocketDetailResponse(pocket);
     }
 
@@ -121,7 +121,7 @@ public class PocketService {
     public PocketFavoriteResponse setFavoritePocket(Long userId, Long pocketId, PocketFavoriteRequest request) {
         Pocket pocket = getPocketById(pocketId);
         // 계좌 소유자 확인 - 보안상 추가
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
+        accountService.validateAccountOwner(pocket.getAccount(), userId);
 
         pocket.setFavorite(request.isFavorite());
         
@@ -137,14 +137,14 @@ public class PocketService {
     public PocketUpdateResponse updatePocket(Long userId, Long pocketId, PocketModifyRequest request) {
         Pocket pocket = getPocketById(pocketId);
         // 계좌 소유자 확인 - 보안상 추가
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
+        accountService.validateAccountOwner(pocket.getAccount(), userId);
         
         // 계좌 변경 시 조회
         Account account = pocket.getAccount();
         if (request.account() != null) {
             account = accountService.getAccountById(request.account().getId());
             // 변경하려는 계좌도 같은 사용자 소유인지 확인
-            accountService.validateAccountOwner(account.getId(), userId);
+            accountService.validateAccountOwner(account, userId);
         }
         
         // 카테고리 변경 시 조회
@@ -178,7 +178,7 @@ public class PocketService {
     @Transactional
     public void deletePocket(Long userId, Long pocketId) {
         Pocket pocket = getPocketById(pocketId);
-        accountService.validateAccountOwner(pocket.getAccount().getId(), userId);
+        accountService.validateAccountOwner(pocket.getAccount(), userId);
         pocket.delete("사용자에 의한 삭제");
     }
 

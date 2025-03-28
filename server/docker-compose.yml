@@ -113,6 +113,33 @@ services:
       timeout: 5s
       retries: 5
 
+  ai-server:
+    build:
+      context: ./data
+      dockerfile: .dockerfile
+    container_name: ai-server
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8081:8081"  # 실제 서비스 포트에 맞게 수정하세요.
+    networks:
+      - my-network
+    environment:
+      DATA_HOST: ${DATA_HOST}
+      DOCUMENT_PATH: ${DOCUMENT_PATH}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_DB: ${REDIS_DB}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ml-service:
     build:
       context: ./ml
@@ -128,10 +155,10 @@ services:
       - PYTHONUNBUFFERED=1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s  # 시간 늘림
-      timeout: 10s   # 시간 늘림
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 20s  # 시작 지연 시간 추가
+      start_period: 20s
 
 networks:
   my-network:
