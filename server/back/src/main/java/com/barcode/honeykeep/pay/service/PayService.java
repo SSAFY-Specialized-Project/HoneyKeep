@@ -72,7 +72,7 @@ public class PayService {
             }
         } catch (IllegalArgumentException e) {
             log.error("QR 코드 변환 중 에러 발생: {}", e.getMessage());
-            return false;
+            throw new CustomException(PayErrorCode.INVALID_QR);
         }
     }
 }

@@ -8,6 +8,8 @@ import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pay.dto.PayRequest;
 import com.barcode.honeykeep.pay.exception.PayErrorCode;
 import com.barcode.honeykeep.pay.repository.PayRepository;
+import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.pocket.repository.PocketRepository;
 import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.type.TransactionType;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Transactional
 @RequiredArgsConstructor
@@ -27,13 +30,13 @@ public class PayRepositoryImpl implements PayRepository {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-//    private final PocketRepository pocketRepository;
+    private final PocketRepository pocketRepository;
 
     @Override
     public boolean payment(UserId userId, PayRequest payRequest) {
         // 1. 실제 있는 계좌인지 조회
         Account account = accountRepository.findByAccountNumberWithLock(payRequest.getAccount());
-        log.info("결제 Repository 진입, userId: {}, account: {}", userId, account);
+        log.info("결제 Repository 진입, userId: {}, account: {}", userId, payRequest.getAccount());
 
         if(account == null) {
             log.error("유효하지 않은 계좌 번호: {}", payRequest.getAccount());
@@ -45,7 +48,7 @@ public class PayRepositoryImpl implements PayRepository {
         BigDecimal payAmount = payRequest.getAmount();
 
         if(currentBalance.compareTo(payAmount) < 0) {
-            log.error("잔액 부족: 현재 잔액 = {}, 결제 요청 금액 = {}", currentBalance, payAmount);
+            log.error("계좌 잔액 부족: 현재 계좌 잔액 = {}, 결제 요청 금액 = {}", currentBalance, payAmount);
             throw new CustomException(PayErrorCode.INSUFFICIENT_BALANCE);
         }
 
@@ -54,14 +57,31 @@ public class PayRepositoryImpl implements PayRepository {
         account.updateBalance(new Money(newBalance));
         log.info("계좌 잔액 업데이트 완료, 이전 잔액 = {}, 새로운 잔액 = {}", currentBalance, newBalance);
 
+        // 4. 포켓 조회
+        Pocket pocket = pocketRepository.findById(payRequest.getPocketId()).orElse(null);
 
-        // 4. 포켓 금액 차감
-        // Pocket pocket = ;
+        if(pocket == null) {
+            log.error("유효하지 않은 포켓ID: {}", payRequest.getPocketId());
+            throw new CustomException(PayErrorCode.INVALID_POCKET);
+        }
 
-        // 5. 결제 기록 생성
+        // 5. 포켓 금액 차감
+        BigDecimal currentPocketBalance = pocket.getSavedAmount().getAmount();
+
+        // 포켓 잔액 여부
+        if(currentPocketBalance.compareTo(payAmount) < 0) {
+            log.error("포켓 잔액 부족: 현재 포켓 잔액 = {}, 결제 요청 금액 = {}", currentPocketBalance, payAmount);
+            throw new CustomException(PayErrorCode.INSUFFICIENT_BALANCE);
+        }
+
+        // 잔액 충분하면 업데이트
+        BigDecimal newPocketBalance = currentPocketBalance.subtract(payAmount);
+        pocket.updateSavedAmount(new Money(newPocketBalance));
+
+        // 6. 결제 기록 생성
         Transaction transaction = Transaction.builder()
                 .account(account)
-                // .pocket(Pocket)
+                .pocket(pocket)
                 .name(payRequest.getProductName())
                 .amount(new Money(payAmount))
                 .balance(new Money(newBalance))
@@ -74,5 +94,4 @@ public class PayRepositoryImpl implements PayRepository {
 
         return true;
     }
-
 }

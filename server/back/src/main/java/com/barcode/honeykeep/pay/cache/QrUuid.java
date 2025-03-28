@@ -1,11 +1,13 @@
 package com.barcode.honeykeep.pay.cache;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
+
 import java.util.Date;
 
-@Value
+@Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class QrUuid {
     String uuid;
     Date createdAt;
