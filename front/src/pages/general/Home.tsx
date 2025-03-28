@@ -3,14 +3,19 @@ import {
   AccountPocketInfo,
   AccountSimpleInfo,
 } from "@/entities/account/ui";
+
 import {
   FixedExpenseInfo,
   FixedExpenseTotal,
   FixedExpenseFound,
   FixedChoiceTab,
 } from "@/entities/fixedExpense/ui";
+
+import { CategoryCheck } from "@/entities/category/ui";
+
 import { ContentAddBox } from "@/shared/ui";
 import { BasicHeader } from "@/widgets";
+import { GlobalNavigation } from "@/widgets/navigation/ui";
 
 const Home = () => {
   return (
@@ -60,6 +65,14 @@ const Home = () => {
         currentAmount={1000000}
       />
       <ContentAddBox text="내 자산 추가하기" onClick={() => {}} />
+      <CategoryCheck
+        imageId="1"
+        name="생활비"
+        pocketCount={5}
+        checked={false}
+        onChange={() => {}}
+      />
+      <GlobalNavigation />
     </div>
   );
 };
