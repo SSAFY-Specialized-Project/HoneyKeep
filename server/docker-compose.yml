@@ -110,7 +110,7 @@ services:
       timeout: 5s
       retries: 5
 
-ai-server:
+  ai-server:
     build:
       context: ./data
       dockerfile: Dockerfile
@@ -123,13 +123,13 @@ ai-server:
     networks:
       - my-network
     environment:
-      DATA_HOST=${DATA_HOST}
-      DOCUMENT_PATH=${DOCUMENT_PATH}
-      REDIS_HOST=${REDIS_HOST}
-      REDIS_PORT=${REDIS_PORT}
-      REDIS_DB=${REDIS_DB}
-      REDIS_PASSWORD=${REDIS_PASSWORD}
-      OPENAI_API_KEY=${OPENAI_API_KEY}
+      DATA_HOST: ${DATA_HOST}
+      DOCUMENT_PATH: ${DOCUMENT_PATH}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_DB: ${REDIS_DB}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
