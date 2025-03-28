@@ -22,14 +22,6 @@ CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(
     "독립적인 질문:"
 )
 
-# QA 프롬프트: retrieval된 문서만 참고하여 답변 생성
-QA_PROMPT = PromptTemplate.from_template(
-    "다음 문서 내용만 참고하여 질문에 답하세요.\n\n"
-    "문서:\n{context}\n\n"
-    "질문: {question}\n\n"
-    "답변:"
-)
-
 # --- LLM 초기화 ---
 llm = ChatOpenAI(
     temperature=0,
