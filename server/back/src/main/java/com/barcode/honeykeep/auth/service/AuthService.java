@@ -3,7 +3,8 @@ package com.barcode.honeykeep.auth.service;
 import com.barcode.honeykeep.auth.dto.*;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
-import com.barcode.honeykeep.auth.repository.AuthRepository;
+import com.barcode.honeykeep.user.exception.UserErrorCode;
+import com.barcode.honeykeep.user.repository.UserRepository;
 import com.barcode.honeykeep.auth.util.JwtTokenProvider;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.service.LoggingService;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -21,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
@@ -35,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 @Transactional(readOnly = true)
 public class AuthService {
 
-    private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final WebClient webClient = WebClient.create("https://finopenapi.ssafy.io/ssafy/api/v1");
     private final PasswordEncoder passwordEncoder;
     private final EncryptionService encryptionService;
@@ -49,22 +53,17 @@ public class AuthService {
 
     /**
      * 사용자 회원가입 처리
+     *
      * @param request
      * @return
      */
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("apiKey", ssafyFinancialNetworkApiKey);
-        requestBody.put("userId", request.email());
+        User user = findUserOrRegisterAsync(request).block();
 
-        User user = webClient.post()
-                .uri("/member/")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(User.class)
-                .block();
+        if(Boolean.TRUE.equals(userRepository.existsUserByUserKey(user.getUserKey()))){
+            throw new CustomException(AuthErrorCode.USER_INFO_ALREADY_REGISTERED);
+        }
 
         String encodedPassword = passwordEncoder.encode(request.password());
         String encryptedIdNumber = encryptionService.encrypt(request.identityNumber());
@@ -79,7 +78,7 @@ public class AuthService {
                 .phoneNumber(request.phoneNumber())
                 .build();
 
-        newUser = authRepository.save(newUser);
+        newUser = userRepository.save(newUser);
 
         // 회원가입 이벤트 로깅
         loggingService.logAuthEvent(
@@ -91,11 +90,36 @@ public class AuthService {
         return RegisterResponse.toDto(newUser);
     }
 
+    private Mono<User> findUserOrRegisterAsync(RegisterRequest request) {
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("apiKey", ssafyFinancialNetworkApiKey);
+        requestBody.put("userId", request.email());
+
+        return webClient.post()
+                .uri("/member/search/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(User.class)
+                .onErrorResume(WebClientResponseException.class, e -> {
+                    if (e.getStatusCode().is4xxClientError() &&
+                            e.getResponseBodyAsString().contains("E4003")) {
+                        return webClient.post()
+                                .uri("/member/")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(requestBody)
+                                .retrieve()
+                                .bodyToMono(User.class);
+                    }
+                    return Mono.error(e);
+                });
+    }
+
     /**
      * 사용자 로그인 처리
      */
     public TokenResponse authenticateUser(LoginRequest request) {
-        User user = authRepository.findByEmail(request.email())
+        User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> {
                     // 로그인 실패 - 사용자 없음 로깅
                     loggingService.logAuth(
@@ -251,7 +275,7 @@ public class AuthService {
      * @return
      */
     public boolean validatePassword(Long userId, String password) {
-        User user = authRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         boolean isValid = passwordEncoder.matches(password, user.getPassword());
@@ -279,7 +303,7 @@ public class AuthService {
      */
     public boolean validateUser(String name, String identityNumber, String phoneNumber, String email) {
         // 1. 먼저 이메일로 사용자 검색
-        Optional<User> emailUserOptional = authRepository.findByEmail(email);
+        Optional<User> emailUserOptional = userRepository.findByEmail(email);
 
         if (emailUserOptional.isPresent()) {
             User emailUser = emailUserOptional.get();
@@ -306,7 +330,7 @@ public class AuthService {
 
         // 2. 이메일은 없지만 이름/주민번호/전화번호 조합으로 사용자 검색
         String encryptedIdNumber = encryptionService.encrypt(identityNumber);
-        Optional<User> userInfoOptional = authRepository.findByNameAndIdentityNumberAndPhoneNumber(
+        Optional<User> userInfoOptional = userRepository.findByNameAndIdentityNumberAndPhoneNumber(
                 name, encryptedIdNumber, phoneNumber);
 
         if (userInfoOptional.isPresent()) {

@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.dto.TransactionSummaryDto;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,7 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
-import com.barcode.honeykeep.auth.repository.AuthRepository;
+import com.barcode.honeykeep.user.repository.UserRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseCandidate;
@@ -43,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FixedExpenseDetectionService {
     private final TransactionRepository transactionRepository;
     private final DetectedFixedExpenseRepository detectedFixedExpenseRepository;
-    private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final MLFixedExpenseClient mlClient;
 
@@ -144,7 +143,7 @@ public class FixedExpenseDetectionService {
                                 fec.merchantName()
                         );
 
-                User user = authRepository.findById(fec.userId())
+                User user = userRepository.findById(fec.userId())
                         .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
                 Account account = accountRepository.findById(fec.accountId())

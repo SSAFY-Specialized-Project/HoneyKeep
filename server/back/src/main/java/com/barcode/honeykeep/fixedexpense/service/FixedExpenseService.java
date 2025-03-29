@@ -5,7 +5,7 @@ import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
-import com.barcode.honeykeep.auth.repository.AuthRepository;
+import com.barcode.honeykeep.user.repository.UserRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseRequest;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseResponse;
@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,7 +25,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class FixedExpenseService {
     private final FixedExpenseRepository fixedExpenseRepository;
-    private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final AccountRepository accountRepository;
 
     public List<FixedExpenseResponse> getAllFixedExpenses(Long userId) {
@@ -51,7 +49,7 @@ public class FixedExpenseService {
 
     @Transactional
     public FixedExpenseResponse createFixedExpenses(Long userId, FixedExpenseRequest fixedExpenseRequest) {
-        User user = authRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         Account account = accountRepository.findByAccountNumber(fixedExpenseRequest.accountNumber())
