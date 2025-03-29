@@ -63,6 +63,7 @@ public class DetectedFixedExpenseService {
         detectedFixedExpense.update(
                 account,
                 request.name(),
+                request.name(),
                 request.averageAmount(),
                 request.averageDay()
         );

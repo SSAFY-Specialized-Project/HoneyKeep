@@ -13,7 +13,7 @@ public interface DetectedFixedExpenseRepository extends JpaRepository<DetectedFi
 
     List<DetectedFixedExpense> findByUser_IdAndStatus(Long userId, DetectionStatus status);
 
-    Optional<DetectedFixedExpense> findByUser_IdAndAccount_IdAndOriginName(Long userId, Long accountId, String merchantName);
+    Optional<DetectedFixedExpense> findByUser_IdAndAccount_IdAndName(Long userId, Long accountId, String merchantName);
 
     List<DetectedFixedExpense> findByStatusIn(List<DetectionStatus> statuses);
 }

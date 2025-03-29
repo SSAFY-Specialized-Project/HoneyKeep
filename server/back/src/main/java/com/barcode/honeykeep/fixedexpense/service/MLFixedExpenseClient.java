@@ -1,5 +1,6 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -148,12 +149,23 @@ public class MLFixedExpenseClient {
      */
     private FixedExpenseCandidate convertMapToFixedExpenseCandidate(Map<String, Object> map) {
         String merchantName = (String) map.get("merchant");
-        double amountScore = ((Number) map.get("amountScore")).doubleValue();
-        double dateScore = ((Number) map.get("dateScore")).doubleValue();
-        double persistenceScore = ((Number) map.get("persistenceScore")).doubleValue();
-        double totalScore = ((Number) map.get("totalScore")).doubleValue();
+        String originName = (String) map.get("originalMerchant");
+        Double amountScore = ((Number) map.get("amountScore")).doubleValue();
+        Double dateScore = ((Number) map.get("dateScore")).doubleValue();
+        Double persistenceScore = ((Number) map.get("persistenceScore")).doubleValue();
+        Double periodicityScore = ((Number) map.get("periodicityScore")).doubleValue();
+        Double totalScore = ((Number) map.get("totalScore")).doubleValue();
+        Double averageAmount = ((Number) map.get("averageAmount")).doubleValue();
+        Integer averageDay = ((Number) map.get("averageDay")).intValue();
         Long userId = ((Number) map.get("userId")).longValue();
         Long accountId = ((Number) map.get("accountId")).longValue();
+
+        // latestDate 처리 추가
+        String latestDateStr = (String) map.get("latestDate");
+        LocalDate latestDate = null;
+        if (latestDateStr != null) {
+            latestDate = LocalDate.parse(latestDateStr);
+        }
 
         List<TransactionSummaryDto> transactions = transactionRepository.findTransactionSummariesByAccountAndName(accountId, merchantName);
 
@@ -161,11 +173,16 @@ public class MLFixedExpenseClient {
                 userId,
                 accountId,
                 merchantName,
+                originName,
                 transactions,
                 amountScore,
                 dateScore,
                 persistenceScore,
-                totalScore
+                periodicityScore,
+                totalScore,
+                averageAmount,
+                averageDay,
+                latestDate
         );
     }
 

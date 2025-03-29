@@ -54,9 +54,10 @@ public class DetectedFixedExpense extends BaseEntity {
     private Double amountScore;
     private Double dateScore;
     private Double persistenceScore;
+    private Double periodicityScore;
 
     @Builder
-    protected DetectedFixedExpense(User user, Account account, String name, String originName, Money averageAmount, Integer averageDay, DetectionStatus status, LocalDate lastTransactionDate, Integer transactionCount, Double detectionScore, Double amountScore, Double dateScore, Double persistenceScore) {
+    protected DetectedFixedExpense(User user, Account account, String name, String originName, Money averageAmount, Integer averageDay, DetectionStatus status, LocalDate lastTransactionDate, Integer transactionCount, Double detectionScore, Double amountScore, Double dateScore, Double persistenceScore, Double periodicityScore) {
         this.user = user;
         this.account = account;
         this.name = name;
@@ -70,13 +71,11 @@ public class DetectedFixedExpense extends BaseEntity {
         this.amountScore = amountScore;
         this.dateScore = dateScore;
         this.persistenceScore = persistenceScore;
+        this.periodicityScore = periodicityScore;
     }
 
-    public void update(Account account, String name, String averageAmount, Integer averageDay) {
-        if (this.originName == null && !this.name.equals(name)) {
-            this.originName = this.name;
-        }
-
+    public void update(Account account, String name, String originName, String averageAmount, Integer averageDay) {
+        if (originName != null && !name.equals(originName)) this.originName = originName;
         if (account != null) this.account = account;
         if (name != null) this.name = name;
         if (averageAmount != null) this.averageAmount = new Money(new BigDecimal(averageAmount));
@@ -88,12 +87,14 @@ public class DetectedFixedExpense extends BaseEntity {
                                           Double detectionScore,
                                           Double amountScore,
                                           Double dateScore,
-                                          Double persistenceScore) {
+                                          Double persistenceScore,
+                                          Double periodicityScore) {
         this.lastTransactionDate = lastTransactionDate;
         this.transactionCount = transactionCount;
         this.detectionScore = detectionScore;
         this.amountScore = amountScore;
         this.dateScore = dateScore;
         this.persistenceScore = persistenceScore;
+        this.periodicityScore = periodicityScore;
     }
 }

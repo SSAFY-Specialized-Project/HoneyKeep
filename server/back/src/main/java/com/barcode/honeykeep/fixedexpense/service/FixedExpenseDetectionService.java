@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +36,11 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * DetectedFixedExpenseService 와 다르게, 이 서비스 클래스는 고정지출을 감지하는 배치 작업만을 처리함.
+ * <br/><br/>
+ *
+ * <h6>2025-03-29 고정지출 감지 1s ~ 3s</h6>
+ *
+ *
  */
 @Slf4j
 @Service
@@ -45,8 +51,6 @@ public class FixedExpenseDetectionService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final MLFixedExpenseClient mlClient;
-
-
 
     /**
      * 고정지출 감지. 매월 1일
@@ -62,7 +66,7 @@ public class FixedExpenseDetectionService {
 
         if (!mlServiceAvailable) {
             log.error("ML 서비스 사용 불가로 고정지출 감지 배치 작업 중단");
-            return null;
+            return List.of();
         }
 
         // 최근 6개월 모든 사용자의 거래내역을 들고온다.
@@ -70,7 +74,7 @@ public class FixedExpenseDetectionService {
         List<Transaction> allTransactions = transactionRepository.findByTypeAndDateAfter(TransactionType.WITHDRAWAL, sixMonthsAgo);
         if (allTransactions.isEmpty()) {
             log.info("분석할 거래내역이 없습니다");
-            return null;
+            return List.of();
         }
 
         // ML 적용 가능한 사용자 ID 목록 조회
@@ -137,7 +141,7 @@ public class FixedExpenseDetectionService {
             try {
                 // 기존 감지된 고정지출이 있는지 확인
                 Optional<DetectedFixedExpense> existingExpense = detectedFixedExpenseRepository
-                        .findByUser_IdAndAccount_IdAndOriginName(
+                        .findByUser_IdAndAccount_IdAndName(
                                 fec.userId(),
                                 fec.accountId(),
                                 fec.merchantName()
@@ -149,31 +153,24 @@ public class FixedExpenseDetectionService {
                 Account account = accountRepository.findById(fec.accountId())
                         .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
 
-                // 평균 금액 계산 (필요시 트랜잭션으로부터)
-                BigDecimal avgAmount = calculateAverageAmount(fec);
-
-                // 평균 발생일 (필요시 트랜잭션으로부터)
-                int avgDayOfMonth = calculateAverageDayOfMonth(fec);
-
-                // 최근 거래일 (필요시 트랜잭션으로부터)
-                LocalDate latestTransactionDate = getLatestTransactionDate(fec);
-
                 if (existingExpense.isPresent()) {
                     // 기존 항목 업데이트
                     DetectedFixedExpense expense = existingExpense.get();
                     expense.update(
                             account,
                             fec.merchantName(),
-                            avgAmount.toString(),
-                            avgDayOfMonth
+                            fec.originName(),
+                            fec.averageAmount().toString(),
+                            fec.averageDay()
                     );
                     expense.updateDetectionAttributes(
-                            latestTransactionDate,
+                            fec.latestDate(),
                             fec.transactions().size(),
                             fec.totalScore(),
                             fec.amountScore(),
                             fec.dateScore(),
-                            fec.persistenceScore()
+                            fec.persistenceScore(),
+                            fec.periodicityScore()
                     );
                     detectedFixedExpenseRepository.save(expense);
                 } else {
@@ -182,16 +179,17 @@ public class FixedExpenseDetectionService {
                             .user(user)
                             .account(account)
                             .name(fec.merchantName())
-                            .originName(fec.merchantName())
-                            .averageAmount(Money.of(avgAmount))
-                            .averageDay(avgDayOfMonth)
+                            .originName(fec.originName())
+                            .averageAmount(Money.of(fec.averageAmount()))
+                            .averageDay(fec.averageDay())
                             .status(DetectionStatus.DETECTED)
-                            .lastTransactionDate(latestTransactionDate)
+                            .lastTransactionDate(fec.latestDate())
                             .transactionCount(fec.transactions().size())
                             .detectionScore(fec.totalScore())
                             .amountScore(fec.amountScore())
                             .dateScore(fec.dateScore())
                             .persistenceScore(fec.persistenceScore())
+                            .periodicityScore(fec.periodicityScore())
                             .build();
 
                     detectedFixedExpenseRepository.save(newExpense);
@@ -200,56 +198,6 @@ public class FixedExpenseDetectionService {
                 log.error("고정지출 후보 처리 중 오류 발생: {}", e.getMessage(), e);
             }
         }
-    }
-
-    /**
-     * 평균 금액 계산 (transactions가 비어있을 경우 대비)
-     */
-    private BigDecimal calculateAverageAmount(FixedExpenseCandidate fec) {
-        if (!fec.transactions().isEmpty()) {
-            return fec.transactions().stream()
-                    .map(TransactionSummaryDto::amount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .divide(BigDecimal.valueOf(fec.transactions().size()), 2, RoundingMode.HALF_UP);
-        }
-
-        // ML 서비스로부터 평균 금액 정보를 받아오는 경우
-        // 현재 구현에서는 트랜잭션 목록이 비어있을 수 있음
-        // 이 경우 추가 API 호출 또는 다른 방법으로 평균 금액 계산 필요
-
-        // 임시로 0 반환
-        return BigDecimal.ZERO;
-    }
-
-    /**
-     * 평균 발생일 계산 (transactions가 비어있을 경우 대비)
-     */
-    private int calculateAverageDayOfMonth(FixedExpenseCandidate fec) {
-        if (!fec.transactions().isEmpty()) {
-            double avgDay = fec.transactions().stream()
-                    .mapToInt(t -> t.date().getDayOfMonth())
-                    .average()
-                    .orElse(0);
-            return (int) Math.round(avgDay);
-        }
-
-        // 임시로 1일 반환
-        return 1;
-    }
-
-    /**
-     * 최근 거래일 가져오기 (transactions가 비어있을 경우 대비)
-     */
-    private LocalDate getLatestTransactionDate(FixedExpenseCandidate fec) {
-        if (!fec.transactions().isEmpty()) {
-            return fec.transactions().stream()
-                    .map(t->t.date().toLocalDate())
-                    .max(LocalDate::compareTo)
-                    .orElse(LocalDate.now());
-        }
-
-        // 데이터 없으면 현재 날짜 반환
-        return LocalDate.now();
     }
 
         /**
@@ -270,7 +218,7 @@ public class FixedExpenseDetectionService {
         return userFeedbackCounts.entrySet().stream()
                 .filter(entry -> entry.getValue() >= 10)
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+                .toList();
     }
 
 }

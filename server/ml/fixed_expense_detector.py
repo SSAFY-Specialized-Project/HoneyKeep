@@ -202,15 +202,16 @@ class FixedExpenseDetector:
                     'periodicityScore': float(periodicity_score),
                     'totalScore': float(rule_score),
                     'mlConfidence': float(ml_confidence),
-                    'averageAmount': float(avg_amount),
-                    'averageDay': avg_day,
+                    'averageAmount': round(float(avg_amount), 2),
+                    'averageDay': int(avg_day),
                     'transactionCount': int(len(group)),
-                    'latestDate': latest_date.isoformat(),
+                    'latestDate': latest_date.strftime('%Y-%m-%d'),
                     'userId': user_id,
                     'accountId': account_id,
                     'status': 'DETECTED',
                     'features': features,
-                    'usingMlModel': use_ml_model
+                    'usingMlModel': use_ml_model,
+                    'originalMerchant': group['original_merchant'].iloc[0] if 'original_merchant' in group.columns else merchant
                 })
 
         return candidates
@@ -225,6 +226,106 @@ class FixedExpenseDetector:
         df = df.copy()
         if isinstance(df['date'].iloc[0], str):
             df['date'] = pd.to_datetime(df['date'])
+            
+        # 가맹점 이름 정규화 (원본 저장)
+        df['original_merchant'] = df['merchant']  # 원본 가맹점명 보존
+        
+        # 통신사 패턴
+        kt_pattern = r'^KT\d+'
+        df.loc[df['merchant'].str.match(kt_pattern, na=False), 'merchant'] = '휴대폰요금'
+        skt_pattern = r'^SK[Tt]\d+'
+        df.loc[df['merchant'].str.match(skt_pattern, na=False), 'merchant'] = '휴대폰요금'
+        lgu_pattern = r'^LG[Uu]\+?\d+'
+        df.loc[df['merchant'].str.match(lgu_pattern, na=False), 'merchant'] = '휴대폰요금'
+        
+        # 전기요금 패턴
+        electric_patterns = [r'(?i)한국전력', r'(?i)KEPCO', r'(?i)전기요금', r'\(한전\).*', r'한전',
+                          r'전기.*요금', r'.*전력공사.*']
+        for pattern in electric_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '전기요금'
+        
+        # 가스요금 패턴
+        gas_patterns = [r'(?i)도시가스', r'(?i)가스공사', r'(?i)가스요금', r'\(가스\).*', r'\(도시가스\).*',
+                     r'가스.*요금', r'.*도시가스.*', r'.*가스공사.*']
+        for pattern in gas_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '도시가스'
+            
+        # 수도요금 패턴
+        water_patterns = [r'(?i)수도요금', r'(?i)상수도', r'(?i)하수도', r'(?i)수자원공사', r'\(수도\).*', r'\(상수도\).*',
+                       r'수도.*요금', r'.*상수도.*', r'.*하수도.*', r'.*수자원.*']
+        for pattern in water_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '수도요금'
+            
+        # 건강보험 패턴
+        health_insurance_patterns = [r'(?i)국민건강보험', r'(?i)건강보험', r'(?i)건강보험공단', r'(?i)건강보험료', 
+                                  r'\(건강보험\).*', r'.*건강.*보험.*', r'.*국민건강.*', r'.*건보.*', r'(?i)건강']
+        for pattern in health_insurance_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '건강보험'
+            
+        # 보험료 패턴 - 괄호 패턴 추가
+        insurance_patterns = [r'(?i)생명보험', r'(?i)손해보험', r'(?i)화재보험', r'(?i)자동차보험', 
+                             r'(?i)삼성생명', r'(?i)한화생명', r'(?i)교보생명', r'(?i)현대해상',
+                             r'(?i)메리츠화재', r'(?i)DB손해보험', r'(?i)KB손해보험',
+                             r'\(보험\).*', r'\(생명\).*', r'\(손해\).*', r'\(화재\).*',
+                             r'.*보험료.*', r'.*보험금.*', r'.*생명.*', r'.*화재.*', 
+                             r'.*손해.*', r'.*자동차보험.*']
+        for pattern in insurance_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '보험료'
+            
+        # 통신비 추가 패턴
+        telecom_patterns = [r'(?i)통신', r'(?i)핸드폰', r'(?i)모바일', r'(?i)휴대폰', r'(?i)통신요금', 
+                         r'(?i)휴대폰요금', r'(?i)모바일요금', r'(?i)KT', r'(?i)SK[Tt]', r'(?i)LG[Uu]']
+        for pattern in telecom_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '휴대폰요금'
+            
+        # 인터넷 패턴 (별도 처리)
+        internet_patterns = [r'(?i)인터넷', r'(?i)와이파이', r'(?i)WIFI', r'(?i)broadband', r'(?i)브로드밴드']
+        for pattern in internet_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '인터넷'
+        
+        # 구독서비스 패턴
+        netflix_pattern = r'(?i)넷플릭스|netflix'
+        df.loc[df['merchant'].str.contains(netflix_pattern, regex=True, na=False), 'merchant'] = '넷플릭스'
+        
+        disney_pattern = r'(?i)디즈니\+|disney\+|디즈니플러스'
+        df.loc[df['merchant'].str.contains(disney_pattern, regex=True, na=False), 'merchant'] = '디즈니플러스'
+        
+        watcha_pattern = r'(?i)왓챠|watcha'
+        df.loc[df['merchant'].str.contains(watcha_pattern, regex=True, na=False), 'merchant'] = '왓챠'
+        
+        wavve_pattern = r'(?i)웨이브|wavve'
+        df.loc[df['merchant'].str.contains(wavve_pattern, regex=True, na=False), 'merchant'] = '웨이브'
+        
+        # 음악 서비스
+        music_patterns = [r'(?i)멜론|melon', r'(?i)지니|genie', r'(?i)스포티파이|spotify', r'(?i)유튜브뮤직|youtube music']
+        music_services = {'(?i)멜론|melon': '멜론', '(?i)지니|genie': '지니', 
+                        '(?i)스포티파이|spotify': '스포티파이', '(?i)유튜브뮤직|youtube music': '유튜브뮤직'}
+        for pattern, service in music_services.items():
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = service
+            
+        # 클라우드 서비스
+        cloud_patterns = {
+            r'(?i)icloud|아이클라우드': '애플 클라우드',
+            r'(?i)google (one|drive)|구글 (원|드라이브)': '구글 클라우드',
+            r'(?i)onedrive|원드라이브': '마이크로소프트 클라우드'
+        }
+        for pattern, service in cloud_patterns.items():
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = service
+            
+        # 관리비/임대료 패턴
+        management_patterns = [r'(?i)관리비', r'(?i)아파트', r'(?i)공동주택', r'.*관리.*', r'.*아파트.*', r'.*주택관리.*', r'.*관리사무소.*']
+        for pattern in management_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '관리비'
+            
+        rent_patterns = [r'(?i)월세', r'(?i)임대료', r'(?i)전세금', r'.*월세.*', r'.*임대.*', r'.*전세.*']
+        for pattern in rent_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '임대료'
+            
+        # 추가 공과금 패턴
+        tax_patterns = [r'(?i)지방세', r'(?i)재산세', r'(?i)소득세', r'(?i)종합소득세', r'(?i)자동차세', r'(?i)취득세',
+                      r'.*세금.*', r'.*세납부.*', r'.*지방세.*', r'.*국세.*']
+        for pattern in tax_patterns:
+            df.loc[df['merchant'].str.contains(pattern, regex=True, na=False), 'merchant'] = '세금'
 
         return df
 
