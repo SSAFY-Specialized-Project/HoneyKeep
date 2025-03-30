@@ -4,338 +4,273 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.barcode.honeykeep.account.entity.Account;
-import com.barcode.honeykeep.account.exception.AccountErrorCode;
-import com.barcode.honeykeep.account.repository.AccountRepository;
-import com.barcode.honeykeep.auth.entity.User;
-import com.barcode.honeykeep.auth.repository.AuthRepository;
-import com.barcode.honeykeep.common.exception.CustomException;
-import com.barcode.honeykeep.common.vo.Money;
-import com.barcode.honeykeep.fixedexpense.entity.DetectedFixedExpense;
-import com.barcode.honeykeep.fixedexpense.type.DetectionStatus;
-import com.barcode.honeykeep.transaction.type.TransactionType;
-import com.barcode.honeykeep.user.exception.UserErrorCode;
+import com.barcode.honeykeep.fixedexpense.dto.TransactionSummaryDto;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.exception.AccountErrorCode;
+import com.barcode.honeykeep.account.repository.AccountRepository;
+import com.barcode.honeykeep.auth.entity.User;
+import com.barcode.honeykeep.user.repository.UserRepository;
+import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseCandidate;
+import com.barcode.honeykeep.fixedexpense.entity.DetectedFixedExpense;
 import com.barcode.honeykeep.fixedexpense.repository.DetectedFixedExpenseRepository;
+import com.barcode.honeykeep.fixedexpense.type.DetectionStatus;
 import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.repository.TransactionRepository;
-import com.barcode.honeykeep.user.service.UserService;
+import com.barcode.honeykeep.transaction.type.TransactionType;
+import com.barcode.honeykeep.user.exception.UserErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * DetectedFixedExpenseService 와 다르게, 이 서비스 클래스는 고정지출을 감지하는 배치 작업만을 처리함.
- * <br/><br/>
- * <h3>2025-03-26</h3>
- * <br/>
- * 현재 점수 자체는 잘 뽑아내지만... 좀 날짜에 대한 일관성이 부족한 애들도 고정지출이라고 판단해버린다.
- * <br/>그래서 날짜에 대해 좀더 엄격한 기준이 필요한가...? 싶기도?? 아니면 총 가중치 점수 높이거나.
- * <br/>날짜 일관성은 +-2일 까지(주말 등 지연 이체 고려). 0.3, 0.3, 0.4 이렇게 가도 ㄱㅊ을 것 같다.
- * <p>
- * <br/>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FixedExpenseDetectionService {
     private final TransactionRepository transactionRepository;
     private final DetectedFixedExpenseRepository detectedFixedExpenseRepository;
-    private final UserService userService;
-    private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final AccountRepository accountRepository;
+    private final MLFixedExpenseClient mlClient;
 
-    private Map<Long, Map<Long, List<Transaction>>> userAccountTransactions;
 
+
+    /**
+     * 고정지출 감지. 매월 1일
+     */
     @Scheduled(cron = "0 0 0 1 * ?")
     @Transactional
-    public void detectMonthlyFixedExpenses() {
-        // 가져오기
-        getUserAccountTransactions();
+    public List<FixedExpenseCandidate> detectMonthlyFixedExpenses() {
+        log.info("고정지출 감지 배치 작업 시작");
 
-        // 계산
-        for (Map.Entry<Long, Map<Long, List<Transaction>>> userEntry : userAccountTransactions.entrySet()) {
-            Long userId = userEntry.getKey();
-            Map<Long, List<Transaction>> accountTransactions = userEntry.getValue();
+        // ML 서비스 가용성 확인
+        boolean mlServiceAvailable = mlClient.isServiceAvailable();
+        log.info("ML 서비스 가용성: {}", mlServiceAvailable);
 
-            for (Map.Entry<Long, List<Transaction>> accountEntry : accountTransactions.entrySet()) {
-                Long accountId = accountEntry.getKey();
-                List<Transaction> transactions = accountEntry.getValue();
+        if (!mlServiceAvailable) {
+            log.error("ML 서비스 사용 불가로 고정지출 감지 배치 작업 중단");
+            return null;
+        }
 
-                // 가맹점별로 그룹화하여 분석
-                analyzeMerchantTransactions(userId, accountId, transactions);
+        // 최근 6개월 모든 사용자의 거래내역을 들고온다.
+        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
+        List<Transaction> allTransactions = transactionRepository.findByTypeAndDateAfter(TransactionType.WITHDRAWAL, sixMonthsAgo);
+        if (allTransactions.isEmpty()) {
+            log.info("분석할 거래내역이 없습니다");
+            return null;
+        }
+
+        // ML 적용 가능한 사용자 ID 목록 조회
+        List<Long> mlEnabledUserIds = getMlEnabledUserIds();
+        log.info("ML 모델 적용 가능 사용자 수: {}", mlEnabledUserIds.size());
+
+        // ML 서비스에 고정지출 감지 요청 (ML 적용 가능 사용자 ID 목록 포함)
+        List<FixedExpenseCandidate> candidates = mlClient.detectFixedExpenses(allTransactions, mlEnabledUserIds);
+        log.info("감지된 고정지출 후보: {}개", candidates.size());
+
+        // 감지된 고정지출 저장
+        createDetectedFixedExpenses(candidates);
+
+        log.info("고정지출 감지 배치 작업 완료");
+
+        return candidates;
+    }
+
+    /**
+     * 매일 새벽 3시에 ML 모델 학습 실행
+     * 누적된 피드백 데이터로 모델을 일괄 학습시킴
+     */
+    @Scheduled(cron = "0 0 3 * * 3")
+    public void scheduledModelTraining() {
+        log.info("ML 모델 학습 배치 작업 시작");
+        
+        // ML 서비스 가용성 확인
+        boolean mlServiceAvailable = mlClient.isServiceAvailable();
+        if (!mlServiceAvailable) {
+            log.error("ML 서비스 사용 불가로 모델 학습 작업 중단");
+            return;
+        }
+        
+        try {
+            // 피드백이 있는 고정지출 데이터 조회 (APPROVED 또는 REJECTED 상태)
+            List<DetectedFixedExpense> feedbackExpenses = detectedFixedExpenseRepository
+                    .findByStatusIn(List.of(DetectionStatus.APPROVED, DetectionStatus.REJECTED));
+            
+            log.info("학습에 사용할 피드백 데이터: {}개", feedbackExpenses.size());
+            
+            if (feedbackExpenses.isEmpty()) {
+                log.info("학습에 사용할 피드백 데이터가 없습니다");
+                return;
+            }
+            
+            // 모델 학습 요청
+            Map<String, Object> result = mlClient.trainModel(feedbackExpenses);
+            log.info("ML 모델 학습 결과: {}", result);
+        } catch (Exception e) {
+            log.error("ML 모델 학습 중 오류 발생: {}", e.getMessage(), e);
+        }
+        
+        log.info("ML 모델 학습 배치 작업 완료");
+    }
+
+    /**
+     * 감지된 고정지출 후보들을 DB에 저장
+     */
+    private void createDetectedFixedExpenses(List<FixedExpenseCandidate> candidates) {
+        for (FixedExpenseCandidate fec : candidates) {
+            log.info("고정지출 후보: {}, 사용자: {}, 계좌: {}, 점수: {}",
+                    fec.merchantName(), fec.userId(), fec.accountId(), fec.totalScore());
+
+            try {
+                // 기존 감지된 고정지출이 있는지 확인
+                Optional<DetectedFixedExpense> existingExpense = detectedFixedExpenseRepository
+                        .findByUser_IdAndAccount_IdAndOriginName(
+                                fec.userId(),
+                                fec.accountId(),
+                                fec.merchantName()
+                        );
+
+                User user = userRepository.findById(fec.userId())
+                        .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+                Account account = accountRepository.findById(fec.accountId())
+                        .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+                // 평균 금액 계산 (필요시 트랜잭션으로부터)
+                BigDecimal avgAmount = calculateAverageAmount(fec);
+
+                // 평균 발생일 (필요시 트랜잭션으로부터)
+                int avgDayOfMonth = calculateAverageDayOfMonth(fec);
+
+                // 최근 거래일 (필요시 트랜잭션으로부터)
+                LocalDate latestTransactionDate = getLatestTransactionDate(fec);
+
+                if (existingExpense.isPresent()) {
+                    // 기존 항목 업데이트
+                    DetectedFixedExpense expense = existingExpense.get();
+                    expense.update(
+                            account,
+                            fec.merchantName(),
+                            avgAmount.toString(),
+                            avgDayOfMonth
+                    );
+                    expense.updateDetectionAttributes(
+                            latestTransactionDate,
+                            fec.transactions().size(),
+                            fec.totalScore(),
+                            fec.amountScore(),
+                            fec.dateScore(),
+                            fec.persistenceScore()
+                    );
+                    detectedFixedExpenseRepository.save(expense);
+                } else {
+                    // 새 항목 생성
+                    DetectedFixedExpense newExpense = DetectedFixedExpense.builder()
+                            .user(user)
+                            .account(account)
+                            .name(fec.merchantName())
+                            .originName(fec.merchantName())
+                            .averageAmount(Money.of(avgAmount))
+                            .averageDay(avgDayOfMonth)
+                            .status(DetectionStatus.DETECTED)
+                            .lastTransactionDate(latestTransactionDate)
+                            .transactionCount(fec.transactions().size())
+                            .detectionScore(fec.totalScore())
+                            .amountScore(fec.amountScore())
+                            .dateScore(fec.dateScore())
+                            .persistenceScore(fec.persistenceScore())
+                            .build();
+
+                    detectedFixedExpenseRepository.save(newExpense);
+                }
+            } catch (Exception e) {
+                log.error("고정지출 후보 처리 중 오류 발생: {}", e.getMessage(), e);
             }
         }
     }
 
     /**
-     * 각 유저들의 모든 계좌에 해당하는 거래내역들을 조회 및 저장
+     * 평균 금액 계산 (transactions가 비어있을 경우 대비)
      */
-    private void getUserAccountTransactions() {
-        List<Long> userIds = userService.getAllUserIds();
-        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
-        userAccountTransactions = new HashMap<>();
-
-        for (Long userId : userIds) {
-            List<Transaction> transactions = transactionRepository.findByAccount_User_IdAndTypeAndDateAfter(userId, TransactionType.WITHDRAWAL, sixMonthsAgo);
-
-            Map<Long, List<Transaction>> accountTransactions = transactions.stream()
-                    .collect(Collectors.groupingBy(
-                            transaction -> transaction.getAccount().getId()  // 계좌 ID로 그룹화
-                    ));
-
-            userAccountTransactions.put(userId, accountTransactions);
-        }
-    }
-
-    private void analyzeMerchantTransactions(Long userId, Long accountId, List<Transaction> transactions) {
-        // 가맹점별로 거래 그룹화
-        Map<String, List<Transaction>> merchantTransactions = transactions.stream()
-                .collect(Collectors.groupingBy(Transaction::getName));
-
-        // 고정지출 후보를 담을 리스트 생성
-        List<FixedExpenseCandidate> fixedExpenseCandidates = new ArrayList<>();
-
-        // 각 가맹점별로 고정지출 여부 판단
-        for (Map.Entry<String, List<Transaction>> entry : merchantTransactions.entrySet()) {
-            String merchantName = entry.getKey();
-            List<Transaction> merchantTxs = entry.getValue();
-
-            // 최소 3회 이상 거래가 있어야 분석
-            if (merchantTxs.size() < 3) continue;
-
-            // 월별로 거래 그룹화
-            Map<YearMonth, List<Transaction>> transactionsByMonth = merchantTxs.stream()
-                    .collect(Collectors.groupingBy(tx ->
-                            YearMonth.from(tx.getDate().toLocalDate())
-                    ));
-
-            // 월별 평균 거래 횟수 계산
-            double avgTransactionsPerMonth = (double) merchantTxs.size() / transactionsByMonth.size();
-
-            // 평균 거래 횟수가 1.34회를 초과하는 경우 고정지출이 아님
-            if (avgTransactionsPerMonth > 1.34) {
-                continue; // 다음 가맹점으로 넘어감
-            }
-
-            // 점수 계산
-            double amountScore = calculateAmountScore(merchantTxs);
-            double dateScore = calculateDateScore(merchantTxs);
-            double persistenceScore = calculatePersistenceScore(merchantTxs);
-
-            // 종합 점수
-            double totalScore = amountScore + dateScore + persistenceScore;
-
-            // 일정 점수 이상이면 고정지출로 감지
-            if (totalScore >= 0.75) {
-                fixedExpenseCandidates.add(
-                        new FixedExpenseCandidate(
-                                userId,
-                                accountId,
-                                merchantName,
-                                merchantTxs,
-                                amountScore,
-                                dateScore,
-                                persistenceScore,
-                                totalScore
-                        )
-                );
-            }
-        }
-        createDetectedFixedExpense(fixedExpenseCandidates);
-    }
-
-    //TODO:
-    // 기존 감지된 고정지출이 있는지 확인
-    // 평균 금액, 평균 발생일, 최근 거래일 등 계산
-    // DetectedFixedExpense 엔티티 생성 및 저장
-    private void createDetectedFixedExpense(List<FixedExpenseCandidate> list) {
-        for (FixedExpenseCandidate fec : list) {
-            // 1. 기존 감지된 고정지출이 있는지 확인
-            Optional<DetectedFixedExpense> existingExpense = detectedFixedExpenseRepository
-                    .findByUser_IdAndAccount_IdAndOriginName(
-                            fec.userId(),
-                            fec.accountId(),
-                            fec.merchantName()
-                    );
-
-            // 2. 평균 금액 계산
-            BigDecimal avgAmount = fec.transactions().stream()
-                    .map(t -> t.getAmount().getAmount())
+    private BigDecimal calculateAverageAmount(FixedExpenseCandidate fec) {
+        if (!fec.transactions().isEmpty()) {
+            return fec.transactions().stream()
+                    .map(TransactionSummaryDto::amount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add)
                     .divide(BigDecimal.valueOf(fec.transactions().size()), 2, RoundingMode.HALF_UP);
+        }
 
-            // 3. 평균 발생일 계산
+        // ML 서비스로부터 평균 금액 정보를 받아오는 경우
+        // 현재 구현에서는 트랜잭션 목록이 비어있을 수 있음
+        // 이 경우 추가 API 호출 또는 다른 방법으로 평균 금액 계산 필요
+
+        // 임시로 0 반환
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * 평균 발생일 계산 (transactions가 비어있을 경우 대비)
+     */
+    private int calculateAverageDayOfMonth(FixedExpenseCandidate fec) {
+        if (!fec.transactions().isEmpty()) {
             double avgDay = fec.transactions().stream()
-                    .mapToInt(t -> t.getDate().toLocalDate().getDayOfMonth())
+                    .mapToInt(t -> t.date().getDayOfMonth())
                     .average()
                     .orElse(0);
-            int avgDayOfMonth = (int) Math.round(avgDay);
+            return (int) Math.round(avgDay);
+        }
 
-            // 4. 최근 거래일 가져오기
-            LocalDate latestTransactionDate = fec.transactions().stream()
-                    .map(t -> t.getDate().toLocalDate())
+        // 임시로 1일 반환
+        return 1;
+    }
+
+    /**
+     * 최근 거래일 가져오기 (transactions가 비어있을 경우 대비)
+     */
+    private LocalDate getLatestTransactionDate(FixedExpenseCandidate fec) {
+        if (!fec.transactions().isEmpty()) {
+            return fec.transactions().stream()
+                    .map(t->t.date().toLocalDate())
                     .max(LocalDate::compareTo)
                     .orElse(LocalDate.now());
-
-            // 5. 거래 횟수 계산
-            int transactionCount = fec.transactions().size();
-
-            User user = authRepository.findById(fec.userId())
-                    .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-
-            Account account = accountRepository.findById(fec.accountId())
-                    .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
-
-            // 6. DetectedFixedExpense 엔티티 생성 또는 업데이트
-            if (existingExpense.isPresent()) {
-                DetectedFixedExpense expense = existingExpense.get();
-                expense.update(
-                        account,
-                        fec.merchantName(),
-                        avgAmount.toString(),
-                        avgDayOfMonth
-                );
-                expense.updateDetectionAttributes(
-                        latestTransactionDate,
-                        transactionCount,
-                        fec.totalScore(),
-                        fec.amountScore(),
-                        fec.dateScore(),
-                        fec.persistenceScore()
-                );
-                detectedFixedExpenseRepository.save(expense);
-            } else {
-                DetectedFixedExpense newExpense = DetectedFixedExpense.builder()
-                        .user(user)
-                        .account(account)
-                        .name(fec.merchantName())
-                        .originName(fec.merchantName())
-                        .averageAmount(Money.of(avgAmount))
-                        .averageDay(avgDayOfMonth)
-                        .status(DetectionStatus.DETECTED)
-                        .lastTransactionDate(latestTransactionDate)
-                        .transactionCount(transactionCount)
-                        .detectionScore(fec.totalScore())
-                        .amountScore(fec.amountScore())
-                        .dateScore(fec.dateScore())
-                        .persistenceScore(fec.persistenceScore())
-                        .build();
-
-                detectedFixedExpenseRepository.save(newExpense);
-            }
-        }
-    }
-
-    private double calculateAmountScore(List<Transaction> transactions) {
-        // 거래 금액의 일관성 분석
-        if (transactions.isEmpty()) return 0.0;
-
-        // 모든 거래 금액 추출
-        List<BigDecimal> amounts = transactions.stream()
-                .map(t -> t.getAmount().getAmount())
-                .toList();
-
-        // 평균 금액 계산
-        BigDecimal avgAmount = amounts.stream()
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(amounts.size()), 2, RoundingMode.HALF_UP);
-
-        // 표준편차 계산
-        double variance = amounts.stream()
-                .map(amount -> amount.subtract(avgAmount).pow(2))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(amounts.size()), 2, RoundingMode.HALF_UP)
-                .doubleValue();
-        double stdDev = Math.sqrt(variance);
-
-        // 변동계수(CV) = 표준편차 / 평균
-        double cv = stdDev / avgAmount.doubleValue();
-
-        // 금액 일관성 점수 (CV가 낮을수록 일관성이 높음)
-        return Math.max(0, (1 - Math.min(cv, 1))) * 0.25;
-    }
-
-    private double calculateDateScore(List<Transaction> transactions) {
-        if (transactions.size() < 2) return 0.0;
-
-        // 거래일자 추출 및 정렬
-        List<LocalDate> dates = transactions.stream()
-                .map(t -> t.getDate().toLocalDate())
-                .sorted()
-                .toList();
-
-        // 각 거래일의 일(day) 추출
-        List<Integer> days = dates.stream()
-                .map(LocalDate::getDayOfMonth)
-                .toList();
-
-        // +/- 2일 범위를 고려한 클러스터 생성
-        Map<Integer, Integer> dayClusters = new HashMap<>();
-        for (Integer day : days) {
-            boolean foundCluster = false;
-            // 기존 클러스터 중 +/- 2일 범위 내에 있는지 확인
-            for (Integer clusterDay : dayClusters.keySet()) {
-                if (Math.abs(day - clusterDay) <= 2) {
-                    dayClusters.put(clusterDay, dayClusters.get(clusterDay) + 1);
-                    foundCluster = true;
-                    break;
-                }
-            }
-            // 새로운 클러스터 생성
-            if (!foundCluster) {
-                dayClusters.put(day, 1);
-            }
         }
 
-        // 가장 큰, 즉 가장 많은 거래를 포함하는 클러스터 찾기
-        Optional<Integer> maxClusterSize = dayClusters.values().stream().max(Integer::compareTo);
-        if (maxClusterSize.isEmpty()) return 0.0;
-
-        // 날짜 일관성 점수 = 최대 클러스터 크기 / 전체 거래 수
-        return (double) maxClusterSize.get() / transactions.size() * 0.25;
+        // 데이터 없으면 현재 날짜 반환
+        return LocalDate.now();
     }
 
-    private double calculatePersistenceScore(List<Transaction> transactions) {
-        // 거래의 지속성 분석
-        if (transactions.isEmpty()) return 0.0;
-
-        // 첫 거래와 마지막 거래 사이의 개월 수 계산
-        LocalDate firstDate = transactions.stream()
-                .map(t -> t.getDate().toLocalDate())
-                .min(LocalDate::compareTo)
-                .orElse(LocalDate.now());
-
-        LocalDate lastDate = transactions.stream()
-                .map(t -> t.getDate().toLocalDate())
-                .max(LocalDate::compareTo)
-                .orElse(LocalDate.now());
-
-        // 예상되는 발생 횟수
-        long expectedOccurrences = ChronoUnit.MONTHS.between(
-                YearMonth.from(firstDate),
-                YearMonth.from(lastDate)
-        ) + 1; // 당월 포함
-
-        // 실제 발생 횟수 (월별로 그룹화하여 카운트)
-        long actualOccurrences = transactions.stream()
-                .map(t -> YearMonth.from(t.getDate().toLocalDate()))
-                .distinct()
-                .count();
-
-        // 지속성 점수 = 실제 발생 횟수 / 예상 발생 횟수
-        return Math.min(1.0, (double) actualOccurrences / expectedOccurrences) * 0.5;
+        /**
+     * ML 모델 적용 가능한 사용자 ID 목록 조회
+     * 피드백(APPROVED 또는 REJECTED) 10개 이상인 사용자만 반환
+     */
+    private List<Long> getMlEnabledUserIds() {
+        // 사용자별 피드백 수 계산
+        Map<Long, Long> userFeedbackCounts = detectedFixedExpenseRepository
+                .findByStatusIn(List.of(DetectionStatus.APPROVED, DetectionStatus.REJECTED))
+                .stream()
+                .collect(Collectors.groupingBy(
+                        expense -> expense.getUser().getId(),
+                        Collectors.counting()
+                ));
+        
+        // 피드백 10개 이상인 사용자 ID 추출
+        return userFeedbackCounts.entrySet().stream()
+                .filter(entry -> entry.getValue() >= 10)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
 }

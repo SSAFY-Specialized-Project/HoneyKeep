@@ -5,7 +5,7 @@ import com.barcode.honeykeep.account.entity.Bank;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
-import com.barcode.honeykeep.auth.repository.AuthRepository;
+import com.barcode.honeykeep.user.repository.UserRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.external.BankApiClient;
 import com.barcode.honeykeep.common.external.dto.ConnectableBankDto;
@@ -40,7 +40,7 @@ public class MydataConnectService {
     private final BankApiClient bankApiClient;
     private final LinkedInstitutionRepository linkedInstitutionRepository;
     private final UserBankTokenRepository userBankTokenRepository;
-    private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final BankForMydataRepository bankForMydataRepository;
     private final AccountRepository accountForMydataRepository;
 
@@ -90,7 +90,7 @@ public class MydataConnectService {
         UserBankToken token = userBankTokenRepository.findByUserIdAndAccessToken(userId, accessToken)
                 .orElseThrow(() -> new CustomException(MydataErrorCode.TOKEN_NOT_FOUND));
 
-        User user = authRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         List<AccountForMydataDto> allAccounts = bankApiClient.getAccounts(user.getUserKey());
@@ -110,7 +110,7 @@ public class MydataConnectService {
 
     @Transactional
     public BankAuthForMydataResponse requestAccountAuth(Long userId, String accountNo) {
-        User user = authRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         return bankApiClient.requestAccountAuth(user.getUserKey(), accountNo);
@@ -119,7 +119,7 @@ public class MydataConnectService {
     @Transactional
     public void verifyAccountAuth(Long userId, AccountVerifyForMydataRequest request) {
         // 인증번호 검증
-        User user = authRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         Map<String, Object> result = bankApiClient.verifyAccountAuthCode(
@@ -155,7 +155,7 @@ public class MydataConnectService {
     @Transactional(readOnly = true)
     public TransactionHistoryResponse inquireTransactionHistory(Long userId, TransactionHistoryRequest request) {
         // 유저 조회
-        User user = authRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         // 외부 API 호출 (BankApiClient)
