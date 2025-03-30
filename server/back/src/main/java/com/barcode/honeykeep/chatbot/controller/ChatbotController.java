@@ -26,7 +26,7 @@ public class ChatbotController {
      * 사용자가 채팅하기를 클릭하면 채팅방을 생성합니다.
      * 사용자의 id를 가지고 mongodb에 빈 채팅방 엔티티를 만들어둡니다.
      */
-    @PostMapping("/chatroom")
+    @PostMapping("/query")
     public ResponseEntity<ApiResponse<Boolean>> query(@AuthenticationPrincipal UserId userId, @RequestBody QueryRequest queryRequest) throws JsonProcessingException {
         boolean isSuccessfullyCreated = chatbotService.query(userId, queryRequest);
 

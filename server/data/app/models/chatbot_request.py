@@ -4,7 +4,7 @@ from typing import List, Optional
 # Spring에서 넘어온 query와 대화 ID
 class ChatbotRequest(BaseModel):
     question: str
-    conversation_id: str
+    conversation_id: int
 
 
 class ChatbotResponse(BaseModel):

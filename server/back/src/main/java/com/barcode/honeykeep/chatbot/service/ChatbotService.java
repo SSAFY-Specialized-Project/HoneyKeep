@@ -25,7 +25,7 @@ public class ChatbotService {
 
     private final ChatbotClient chatbotClient;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final String ROOT_KEY = "chat_history";
+    private final String ROOT_KEY = "message_store:chat_history";
 
     /**
      * 1. Redis에 chat_history 키가 있는지 확인
@@ -38,24 +38,29 @@ public class ChatbotService {
         ObjectMapper objectMapper = new ObjectMapper();
         Long userId = user.value();
 
-        // TODO: 질문 받아서 답변 생성
+        // 질문 받아서 답변 생성
         String query = queryRequest.getQuery();
-        String answer = "";
+        queryRequest.setConversationId(userId);
+        String answer = chatbotClient.sendQuery(queryRequest);
 
-        // 1-1. chat_history 하위 데이터가 있을 때
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(ROOT_KEY))) {
-            String chatroomJson = (String) redisTemplate.opsForHash().get(ROOT_KEY, userId);
+        // 사용자별 Redis 키 생성: 예, "chat_history:123"
+        final String userChatKey = ROOT_KEY + ":" + userId;
+
+        // 1-1. chat_history:userId 하위 데이터가 있을 때
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(userChatKey))) {
+
+            String chatroomJson = (String) redisTemplate.opsForValue().get(userChatKey);
             List<ChatMessage> chatMessages;
 
-            // 2-1. chat_history 해시가 있으면, 해당 사용자(userId)의 채팅방 데이터를 가져옴
+            // 2-1. chat_history:userId 해시가 있으면, 해당 사용자(userId)의 채팅방 데이터를 가져옴 (JSON 문자열)
             if (chatroomJson != null) {
-                // 기존 채팅방의 메시지 리스트를 읽어옴
+
+                // 기존 채팅 기록이 있으면 메시지 리스트로 변환
                 chatMessages = objectMapper.readValue(chatroomJson, new TypeReference<List<ChatMessage>>() {});
             }
-
-            // 2-2. chat_history 해시가 있으면, 해당 사용자(userId)의 채팅방 데이터를 가져옴
+            // 2-2. chat_history:userId 해시가 없으면
             else {
-                // 해당 사용자의 채팅방이 없으면 새 채팅방 생성 (빈 리스트)
+                // 없으면 빈 리스트로 초기화
                 chatMessages = new ArrayList<>();
             }
 
@@ -66,13 +71,15 @@ public class ChatbotService {
             saveChatroom(userId, chatMessages, objectMapper);
         }
 
-        // 1-2. chat_history 하위 데이터가 있을 때
+        // 1-2. chat_history:userId 하위 데이터가 없을 때
         else {
-            // chat_history 해시 자체가 없으면 새로 생성하여 사용자 채팅방을 추가
+            // 사용자의 채팅 기록이 없는 경우, 빈 리스트로 새 채팅방 생성
             List<ChatMessage> chatMessages = new ArrayList<>();
 
             // 새 쿼리와 답변 메시지를 리스트에 추가
             appendNewQueryAnswer(chatMessages, query, answer);
+
+            // Redis에 새 채팅방 저장
             saveChatroom(userId, chatMessages, objectMapper);
         }
 
@@ -99,9 +106,10 @@ public class ChatbotService {
         messages.add(answerMessage);
     }
 
-    // 채팅방 Redis에 저장
+    // 채팅방을 JSON으로 직렬화하여 Redis의 사용자별 키에 저장
     private void saveChatroom(Long userId, List<ChatMessage> chatMessages, ObjectMapper objectMapper) throws JsonProcessingException {
         String updatedJson = objectMapper.writeValueAsString(chatMessages);
-        redisTemplate.opsForHash().put(ROOT_KEY, userId, updatedJson);
+        String userChatKey = ROOT_KEY + ":" + userId;
+        redisTemplate.opsForValue().set(userChatKey, updatedJson);
     }
 }

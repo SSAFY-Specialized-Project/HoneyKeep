@@ -12,19 +12,20 @@ import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class ChatbotClient {
-    @Value("${data.url}")
-    private String chatbotUrl;
 
-    private final WebClient webClient = WebClient.create(chatbotUrl);
+    private final WebClient webClient;
+
+    public ChatbotClient(@Value("${data.url}") String chatbotUrl) {
+        this.webClient = WebClient.create(chatbotUrl);
+    }
 
     /**
      * 챗봇 서버에 질문을 보내고, LLM 답변을 받아옴
      */
     public String sendQuery(QueryRequest queryRequest) {
         return webClient.post()
-                .uri("/ask")
+                .uri("/chatbot/ask")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(queryRequest)
                 .retrieve()

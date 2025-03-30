@@ -3,11 +3,20 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain.memory.chat_message_histories import RedisChatMessageHistory
-from redis import Redis
 
 from app.services.document_loader import create_vector_store
 from app.config import Config
 
+
+class ReadOnlyRedisChatMessageHistory(RedisChatMessageHistory):
+    def add_message(self, message) -> None:
+        # 저장하지 않음으로써, 대화 내역 갱신(쓰기)을 무력화합니다.
+        pass
+
+    def clear(self) -> None:
+        # 지우기 작업도 필요없다면 아무 동작도 하지 않음
+        pass
+    
 
 # 벡터스토어 및 리트리버 생성
 vector_store = create_vector_store()
@@ -30,7 +39,7 @@ llm = ChatOpenAI(
 )
 
 
-def get_memory(conversation_id: str) -> ConversationBufferMemory:
+def get_memory(conversation_id: int) -> ConversationBufferMemory:
     """
     주어진 conversation_id에 대해 Redis에 저장된 대화 히스토리를 불러와
     ConversationBufferMemory 객체로 반환
@@ -40,7 +49,7 @@ def get_memory(conversation_id: str) -> ConversationBufferMemory:
     # Redis URL 형식: "redis://<host>:<port>/<db>"
     redis_url = f"redis://:{Config.REDIS_PASSWORD}@{Config.REDIS_HOST}:{Config.REDIS_PORT}/{Config.REDIS_DB}"
 
-    history = RedisChatMessageHistory(session_id=f"chat_history:{conversation_id}", url=redis_url)
+    history = ReadOnlyRedisChatMessageHistory(session_id=f"chat_history:{conversation_id}", url=redis_url)
     memory = ConversationBufferMemory(chat_memory=history, memory_key="chat_history", return_messages=True)
     return memory
 
@@ -60,7 +69,7 @@ def get_conversation_chain(memory: ConversationBufferMemory) -> ConversationalRe
     return conversation_chain
 
 
-def ask_question(query: str, conversation_id: str):
+def ask_question(query: str, conversation_id: int):
     """
     conversation_id에 해당하는 대화 메모리를 Redis에서 불러오고,
     retrieval 체인을 통해 질문에 대한 답변을 생성
