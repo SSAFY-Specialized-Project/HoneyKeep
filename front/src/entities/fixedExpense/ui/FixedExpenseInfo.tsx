@@ -16,20 +16,20 @@ const FixedExpenseInfo = ({
   onDelete,
 }: Props) => {
   return (
-    <li className="list-none w-full shadow-sm rounded-[1.25rem]">
+    <li className="list-none w-full shadow-custom rounded-[1.25rem]">
       <button
         type="button"
         onClick={onClick}
-        className="flex flex-col w-full p-[16px] rounded-[1.25rem] border-b border-gray-100 gap-[8px]"
+        className="flex flex-col w-full p-5 rounded-[1.25rem] gap-3"
       >
-        <div className="flex justify-start items-center w-full gap-[4px]">
+        <div className="flex justify-start items-center w-full gap-2">
           <strong className="text-text-xl text-gray-900 font-bold">
             {title}
           </strong>
         </div>
 
-        <div className="flex justify-between items-center w-full gap-[4px]">
-          <span className="text-text-sm text-gray-600">
+        <div className="flex justify-between items-center w-full">
+          <span className="text-text-md text-gray-600">
             매월 {paymentDate}일에 지출
           </span>
           <span className="text-text-xl font-bold">
@@ -37,14 +37,14 @@ const FixedExpenseInfo = ({
           </span>
         </div>
 
-        <div className="flex justify-between items-center w-full gap-[4px]">
-          <span className="text-text-sm text-extra">
+        <div className="flex justify-between items-center w-full">
+          <span className="text-text-md text-extra">
             지난 {monthCount}개월 동안 고정지출
           </span>
           <button
             type="button"
             onClick={onDelete}
-            className="text-text-sm text-gray-600"
+            className="text-text-md text-gray-600"
           >
             삭제
           </button>

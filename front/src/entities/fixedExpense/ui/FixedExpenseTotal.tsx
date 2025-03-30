@@ -5,22 +5,22 @@ interface Props {
 
 const FixedExpenseTotal = ({ count, totalAmount }: Props) => {
   return (
-    <div className="w-full shadow-sm rounded-[1.25rem] bg-white">
-      <div className="flex flex-col w-full p-[16px] gap-[8px]">
-        <div className="flex justify-between items-center w-full gap-[4px]">
-          <span className="text-[20px] text-gray-600 font-medium leading-[150%] font-pretendard">
+    <div className="w-full shadow-custom rounded-[1.25rem] bg-white">
+      <div className="flex flex-col w-full p-5 gap-3">
+        <div className="flex justify-between items-center w-full">
+          <span className="text-text-xl text-gray-600 font-medium">
             내 고정지출
           </span>
-          <span className="text-[20px] text-black font-medium leading-[150%] font-pretendard">
+          <span className="text-text-xl text-gray-900 font-medium">
             {count} 개
           </span>
         </div>
 
-        <div className="flex justify-between items-center w-full gap-[4px]">
-          <span className="text-[20px] text-gray-600 font-medium leading-[150%] font-pretendard">
+        <div className="flex justify-between items-center w-full">
+          <span className="text-text-xl text-gray-600 font-medium">
             총 금액
           </span>
-          <span className="text-[20px] text-black font-medium leading-[150%] font-pretendard">
+          <span className="text-text-xl text-gray-900 font-medium">
             {totalAmount.toLocaleString()} 원
           </span>
         </div>

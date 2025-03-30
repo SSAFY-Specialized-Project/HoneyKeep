@@ -16,7 +16,7 @@ import { CategoryCheck } from "@/entities/category/ui";
 import { ContentAddBox } from "@/shared/ui";
 import { BasicHeader } from "@/widgets";
 import { GlobalNavigation } from "@/widgets/navigation/ui";
-
+import { PocketChoiceTab } from "@/entities/pocket/ui";
 const Home = () => {
   return (
     <div className="flex flex-col gap-2">
@@ -31,6 +31,7 @@ const Home = () => {
       />
       <FixedExpenseTotal count={5} totalAmount={100000} />
       <FixedChoiceTab />
+      <PocketChoiceTab />
       <FixedExpenseInfo
         title="유튜브 프리미엄"
         paymentDate="23"

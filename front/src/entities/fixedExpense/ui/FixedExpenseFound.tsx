@@ -20,9 +20,9 @@ const FixedExpenseFound = ({
   onDelete,
 }: Props) => {
   return (
-    <li className="list-none w-full shadow-sm rounded-[1.25rem]">
-      <div className="flex flex-col w-full p-[16px] rounded-[1.25rem] border-b border-gray-100 gap-[8px]">
-        <div className="flex justify-between items-center w-full gap-[4px]">
+    <li className="list-none w-full shadow-custom rounded-[1.25rem]">
+      <div className="flex flex-col w-full p-5 rounded-[1.25rem] gap-3">
+        <div className="flex justify-between items-center w-full">
           <strong className="text-text-xl text-gray-900 font-bold">
             {title}
           </strong>
@@ -31,37 +31,38 @@ const FixedExpenseFound = ({
           </span>
         </div>
 
-        <div className="flex justify-start items-center w-full gap-[4px]">
-          <span className="text-text-sm text-gray-600">
+        <div className="flex justify-start items-center w-full">
+          <span className="text-text-md text-gray-600">
             매월 {paymentDate}일에 지출
           </span>
         </div>
 
-        <div className="flex justify-start items-center w-full gap-[4px]">
-          <span className="text-text-sm text-blue-600">
+        <div className="flex justify-start items-center w-full">
+          <span className="text-text-md text-extra">
             지난 {monthCount}개월 동안 고정 지출
           </span>
         </div>
 
-        <div className="flex justify-end items-center gap-[8px]">
+        <div className="flex justify-end items-center gap-2">
           <button
             type="button"
             onClick={onRegister}
-            className={`flex w-[81px] px-[14px] py-[8px] justify-center items-center gap-[10px] rounded-[8px] ${
+            className={`w-24 px-[14px] py-2 rounded-lg text-text-md ${
               selectedAction === "register"
-                ? "bg-[#FFAA00] text-white"
-                : "bg-[#F5F5F5] text-gray-900"
+                ? "bg-[var(--color-brand-primary-600)] text-white"
+                : "bg-gray-100 text-gray-900"
             }`}
           >
             등록
           </button>
+          ㅗ
           <button
             type="button"
             onClick={onModify}
-            className={`flex w-[81px] px-[14px] py-[8px] justify-center items-center gap-[10px] rounded-[8px] ${
+            className={`w-24 px-[14px] py-2 rounded-lg text-text-md ${
               selectedAction === "modify"
-                ? "bg-[#FFAA00] text-white"
-                : "bg-[#F5F5F5] text-gray-900"
+                ? "bg-[var(--color-brand-primary-600)] text-white"
+                : "bg-gray-100 text-gray-900"
             }`}
           >
             수정
@@ -69,10 +70,10 @@ const FixedExpenseFound = ({
           <button
             type="button"
             onClick={onDelete}
-            className={`flex w-[81px] px-[14px] py-[8px] justify-center items-center gap-[10px] rounded-[8px] ${
+            className={`w-24 px-[14px] py-2 rounded-lg text-text-md ${
               selectedAction === "delete"
-                ? "bg-[#FFAA00] text-white"
-                : "bg-[#F5F5F5] text-gray-900"
+                ? "bg-[var(--color-brand-primary-600)] text-white"
+                : "bg-gray-100 text-gray-900"
             }`}
           >
             삭제

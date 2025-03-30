@@ -1,10 +1,10 @@
 import { NavLink } from "react-router-dom";
 
-const FixedChoiceTab = () => {
+const PocketChoiceTab = () => {
   return (
     <div className="flex w-full border-b border-gray-200">
       <NavLink
-        to="/fixed-expense/list"
+        to="/pocket/link"
         className={({ isActive }) =>
           `flex-1 text-text-xl font-medium text-center py-2 border-b-2 ${
             isActive
@@ -13,10 +13,10 @@ const FixedChoiceTab = () => {
           }`
         }
       >
-        고정지출 목록
+        링크로 추가하기
       </NavLink>
       <NavLink
-        to="/fixed-expense/found"
+        to="/pocket/favorite"
         className={({ isActive }) =>
           `flex-1 text-text-xl font-medium text-center py-2 border-b-2 ${
             isActive
@@ -25,10 +25,22 @@ const FixedChoiceTab = () => {
           }`
         }
       >
-        발견된 고정지출
+        즐겨찾는 포켓
+      </NavLink>
+      <NavLink
+        to="/pocket/direct"
+        className={({ isActive }) =>
+          `flex-1 text-text-xl font-medium text-center py-2 border-b-2 ${
+            isActive
+              ? "text-[var(--color-brand-primary-600)] font-bold border-[var(--color-brand-primary-600)]"
+              : "text-gray-600 border-transparent"
+          }`
+        }
+      >
+        직접 추가하기
       </NavLink>
     </div>
   );
 };
 
-export default FixedChoiceTab;
+export default PocketChoiceTab;
