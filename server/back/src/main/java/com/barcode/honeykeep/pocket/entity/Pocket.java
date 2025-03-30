@@ -81,16 +81,6 @@ public class Pocket extends BaseEntity {
         this.transactions = new ArrayList<>();
     }
 
-    /**
-     * 포켓 논리적 삭제
-     * @param reason 삭제 이유
-     */
-    @Override
-    public void delete(String reason) {
-        // 부모 클래스(BaseEntity)의 delete 메소드 호출
-        super.delete(reason);
-    }
-
     public void setFavorite(Boolean isFavorite) {
         this.isFavorite = isFavorite;
     }

@@ -126,4 +126,12 @@ public class DetectedFixedExpense extends BaseEntity {
         this.amountTrendSlope = amountTrendSlope;
         this.amountTrendR2 = amountTrendR2;
     }
+
+    public void approve() {
+        this.status = DetectionStatus.APPROVED;
+    }
+
+    public void reject() {
+        this.status = DetectionStatus.REJECTED;
+    }
 }

@@ -110,16 +110,16 @@ public class FixedExpenseService {
         fixedExpense.delete("");
     }
 
-    private FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpense) {
-        return FixedExpenseResponse.builder()
-                .id(fixedExpense.getId())
-                .bankName(fixedExpense.getAccount().getBank().getName())
-                .accountName(fixedExpense.getAccount().getAccountName())
-                .name(fixedExpense.getName())
-                .money(fixedExpense.getMoney())
-                .startDate(fixedExpense.getStartDate())
-                .payDay(fixedExpense.getPayDay())
-                .memo(fixedExpense.getMemo())
-                .build();
+    protected FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpense) {
+        return new FixedExpenseResponse(
+                fixedExpense.getId(),
+                fixedExpense.getAccount().getBank().getName(),
+                fixedExpense.getAccount().getAccountName(),
+                fixedExpense.getName(),
+                fixedExpense.getMoney(),
+                fixedExpense.getStartDate(),
+                fixedExpense.getPayDay(),
+                fixedExpense.getMemo()
+        );
     }
 }
