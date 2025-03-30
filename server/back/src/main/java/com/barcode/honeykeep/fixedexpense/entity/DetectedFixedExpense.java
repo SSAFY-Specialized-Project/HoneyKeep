@@ -46,6 +46,7 @@ public class DetectedFixedExpense extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private DetectionStatus status;
 
+    private Double avgInterval;
     private LocalDate lastTransactionDate;
 
     private Integer transactionCount;
@@ -56,8 +57,15 @@ public class DetectedFixedExpense extends BaseEntity {
     private Double persistenceScore;
     private Double periodicityScore;
 
+    private Double weekendRatio;
+    private Double intervalStd;
+    private Double intervalCv;
+    private Double continuityRatio;
+    private Double amountTrendSlope;
+    private Double amountTrendR2;
+
     @Builder
-    protected DetectedFixedExpense(User user, Account account, String name, String originName, Money averageAmount, Integer averageDay, DetectionStatus status, LocalDate lastTransactionDate, Integer transactionCount, Double detectionScore, Double amountScore, Double dateScore, Double persistenceScore, Double periodicityScore) {
+    protected DetectedFixedExpense(User user, Account account, String name, String originName, Money averageAmount, Integer averageDay, DetectionStatus status, Double avgInterval, LocalDate lastTransactionDate, Integer transactionCount, Double detectionScore, Double amountScore, Double dateScore, Double persistenceScore, Double periodicityScore, Double weekendRatio, Double intervalStd, Double intervalCv, Double continuityRatio, Double amountTrendSlope, Double amountTrendR2) {
         this.user = user;
         this.account = account;
         this.name = name;
@@ -65,6 +73,7 @@ public class DetectedFixedExpense extends BaseEntity {
         this.averageAmount = averageAmount;
         this.averageDay = averageDay;
         this.status = status;
+        this.avgInterval = avgInterval;
         this.lastTransactionDate = lastTransactionDate;
         this.transactionCount = transactionCount;
         this.detectionScore = detectionScore;
@@ -72,6 +81,12 @@ public class DetectedFixedExpense extends BaseEntity {
         this.dateScore = dateScore;
         this.persistenceScore = persistenceScore;
         this.periodicityScore = periodicityScore;
+        this.weekendRatio = weekendRatio;
+        this.intervalStd = intervalStd;
+        this.intervalCv = intervalCv;
+        this.continuityRatio = continuityRatio;
+        this.amountTrendSlope = amountTrendSlope;
+        this.amountTrendR2 = amountTrendR2;
     }
 
     public void update(Account account, String name, String originName, String averageAmount, Integer averageDay) {
@@ -82,13 +97,21 @@ public class DetectedFixedExpense extends BaseEntity {
         if (averageDay != null) this.averageDay = averageDay;
     }
 
-    public void updateDetectionAttributes(LocalDate lastTransactionDate,
+    public void updateDetectionAttributes(Double avgInterval,
+                                          LocalDate lastTransactionDate,
                                           Integer transactionCount,
                                           Double detectionScore,
                                           Double amountScore,
                                           Double dateScore,
                                           Double persistenceScore,
-                                          Double periodicityScore) {
+                                          Double periodicityScore,
+                                          Double weekendRatio,
+                                          Double intervalStd,
+                                          Double intervalCv,
+                                          Double continuityRatio,
+                                          Double amountTrendSlope,
+                                          Double amountTrendR2) {
+        this.avgInterval = avgInterval;
         this.lastTransactionDate = lastTransactionDate;
         this.transactionCount = transactionCount;
         this.detectionScore = detectionScore;
@@ -96,5 +119,11 @@ public class DetectedFixedExpense extends BaseEntity {
         this.dateScore = dateScore;
         this.persistenceScore = persistenceScore;
         this.periodicityScore = periodicityScore;
+        this.weekendRatio = weekendRatio;
+        this.intervalStd = intervalStd;
+        this.intervalCv = intervalCv;
+        this.continuityRatio = continuityRatio;
+        this.amountTrendSlope = amountTrendSlope;
+        this.amountTrendR2 = amountTrendR2;
     }
 }

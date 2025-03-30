@@ -3,11 +3,26 @@ import numpy as np
 from scipy.fft import fft
 import pickle
 import os
-import re  # 정규식 모듈 추가
+import re
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix    
 
 # 전역 변수 및 설정
 MODEL_PATH = 'model/fixed_expense_model.pkl'
 MODEL_TRAINED = os.path.exists(MODEL_PATH)
+DEFAULT_MODEL_PARAMS = {
+    'objective': 'binary:logistic',
+    'n_estimators': 100,
+    'learning_rate': 0.1,
+    'max_depth': 4,
+    'gamma': 0.25,
+    'reg_lambda': 10,
+    'scale_pos_weight': 3,
+    'subsample': 0.9,
+    'colsample_bytree': 0.5,
+    'random_state': 42
+}
 
 # 모델 로드 또는 새로 생성 함수
 def get_model():
@@ -16,16 +31,8 @@ def get_model():
         with open(MODEL_PATH, 'rb') as f:
             MODEL_TRAINED = True
             return pickle.load(f)
-    from sklearn.ensemble import RandomForestClassifier
     MODEL_TRAINED = False
-    DEFAULT_MODEL_PARAMS = {
-        'n_estimators': 200,
-        'random_state': 42,
-        'max_depth': 10,
-        'min_samples_split': 4,
-        'class_weight': 'balanced'
-    }
-    return RandomForestClassifier(**DEFAULT_MODEL_PARAMS)
+    return XGBClassifier(**DEFAULT_MODEL_PARAMS)
 
 # 모델 저장 함수
 def save_model(model):
@@ -34,10 +41,7 @@ def save_model(model):
         pickle.dump(model, f)
 
 # 모델 학습 함수
-def train(data):
-    import pandas as pd
-    from sklearn.model_selection import train_test_split
-    
+def train(data):    
     # 트랜잭션 데이터를 데이터프레임으로 변환
     df = pd.DataFrame(data['detectedFixedExpenses'])
     
@@ -46,25 +50,141 @@ def train(data):
         return {'status': 'insufficient_data', 'samples': len(df)}
     
     # 모델 학습에 필요한 특성 선택
-    X = df[['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 'avgInterval']]
-    # 타겟 값 (고정지출 여부)
+    feature_columns = ['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 
+                       'avgInterval', 'userId', 'weekendRatio', 'intervalStd', 
+                       'intervalCv', 'continuityRatio', 'amountTrendSlope', 'amountTrendR2']
+    
+    # 실제 존재하는 컬럼만 선택
+    X_columns = [col for col in feature_columns if col in df.columns]
+    X = df[X_columns]
     y = df['isFixedExpense']
     
-    # 모델 로드 또는 새로 생성
-    model = get_model()
-    
-    # 데이터 분할 및 학습 로직 간소화
-    # 데이터가 충분히 많은 경우에만 테스트 분할
-    if len(df) >= 50:
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+    # 하이퍼파라미터 최적화 여부 결정 (데이터가 충분할 때만)
+    use_grid_search = len(df) >= 100  # 데이터가 100개 이상일 때만 하이퍼파라미터 튜닝
+
+    # 클래스 분포 계산    
+    pos_class_count = np.sum(y)
+    neg_class_count = len(y) - pos_class_count
+
+    if use_grid_search:
+        # 하이퍼파라미터 그리드 정의
+        param_grid = {
+            'max_depth': [3, 4, 5],
+            'learning_rate': [0.05, 0.1, 0.2],
+            'gamma': [0, 0.1, 0.25],
+            'reg_lambda': [1, 5, 10],
+            'scale_pos_weight': [1, 3, 5],
+            'subsample': [0.8, 0.9, 1.0],
+            'colsample_bytree': [0.5, 0.7, 0.9]
+        }
+        
+        # 클래스 불균형을 고려한 가중치 계산
+        if pos_class_count > 0 and neg_class_count > 0:
+            scale_pos_weight = neg_class_count / pos_class_count
+            param_grid['scale_pos_weight'] = [1, scale_pos_weight, scale_pos_weight * 1.5]
+        
+        # 1단계: 빠른 검색으로 대략적인 범위 찾기
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
+        
+        # 계산 비용 줄이기 위해 파라미터 샘플링
+        from sklearn.model_selection import ParameterSampler
+        import random
+        
+        param_distributions = ParameterSampler(
+            param_grid, n_iter=10, random_state=42
         )
-        model.fit(X_train, y_train)
-        accuracy = model.score(X_test, y_test)
+        
+        best_score = -1
+        best_params = None
+        
+        for params in param_distributions:
+            model = XGBClassifier(objective='binary:logistic', n_estimators=100, **params, random_state=42)
+            model.fit(X_train, y_train, eval_set=[(X_val, y_val)], early_stopping_rounds=10, verbose=False)
+            
+            y_pred = model.predict(X_val)
+            f1 = f1_score(y_val, y_pred)
+            
+            if f1 > best_score:
+                best_score = f1
+                best_params = params
+        
+        # 2단계: 최적 파라미터 주변 더 자세히 탐색
+        refined_param_grid = {}
+        for param, value in best_params.items():
+            if param in ['max_depth', 'scale_pos_weight']:
+                refined_param_grid[param] = [max(1, value - 1), value, value + 1]
+            elif param in ['learning_rate', 'gamma', 'subsample', 'colsample_bytree']:
+                refined_param_grid[param] = [max(0.01, value - 0.05), value, min(1.0, value + 0.05)]
+            elif param in ['reg_lambda']:
+                refined_param_grid[param] = [max(0, value - 2), value, value + 2]
+        
+        grid_search = GridSearchCV(
+            XGBClassifier(objective='binary:logistic', n_estimators=100, random_state=42),
+            refined_param_grid,
+            cv=min(5, len(X_train) // 20),  # 최소 20개 샘플 필요
+            scoring='f1',
+            n_jobs=-1
+        )
+        
+        grid_search.fit(X_train, y_train)
+        best_params = grid_search.best_params_
+        model = grid_search.best_estimator_
     else:
-        # 데이터가 적으면 전체 데이터로 학습하고 정확도는 계산하지 않음
-        model.fit(X, y)
-        accuracy = None
+        # 기본 모델 사용
+        model = get_model()
+        best_params = DEFAULT_MODEL_PARAMS
+    
+    # 최종 평가를 위한 데이터 분할
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+    
+    # 최종 모델 학습 (조기 종료 사용)
+    if not use_grid_search:
+        # 검증 세트 생성
+        _, X_val, _, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+        model.fit(X_train, y_train, 
+                eval_set=[(X_val, y_val)], 
+                early_stopping_rounds=10, 
+                eval_metric='auc',
+                verbose=False)
+    
+    # 기본 평가 지표
+    y_pred = model.predict(X_test)
+    y_prob = model.predict_proba(X_test)[:, 1]  # 양성 클래스 확률
+    
+    # 주요 평가 지표 계산
+    metrics = {}
+    metrics['accuracy'] = float(model.score(X_test, y_test))
+    metrics['precision'] = float(precision_score(y_test, y_pred, zero_division=0))
+    metrics['recall'] = float(recall_score(y_test, y_pred, zero_division=0))
+    metrics['f1_score'] = float(f1_score(y_test, y_pred, zero_division=0))
+    
+    # AUC-ROC (클래스가 하나만 있으면 계산 불가)
+    if len(np.unique(y_test)) > 1:
+        metrics['auc_roc'] = float(roc_auc_score(y_test, y_prob))
+    else:
+        metrics['auc_roc'] = None
+    
+    # 교차 검증 (최소 2개 클래스 필요)
+    if len(np.unique(y)) > 1 and len(df) >= 50:
+        cv_scores = cross_val_score(model, X, y, cv=min(5, len(df) // 10), scoring='f1')
+        metrics['cv_f1_mean'] = float(np.mean(cv_scores))
+        metrics['cv_f1_std'] = float(np.std(cv_scores))
+    else:
+        metrics['cv_f1_mean'] = None
+        metrics['cv_f1_std'] = None
+    
+    # 혼동행렬 계산 (문자열로 변환하여 JSON 직렬화 가능하게)
+    cm = confusion_matrix(y_test, y_pred)
+    metrics['confusion_matrix'] = cm.tolist()
+    
+    # 혼동행렬에서 파생된 지표
+    tn, fp, fn, tp = cm.ravel() if cm.size == 4 else (0, 0, 0, 0)
+    metrics['true_negative'] = int(tn)
+    metrics['false_positive'] = int(fp)
+    metrics['false_negative'] = int(fn)
+    metrics['true_positive'] = int(tp)
     
     # 모델 저장
     save_model(model)
@@ -73,14 +193,34 @@ def train(data):
     feature_importance = dict(zip(X.columns, model.feature_importances_))
     
     # 학습 결과 반환
-    return {
+    result = {
         'status': 'success',
-        'accuracy': accuracy,
-        'feature_importance': feature_importance,
-        'training_samples': len(df),
+        'metrics': metrics,
+        'feature_importance': {k: float(v) for k, v in feature_importance.items()},
+        'training_samples': int(len(df)),
+        'class_distribution': {
+            'positive': int(pos_class_count),
+            'negative': int(neg_class_count),
+            'positive_ratio': float(pos_class_count / len(y))
+        },
         'feedback_approved': int(df[df['status'] == 'APPROVED'].shape[0]),
-        'feedback_rejected': int(df[df['status'] == 'REJECTED'].shape[0])
+        'feedback_rejected': int(df[df['status'] == 'REJECTED'].shape[0]),
+        'best_parameters': {k: (float(v) if isinstance(v, (np.float32, np.float64)) else v) 
+                            for k, v in best_params.items()}
     }
+    
+    # 모델 학습 함수의 마지막에 추가
+    from model_monitoring import save_metrics, send_alert
+    import datetime
+
+    # 모델 버전 정보 추가 (날짜 기반)
+    model_version = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+
+    # 모니터링
+    drift_result = save_metrics(metrics, version=model_version)
+    send_alert(drift_result)
+    
+    return result
 
 # FixedExpenseDetector 클래스 구현
 class FixedExpenseDetector:
@@ -91,13 +231,13 @@ class FixedExpenseDetector:
         self.persistence_weight = persistence_weight
         self.periodicity_weight = periodicity_weight
 
-    def detect(self, transactions_df, ml_enabled_user_ids=None):
+    def detect(self, transactions_df, enable_ml=False):
         """
         고정지출 감지 함수
         
         Args:
             transactions_df: 거래 데이터
-            ml_enabled_user_ids: ML 모델을 적용할 수 있는 사용자 ID 목록
+            enable_ml: ML 모델을 적용할 수 있는 사용자인지
         """
         # 입력 데이터 전처리
         df = self._preprocess(transactions_df)
@@ -144,26 +284,37 @@ class FixedExpenseDetector:
             use_ml_model = False
 
             # ML 모델 입력 특성
-            features = {
+            base_features = {
                 'amountScore': amount_score,
                 'dateScore': date_score,
                 'persistenceScore': persistence_score,
                 'transactionCount': len(group),
                 'avgInterval': self._calculate_avg_interval(group),
-                'transactionId': transaction_id,
-                'userId': user_id,
-                'accountId': account_id
             }
+
+            # 고급 특성 추가
+            advanced_features = self._extract_advanced_features(group)
+            features = {**base_features, **advanced_features, 'transactionId': transaction_id, 'userId': user_id, 'accountId': account_id}
 
             # ML 모델 예측 시도 - 사용자별 피드백이 10개 이상인 경우에만
             try:
                 model = get_model()
                 # 해당 사용자에게 ML 모델 적용 가능 여부 확인
                 # 자바에서 전달한 ML 적용 가능 사용자 목록 사용
-                if MODEL_TRAINED and user_id and ml_enabled_user_ids and user_id in ml_enabled_user_ids:
+                if MODEL_TRAINED and user_id and enable_ml:
                     use_ml_model = True
-                    X = pd.DataFrame([{k: v for k, v in features.items() 
-                                      if k not in ['transactionId', 'userId', 'accountId', 'status']}])
+                    
+                    # 특성 확인 및 누락된 특성 추가
+                    required_features = ['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 
+                                        'avgInterval', 'userId', 'weekendRatio', 'intervalStd', 'intervalCv',
+                                        'continuityRatio', 'amountTrendSlope', 'amountTrendR2']
+                    
+                    # 누락된 특성 채우기
+                    features_for_model = {k: features.get(k, 0.0) for k in required_features}
+                    
+                    # 예측용 데이터프레임 생성
+                    X = pd.DataFrame([features_for_model])
+                    
                     ml_prediction = bool(model.predict(X)[0])
                     proba = model.predict_proba(X)[0]
                     ml_confidence = float(proba[1] if ml_prediction else proba[0])
@@ -222,10 +373,22 @@ class FixedExpenseDetector:
         if not all(field in df.columns for field in required_fields):
             raise ValueError(f"필수 필드 누락: {required_fields}")
 
-        # 데이터 타입 변환
+        # 안전한 변환 코드
         df = df.copy()
-        if isinstance(df['date'].iloc[0], str):
-            df['date'] = pd.to_datetime(df['date'])
+        try:
+            # 'format="mixed"'로 다양한 형식의 날짜 처리
+            df['date'] = pd.to_datetime(df['date'], format='mixed')
+        except Exception as e:
+            # 실패 시 ISO 형식으로 시도
+            try:
+                df['date'] = pd.to_datetime(df['date'], format='ISO8601')
+            except Exception as e2:
+                print(f"날짜 변환 오류 2차: {e2}")
+                # 마지막 대안: 에러 무시 옵션
+                df['date'] = pd.to_datetime(df['date'], errors='coerce')
+                # NaT 값 확인 및 처리
+                if df['date'].isna().any():
+                    print(f"일부 날짜가 NaT로 변환됨: {df['date'].isna().sum()}개")
             
         # 가맹점 이름 정규화 (원본 저장)
         df['original_merchant'] = df['merchant']  # 원본 가맹점명 보존
@@ -422,3 +585,62 @@ class FixedExpenseDetector:
             total_days += (dates[i] - dates[i - 1]).days
 
         return total_days / (len(dates) - 1)
+    
+    def _extract_advanced_features(self, group):
+        """고급 특성 추출"""
+        features = {}
+        
+        # 1. 시간적 패턴 특성
+        group['dayofweek'] = group['date'].dt.dayofweek
+        group['weekend'] = group['dayofweek'].apply(lambda x: 1 if x >= 5 else 0)
+        group['quarter'] = group['date'].dt.quarter
+        
+        # 주중/주말 거래 비율 (주말 거래가 많으면 고정지출 가능성 낮음)
+        weekend_ratio = group[group['weekend'] == 1].shape[0] / len(group)
+        features['weekendRatio'] = weekend_ratio
+        
+        # 2. 사용자 행동 기반 특성
+        # 해당 사용자의 다른 거래와 비교한 상대적 크기
+        user_id = group['userId'].iloc[0]
+        account_id = group['accountId'].iloc[0]
+        
+        # 이 기능 구현을 위해 모든 거래에 대한 참조가 필요함
+        # 데이터베이스나 캐시에서 사용자 평균 거래액을 가져와야 함
+        # features['relative_to_user_avg'] = group['amount'].mean() / user_avg_transaction
+        
+        # 3. 시계열 특성
+        # 거래일 간격의 표준편차 (낮을수록 고정지출 가능성 높음)
+        dates = sorted(group['date'])
+        if len(dates) >= 3:
+            intervals = [(dates[i] - dates[i-1]).days for i in range(1, len(dates))]
+            features['intervalStd'] = np.std(intervals)
+            
+            # 거래 간격의 변동 계수 (낮을수록 규칙적)
+            features['intervalCv'] = np.std(intervals) / np.mean(intervals) if np.mean(intervals) > 0 else 0
+        else:
+            features['intervalStd'] = 0
+            features['intervalCv'] = 0
+        
+        # 4. 연속성 특성 - 거래 누락 비율 (낮을수록 고정지출 가능성 높음)
+        first_date = group['date'].min()
+        last_date = group['date'].max()
+        expected_count = (last_date.to_period('M') - first_date.to_period('M')).n + 1
+        actual_count = len(group['date'].dt.to_period('M').unique())
+        features['continuityRatio'] = actual_count / expected_count if expected_count > 0 else 0
+        
+        # 5. 금액 경향성 (고정지출은 보통 금액이 증가하거나 고정)
+        if len(group) >= 3:
+            amounts = group.sort_values('date')['amount'].values
+            try:
+                from scipy.stats import linregress
+                slope, _, rvalue, _, _ = linregress(range(len(amounts)), amounts)
+                features['amountTrendSlope'] = slope
+                features['amountTrendR2'] = rvalue ** 2
+            except:
+                features['amountTrendSlope'] = 0
+                features['amountTrendR2'] = 0
+        else:
+            features['amountTrendSlope'] = 0
+            features['amountTrendR2'] = 0
+        
+        return features

@@ -16,6 +16,13 @@ public record FixedExpenseCandidate(
         Double totalScore,
         Double averageAmount,
         Integer averageDay,
-        LocalDate latestDate
+        Double avgInterval,
+        LocalDate latestDate,
+        Double weekendRatio,
+        Double intervalStd,
+        Double intervalCv,
+        Double continuityRatio,
+        Double amountTrendSlope,
+        Double amountTrendR2
 ) {
 }

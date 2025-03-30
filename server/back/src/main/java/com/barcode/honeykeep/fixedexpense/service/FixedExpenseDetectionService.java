@@ -1,8 +1,5 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.barcode.honeykeep.fixedexpense.dto.TransactionSummaryDto;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * DetectedFixedExpenseService 와 다르게, 이 서비스 클래스는 고정지출을 감지하는 배치 작업만을 처리함.
  * <br/><br/>
  *
- * <h6>2025-03-29 고정지출 감지 1s ~ 3s</h6>
+ * <h6>2025-03-30 10,000개 거래내역 고정지출 감지 20s ~ 30s 최적화 무조건 필요.</h6>
  *
  *
  */
@@ -69,33 +65,61 @@ public class FixedExpenseDetectionService {
             return List.of();
         }
 
-        // 최근 6개월 모든 사용자의 거래내역을 들고온다.
+        // 최근 6개월 기간 설정
         LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
-        List<Transaction> allTransactions = transactionRepository.findByTypeAndDateAfter(TransactionType.WITHDRAWAL, sixMonthsAgo);
-        if (allTransactions.isEmpty()) {
-            log.info("분석할 거래내역이 없습니다");
-            return List.of();
+
+        // ML 적용 가능한 사용자 ID 목록
+        List<Long> mlEnabledUserIds = getMlEnabledUserIds();
+
+        // 사용자 목록 조회
+        List<User> users = userRepository.findAll();
+        List<FixedExpenseCandidate> allCandidates = new ArrayList<>();
+
+        // 사용자별로 개별 처리
+        for (User user : users) {
+            try {
+                log.info("사용자 ID: {} 고정지출 감지 시작", user.getId());
+
+                // 해당 사용자의 거래내역만 조회
+                List<Transaction> userTransactions = transactionRepository
+                        .findByAccount_User_IdAndTypeAndDateAfter(user.getId(), TransactionType.WITHDRAWAL, sixMonthsAgo);
+
+                if (userTransactions.isEmpty()) {
+                    log.info("사용자 ID: {} 분석할 거래내역 없음", user.getId());
+                    continue;
+                }
+
+                // 해당 사용자의 ML 모델 적용 가능 여부 확인
+                boolean enableMlForUser = mlEnabledUserIds.contains(user.getId());
+
+                // 해당 사용자의 고정지출 감지
+                List<FixedExpenseCandidate> userCandidates =
+                        mlClient.detectFixedExpenses(userTransactions, enableMlForUser);
+
+                log.info("사용자 ID: {} 감지된 고정지출: {}개",
+                        user.getId(), userCandidates.size());
+
+                // 전체 목록에 추가
+                allCandidates.addAll(userCandidates);
+            } catch (Exception e) {
+                log.error("사용자 ID: {} 고정지출 감지 중 오류: {}",
+                        user.getId(), e.getMessage(), e);
+            }
         }
 
-        // ML 적용 가능한 사용자 ID 목록 조회
-        List<Long> mlEnabledUserIds = getMlEnabledUserIds();
-        log.info("ML 모델 적용 가능 사용자 수: {}", mlEnabledUserIds.size());
-
-        // ML 서비스에 고정지출 감지 요청 (ML 적용 가능 사용자 ID 목록 포함)
-        List<FixedExpenseCandidate> candidates = mlClient.detectFixedExpenses(allTransactions, mlEnabledUserIds);
-        log.info("감지된 고정지출 후보: {}개", candidates.size());
+        log.info("전체 감지된 고정지출 후보: {}개", allCandidates.size());
 
         // 감지된 고정지출 저장
-        createDetectedFixedExpenses(candidates);
+        createDetectedFixedExpenses(allCandidates);
 
         log.info("고정지출 감지 배치 작업 완료");
 
-        return candidates;
+        return allCandidates;
     }
 
     /**
-     * 매일 새벽 3시에 ML 모델 학습 실행
-     * 누적된 피드백 데이터로 모델을 일괄 학습시킴
+     * 매주 수요일 새벽 3시에 ML 모델 학습 실행
+     * <p>누적된 피드백 데이터로 모델을 일괄 학습시킴</p>
      */
     @Scheduled(cron = "0 0 3 * * 3")
     public void scheduledModelTraining() {
@@ -164,13 +188,20 @@ public class FixedExpenseDetectionService {
                             fec.averageDay()
                     );
                     expense.updateDetectionAttributes(
+                            fec.avgInterval(),
                             fec.latestDate(),
                             fec.transactions().size(),
                             fec.totalScore(),
                             fec.amountScore(),
                             fec.dateScore(),
                             fec.persistenceScore(),
-                            fec.periodicityScore()
+                            fec.periodicityScore(),
+                            fec.weekendRatio(),
+                            fec.intervalStd(),
+                            fec.intervalCv(),
+                            fec.continuityRatio(),
+                            fec.amountTrendSlope(),
+                            fec.amountTrendR2()
                     );
                     detectedFixedExpenseRepository.save(expense);
                 } else {
@@ -183,6 +214,7 @@ public class FixedExpenseDetectionService {
                             .averageAmount(Money.of(fec.averageAmount()))
                             .averageDay(fec.averageDay())
                             .status(DetectionStatus.DETECTED)
+                            .avgInterval(fec.avgInterval())
                             .lastTransactionDate(fec.latestDate())
                             .transactionCount(fec.transactions().size())
                             .detectionScore(fec.totalScore())
@@ -190,6 +222,12 @@ public class FixedExpenseDetectionService {
                             .dateScore(fec.dateScore())
                             .persistenceScore(fec.persistenceScore())
                             .periodicityScore(fec.periodicityScore())
+                            .weekendRatio(fec.weekendRatio())
+                            .intervalStd(fec.intervalStd())
+                            .intervalCv(fec.intervalCv())
+                            .continuityRatio(fec.continuityRatio())
+                            .amountTrendSlope(fec.amountTrendSlope())
+                            .amountTrendR2(fec.amountTrendR2())
                             .build();
 
                     detectedFixedExpenseRepository.save(newExpense);
