@@ -162,5 +162,4 @@ public class CategoryService {
                 .icon(category.getIcon())
                 .build();
     }
-
 }

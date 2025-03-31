@@ -43,6 +43,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(true)          // HTTPS 환경에서만 전송 (https 설정이 아직 안된 상태라 꺼놓음)
                 .path("/")              // 필요한 경로 지정
+                .maxAge(Duration.ofMillis(tokenProvider.getRefreshTokenExpiresIn()))
                 .domain("localhost")    // ✅ 도메인 설정 필요
                 .sameSite("Lax")        // CSRF 방지
                 .build();
@@ -108,6 +109,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(Duration.ofMillis(tokenProvider.getRefreshTokenExpiresIn()))
+                .domain("localhost")
                 .sameSite("Lax")
                 .build();
 

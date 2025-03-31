@@ -127,6 +127,7 @@ services:
       - my-network
     environment:
       DATA_HOST: ${DATA_HOST}
+      DATA_URL: ${DATA_URL}
       DOCUMENT_PATH: ${DOCUMENT_PATH}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
