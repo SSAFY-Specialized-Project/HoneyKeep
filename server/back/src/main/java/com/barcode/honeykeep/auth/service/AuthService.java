@@ -28,6 +28,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -61,7 +62,7 @@ public class AuthService {
     public RegisterResponse registerUser(RegisterRequest request) {
         User user = findUserOrRegisterAsync(request).block();
 
-        if(Boolean.TRUE.equals(userRepository.existsUserByUserKey(user.getUserKey()))){
+        if (Boolean.TRUE.equals(userRepository.existsUserByUserKey(user.getUserKey()))) {
             throw new CustomException(AuthErrorCode.USER_INFO_ALREADY_REGISTERED);
         }
 
@@ -146,9 +147,15 @@ public class AuthService {
 
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
+        long refreshTokenExpiresIn = jwtTokenProvider.getRefreshTokenExpiresIn();
 
         String refreshTokenKey = "refresh_token:" + user.getId();
-        redisTemplate.opsForValue().set(refreshTokenKey, refreshToken);
+        redisTemplate.opsForValue().set(
+                refreshTokenKey,
+                refreshToken,
+                refreshTokenExpiresIn,
+                TimeUnit.MILLISECONDS
+        );
 
         // 로그인 성공 로깅
         loggingService.logAuth(
@@ -159,10 +166,11 @@ public class AuthService {
                 String.format("로그인 성공: %s (%s)", user.getEmail(), user.getName())
         );
 
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        return new TokenResponse(
+                accessToken,
+                refreshToken,
+                refreshTokenExpiresIn
+        );
     }
 
     /**
@@ -347,6 +355,42 @@ public class AuthService {
 
         // 3. 신규 사용자 - 회원가입 진행 가능
         return false;
+    }
+
+    public TokenResponse reissueToken(String refreshToken) {
+        // 리프레시 토큰 존재 확인
+        if (refreshToken == null) {
+            throw new CustomException(AuthErrorCode.MISSING_REFRESH_TOKEN);
+        }
+
+        // 리프레시 토큰 검증 및 사용자 ID 추출
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+
+        String refreshTokenKey = "refresh_token:" + userId;
+
+        // 레디스에 저장된 리프레시 토큰 확인
+        String storedToken = redisTemplate.opsForValue().get(refreshTokenKey);
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw new CustomException(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
+        }
+
+        // 새 토큰 발급
+        TokenResponse newTokens = new TokenResponse(
+                jwtTokenProvider.generateAccessToken(userId),
+                jwtTokenProvider.generateRefreshToken(userId),
+                jwtTokenProvider.getRefreshTokenExpiresIn()
+        );
+
+
+        // 레디스에 새 리프레시 토큰 저장
+        redisTemplate.opsForValue().set(
+                refreshTokenKey,
+                newTokens.refreshToken(),
+                newTokens.refreshTokenExpiresIn(),
+                TimeUnit.MILLISECONDS
+        );
+
+        return newTokens;
     }
 
     /**

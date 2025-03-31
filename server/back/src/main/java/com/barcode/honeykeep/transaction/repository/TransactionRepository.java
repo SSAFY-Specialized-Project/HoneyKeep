@@ -22,4 +22,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "FROM Transaction t WHERE t.account.id = :accountId AND t.name = :name")
     List<TransactionSummaryDto> findTransactionSummariesByAccountAndName(Long accountId, String name);
 
+    List<Transaction> findByAccount_User_IdAndTypeAndDateAfter(Long userId, TransactionType type, LocalDateTime date);
 }

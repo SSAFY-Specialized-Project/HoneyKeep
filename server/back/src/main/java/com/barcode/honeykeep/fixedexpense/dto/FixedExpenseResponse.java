@@ -15,10 +15,5 @@ public record FixedExpenseResponse(
         Money money,
         LocalDate startDate,
         LocalDate payDay,
-        String memo) {
-
-    @Builder
-    public FixedExpenseResponse {
-
-    }
-}
+        String memo
+) { }

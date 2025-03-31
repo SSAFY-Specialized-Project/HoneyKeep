@@ -1,5 +1,6 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -51,22 +52,22 @@ public class MLFixedExpenseClient {
     }
 
     /**
-     * 고정지출을 pandas 기반으로 감지하는 파이썬 기능 요청
+     * 고정지출 감지 기능 요청
      *
-     * @param transactions 거래 내역 목록
-     * @param mlEnabledUserIds ML 모델 적용 가능한 사용자 ID 목록 (피드백 10개 이상)
+     * @param transactions     거래 내역 목록
+     * @param enableMlForUser  ML 모델 적용 가능한 사용자 ID 목록 (피드백 10개 이상)
      * @return 감지된 고정지출 후보 목록
      */
-    public List<FixedExpenseCandidate> detectFixedExpenses(List<Transaction> transactions, List<Long> mlEnabledUserIds) {
+    public List<FixedExpenseCandidate> detectFixedExpenses(List<Transaction> transactions, Boolean enableMlForUser) {
         try {
             // 트랜잭션 데이터를 JSON으로 변환
             Map<String, Object> request = new HashMap<>();
             request.put("transactions", transactions.stream()
                     .map(this::convertTransactionToMap)
                     .toList());
-            
+
             // ML 적용 가능한 사용자 ID 목록 추가
-            request.put("ml_enabled_user_ids", mlEnabledUserIds);
+            request.put("enable_ml", enableMlForUser);
 
             return (List<FixedExpenseCandidate>) webClient.post()
                     .uri(mlServiceUrl + "/detect-fixed-expenses")
@@ -148,12 +149,34 @@ public class MLFixedExpenseClient {
      */
     private FixedExpenseCandidate convertMapToFixedExpenseCandidate(Map<String, Object> map) {
         String merchantName = (String) map.get("merchant");
-        double amountScore = ((Number) map.get("amountScore")).doubleValue();
-        double dateScore = ((Number) map.get("dateScore")).doubleValue();
-        double persistenceScore = ((Number) map.get("persistenceScore")).doubleValue();
-        double totalScore = ((Number) map.get("totalScore")).doubleValue();
+        String originName = (String) map.get("originalMerchant");
+        Double amountScore = ((Number) map.get("amountScore")).doubleValue();
+        Double dateScore = ((Number) map.get("dateScore")).doubleValue();
+        Double persistenceScore = ((Number) map.get("persistenceScore")).doubleValue();
+        Double periodicityScore = ((Number) map.get("periodicityScore")).doubleValue();
+        Double totalScore = ((Number) map.get("totalScore")).doubleValue();
+        Double averageAmount = ((Number) map.get("averageAmount")).doubleValue();
+        Integer averageDay = ((Number) map.get("averageDay")).intValue();
         Long userId = ((Number) map.get("userId")).longValue();
         Long accountId = ((Number) map.get("accountId")).longValue();
+
+        Map<String, Object> features = (Map<String, Object>) map.get("features");
+
+        Double avgInterval = ((Number)features.get("avgInterval")).doubleValue();
+
+        Double weekendRatio = ((Number) features.get("weekendRatio")).doubleValue();
+        Double intervalStd = ((Number) features.get("intervalStd")).doubleValue();
+        Double intervalCv = ((Number) features.get("intervalCv")).doubleValue();
+        Double continuityRatio = ((Number) features.get("continuityRatio")).doubleValue();
+        Double amountTrendSlope = ((Number) features.get("amountTrendSlope")).doubleValue();
+        Double amountTrendR2 = ((Number) features.get("amountTrendR2")).doubleValue();
+
+        // latestDate 처리 추가
+        String latestDateStr = (String) map.get("latestDate");
+        LocalDate latestDate = null;
+        if (latestDateStr != null) {
+            latestDate = LocalDate.parse(latestDateStr);
+        }
 
         List<TransactionSummaryDto> transactions = transactionRepository.findTransactionSummariesByAccountAndName(accountId, merchantName);
 
@@ -161,11 +184,23 @@ public class MLFixedExpenseClient {
                 userId,
                 accountId,
                 merchantName,
+                originName,
                 transactions,
                 amountScore,
                 dateScore,
                 persistenceScore,
-                totalScore
+                periodicityScore,
+                totalScore,
+                averageAmount,
+                averageDay,
+                avgInterval,
+                latestDate,
+                weekendRatio,
+                intervalStd,
+                intervalCv,
+                continuityRatio,
+                amountTrendSlope,
+                amountTrendR2
         );
     }
 
@@ -174,7 +209,7 @@ public class MLFixedExpenseClient {
      */
     private Map<String, Object> convertDetectedExpenseToTrainingData(DetectedFixedExpense expense) {
         Map<String, Object> data = new HashMap<>();
-        
+
         // 학습에 필요한 특성들
         data.put("transactionId", expense.getOriginName() + "_" + expense.getAccount().getId());
         data.put("amountScore", expense.getAmountScore());
@@ -184,14 +219,22 @@ public class MLFixedExpenseClient {
         data.put("userId", expense.getUser().getId());
         data.put("accountId", expense.getAccount().getId());
         data.put("merchant", expense.getOriginName());
-        
+
         // APPROVED/REJECTED 상태를 isFixedExpense로 변환
         data.put("status", expense.getStatus().toString());
         data.put("isFixedExpense", expense.getStatus().toString().equals("APPROVED"));
-        
+
         // 평균 거래 간격은 없으므로 기본값 추가
-        data.put("avgInterval", 30.0); // 기본값으로 한 달 (30일)
-        
+        data.put("avgInterval", expense.getAvgInterval()); // 기본값으로 한 달 (30일)
+        data.put("weekendRatio", expense.getWeekendRatio());
+        data.put("intervalStd", expense.getIntervalStd());
+        data.put("intervalCv", expense.getIntervalCv());
+        data.put("continuityRatio", expense.getContinuityRatio());
+        data.put("amountTrendSlope", expense.getAmountTrendSlope());
+        data.put("amountTrendR2", expense.getAmountTrendR2());
+
+
+
         return data;
     }
 }
