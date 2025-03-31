@@ -1,6 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import svgr from "vite-plugin-svgr";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,11 +9,10 @@ export default defineConfig({
     host: true,
     port: 5173,
   },
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), svgr()],
   resolve: {
     alias: {
-        '@': '/src', // 프로젝트 루트 기준 src 폴더를 가리킴
+      "@": "/src", // 프로젝트 루트 기준 src 폴더를 가리킴
     },
-  } 
-
-})
+  },
+});
