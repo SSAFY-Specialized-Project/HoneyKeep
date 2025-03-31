@@ -6,3 +6,6 @@ export { default as Checkbox } from "./Checkbox/Checkbox";
 export { default as BankIcon } from "./BankIcon/BankIcon";
 export { default as ContentAddBox } from "./ContentAddBox/ContentAddBox";
 export { default as NavItem } from "./NavItem/NavItem";
+export { default as ImageContainer } from "./ImageContainer/ImageContainer";
+export { default as CategoryIcon } from "./CategoryIcon/CategoryIcon";
+export { default as Icon } from "./Icon/Icon";

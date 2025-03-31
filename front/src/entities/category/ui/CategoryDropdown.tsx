@@ -11,11 +11,9 @@ interface Props {
 const CategoryDropdown = ({
   active,
   setActive,
-  imageId,
   name,
   pocketCount,
   totalAmount,
-  pocketList,
 }: Props) => {
   return (
     <>
