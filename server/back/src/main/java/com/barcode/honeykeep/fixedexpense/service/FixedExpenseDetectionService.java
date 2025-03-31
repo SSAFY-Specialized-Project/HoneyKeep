@@ -1,15 +1,12 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.barcode.honeykeep.fixedexpense.dto.TransactionSummaryDto;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * DetectedFixedExpenseService 와 다르게, 이 서비스 클래스는 고정지출을 감지하는 배치 작업만을 처리함.
+ * <br/><br/>
+ *
+ * <h6>2025-03-30</h6>
+ * <h6>10,000개 거래내역 고정지출 감지 20s ~ 30s</h6>
+ * <h6>256개 고정지출 피드백 데이터 학습 5~6분 소요</h6>
+ *
+ *
  */
 @Slf4j
 @Service
@@ -45,8 +49,6 @@ public class FixedExpenseDetectionService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final MLFixedExpenseClient mlClient;
-
-
 
     /**
      * 고정지출 감지. 매월 1일
@@ -62,36 +64,64 @@ public class FixedExpenseDetectionService {
 
         if (!mlServiceAvailable) {
             log.error("ML 서비스 사용 불가로 고정지출 감지 배치 작업 중단");
-            return null;
+            return List.of();
         }
 
-        // 최근 6개월 모든 사용자의 거래내역을 들고온다.
+        // 최근 6개월 기간 설정
         LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
-        List<Transaction> allTransactions = transactionRepository.findByTypeAndDateAfter(TransactionType.WITHDRAWAL, sixMonthsAgo);
-        if (allTransactions.isEmpty()) {
-            log.info("분석할 거래내역이 없습니다");
-            return null;
+
+        // ML 적용 가능한 사용자 ID 목록
+        List<Long> mlEnabledUserIds = getMlEnabledUserIds();
+
+        // 사용자 목록 조회
+        List<User> users = userRepository.findAll();
+        List<FixedExpenseCandidate> allCandidates = new ArrayList<>();
+
+        // 사용자별로 개별 처리
+        for (User user : users) {
+            try {
+                log.info("사용자 ID: {} 고정지출 감지 시작", user.getId());
+
+                // 해당 사용자의 거래내역만 조회
+                List<Transaction> userTransactions = transactionRepository
+                        .findByAccount_User_IdAndTypeAndDateAfter(user.getId(), TransactionType.WITHDRAWAL, sixMonthsAgo);
+
+                if (userTransactions.isEmpty()) {
+                    log.info("사용자 ID: {} 분석할 거래내역 없음", user.getId());
+                    continue;
+                }
+
+                // 해당 사용자의 ML 모델 적용 가능 여부 확인
+                boolean enableMlForUser = mlEnabledUserIds.contains(user.getId());
+
+                // 해당 사용자의 고정지출 감지
+                List<FixedExpenseCandidate> userCandidates =
+                        mlClient.detectFixedExpenses(userTransactions, enableMlForUser);
+
+                log.info("사용자 ID: {} 감지된 고정지출: {}개",
+                        user.getId(), userCandidates.size());
+
+                // 전체 목록에 추가
+                allCandidates.addAll(userCandidates);
+            } catch (Exception e) {
+                log.error("사용자 ID: {} 고정지출 감지 중 오류: {}",
+                        user.getId(), e.getMessage(), e);
+            }
         }
 
-        // ML 적용 가능한 사용자 ID 목록 조회
-        List<Long> mlEnabledUserIds = getMlEnabledUserIds();
-        log.info("ML 모델 적용 가능 사용자 수: {}", mlEnabledUserIds.size());
-
-        // ML 서비스에 고정지출 감지 요청 (ML 적용 가능 사용자 ID 목록 포함)
-        List<FixedExpenseCandidate> candidates = mlClient.detectFixedExpenses(allTransactions, mlEnabledUserIds);
-        log.info("감지된 고정지출 후보: {}개", candidates.size());
+        log.info("전체 감지된 고정지출 후보: {}개", allCandidates.size());
 
         // 감지된 고정지출 저장
-        createDetectedFixedExpenses(candidates);
+        createDetectedFixedExpenses(allCandidates);
 
         log.info("고정지출 감지 배치 작업 완료");
 
-        return candidates;
+        return allCandidates;
     }
 
     /**
-     * 매일 새벽 3시에 ML 모델 학습 실행
-     * 누적된 피드백 데이터로 모델을 일괄 학습시킴
+     * 매주 수요일 새벽 3시에 ML 모델 학습 실행
+     * <p>누적된 피드백 데이터로 모델을 일괄 학습시킴</p>
      */
     @Scheduled(cron = "0 0 3 * * 3")
     public void scheduledModelTraining() {
@@ -137,7 +167,7 @@ public class FixedExpenseDetectionService {
             try {
                 // 기존 감지된 고정지출이 있는지 확인
                 Optional<DetectedFixedExpense> existingExpense = detectedFixedExpenseRepository
-                        .findByUser_IdAndAccount_IdAndOriginName(
+                        .findByUser_IdAndAccount_IdAndName(
                                 fec.userId(),
                                 fec.accountId(),
                                 fec.merchantName()
@@ -149,31 +179,31 @@ public class FixedExpenseDetectionService {
                 Account account = accountRepository.findById(fec.accountId())
                         .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
 
-                // 평균 금액 계산 (필요시 트랜잭션으로부터)
-                BigDecimal avgAmount = calculateAverageAmount(fec);
-
-                // 평균 발생일 (필요시 트랜잭션으로부터)
-                int avgDayOfMonth = calculateAverageDayOfMonth(fec);
-
-                // 최근 거래일 (필요시 트랜잭션으로부터)
-                LocalDate latestTransactionDate = getLatestTransactionDate(fec);
-
                 if (existingExpense.isPresent()) {
                     // 기존 항목 업데이트
                     DetectedFixedExpense expense = existingExpense.get();
                     expense.update(
                             account,
                             fec.merchantName(),
-                            avgAmount.toString(),
-                            avgDayOfMonth
+                            fec.originName(),
+                            fec.averageAmount().toString(),
+                            fec.averageDay()
                     );
                     expense.updateDetectionAttributes(
-                            latestTransactionDate,
+                            fec.avgInterval(),
+                            fec.latestDate(),
                             fec.transactions().size(),
                             fec.totalScore(),
                             fec.amountScore(),
                             fec.dateScore(),
-                            fec.persistenceScore()
+                            fec.persistenceScore(),
+                            fec.periodicityScore(),
+                            fec.weekendRatio(),
+                            fec.intervalStd(),
+                            fec.intervalCv(),
+                            fec.continuityRatio(),
+                            fec.amountTrendSlope(),
+                            fec.amountTrendR2()
                     );
                     detectedFixedExpenseRepository.save(expense);
                 } else {
@@ -182,16 +212,24 @@ public class FixedExpenseDetectionService {
                             .user(user)
                             .account(account)
                             .name(fec.merchantName())
-                            .originName(fec.merchantName())
-                            .averageAmount(Money.of(avgAmount))
-                            .averageDay(avgDayOfMonth)
+                            .originName(fec.originName())
+                            .averageAmount(Money.of(fec.averageAmount()))
+                            .averageDay(fec.averageDay())
                             .status(DetectionStatus.DETECTED)
-                            .lastTransactionDate(latestTransactionDate)
+                            .avgInterval(fec.avgInterval())
+                            .lastTransactionDate(fec.latestDate())
                             .transactionCount(fec.transactions().size())
                             .detectionScore(fec.totalScore())
                             .amountScore(fec.amountScore())
                             .dateScore(fec.dateScore())
                             .persistenceScore(fec.persistenceScore())
+                            .periodicityScore(fec.periodicityScore())
+                            .weekendRatio(fec.weekendRatio())
+                            .intervalStd(fec.intervalStd())
+                            .intervalCv(fec.intervalCv())
+                            .continuityRatio(fec.continuityRatio())
+                            .amountTrendSlope(fec.amountTrendSlope())
+                            .amountTrendR2(fec.amountTrendR2())
                             .build();
 
                     detectedFixedExpenseRepository.save(newExpense);
@@ -200,56 +238,6 @@ public class FixedExpenseDetectionService {
                 log.error("고정지출 후보 처리 중 오류 발생: {}", e.getMessage(), e);
             }
         }
-    }
-
-    /**
-     * 평균 금액 계산 (transactions가 비어있을 경우 대비)
-     */
-    private BigDecimal calculateAverageAmount(FixedExpenseCandidate fec) {
-        if (!fec.transactions().isEmpty()) {
-            return fec.transactions().stream()
-                    .map(TransactionSummaryDto::amount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .divide(BigDecimal.valueOf(fec.transactions().size()), 2, RoundingMode.HALF_UP);
-        }
-
-        // ML 서비스로부터 평균 금액 정보를 받아오는 경우
-        // 현재 구현에서는 트랜잭션 목록이 비어있을 수 있음
-        // 이 경우 추가 API 호출 또는 다른 방법으로 평균 금액 계산 필요
-
-        // 임시로 0 반환
-        return BigDecimal.ZERO;
-    }
-
-    /**
-     * 평균 발생일 계산 (transactions가 비어있을 경우 대비)
-     */
-    private int calculateAverageDayOfMonth(FixedExpenseCandidate fec) {
-        if (!fec.transactions().isEmpty()) {
-            double avgDay = fec.transactions().stream()
-                    .mapToInt(t -> t.date().getDayOfMonth())
-                    .average()
-                    .orElse(0);
-            return (int) Math.round(avgDay);
-        }
-
-        // 임시로 1일 반환
-        return 1;
-    }
-
-    /**
-     * 최근 거래일 가져오기 (transactions가 비어있을 경우 대비)
-     */
-    private LocalDate getLatestTransactionDate(FixedExpenseCandidate fec) {
-        if (!fec.transactions().isEmpty()) {
-            return fec.transactions().stream()
-                    .map(t->t.date().toLocalDate())
-                    .max(LocalDate::compareTo)
-                    .orElse(LocalDate.now());
-        }
-
-        // 데이터 없으면 현재 날짜 반환
-        return LocalDate.now();
     }
 
         /**
@@ -270,7 +258,7 @@ public class FixedExpenseDetectionService {
         return userFeedbackCounts.entrySet().stream()
                 .filter(entry -> entry.getValue() >= 10)
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+                .toList();
     }
 
 }
