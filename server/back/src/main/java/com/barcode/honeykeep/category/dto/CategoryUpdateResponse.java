@@ -6,5 +6,6 @@ import lombok.Builder;
 @Builder
 public record CategoryUpdateResponse(
     Long categoryId,
-    String name
+    String name,
+    Integer icon
 ) {}

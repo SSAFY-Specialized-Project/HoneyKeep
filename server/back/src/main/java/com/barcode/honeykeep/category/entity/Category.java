@@ -24,21 +24,27 @@ public class Category extends BaseEntity {
 
     private String name;
 
+    @Column(nullable = true)
+    private Integer icon;
+
     @OneToMany(mappedBy = "category")
     List<Pocket> pockets = new ArrayList<>();
 
     @Builder
-    protected Category(String name) {
+    protected Category(String name, Integer icon) {
         this.name = name;
+        this.icon = icon;
         this.pockets = new ArrayList<>();
     }
-    
+
     /**
-     * 카테고리 이름 수정
+     * 카테고리 이름 및 아이콘 수정
      * @param name 새 카테고리 이름
+     * @param icon 새 카테고리 아이콘
      */
-    public void updateName(String name) {
+    public void update(String name, Integer icon) {
         this.name = name;
+        this.icon = icon;
     }
 
     /**

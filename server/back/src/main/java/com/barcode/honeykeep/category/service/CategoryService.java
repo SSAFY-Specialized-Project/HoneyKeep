@@ -4,6 +4,7 @@ import com.barcode.honeykeep.category.dto.CategoryCreateRequest;
 import com.barcode.honeykeep.category.dto.CategoryCreateResponse;
 import com.barcode.honeykeep.category.dto.CategoryUpdateRequest;
 import com.barcode.honeykeep.category.dto.CategoryUpdateResponse;
+import com.barcode.honeykeep.category.dto.CategoryWithPocketsResponse;
 import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.category.repository.CategoryRepository;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
@@ -61,6 +62,39 @@ public class CategoryService {
     }
 
     /**
+     * 모든 카테고리와 각 카테고리에 속한 포켓들을 함께 조회
+     * @param userId 인증된 사용자 ID
+     * @return 카테고리와 포켓 정보가 포함된 응답 리스트
+     */
+    public List<CategoryWithPocketsResponse> getAllCategoriesWithPockets(Long userId) {
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream()
+                .map(category -> {
+                    List<Pocket> pockets = pocketRepository.findByAccountUserIdAndCategory_Id(userId, category.getId());
+                    List<PocketSummaryResponse> pocketResponses = pockets.stream()
+                            .map(pocket -> PocketSummaryResponse.builder()
+                                    .id(pocket.getId())
+                                    .name(pocket.getName())
+                                    .accountName(pocket.getAccount().getAccountName())
+                                    .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                                    .savedAmount(pocket.getSavedAmount().getAmountAsLong())
+                                    .type(pocket.getType().getType())
+                                    .isFavorite(pocket.getIsFavorite())
+                                    .endDate(pocket.getEndDate())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    return CategoryWithPocketsResponse.builder()
+                            .categoryId(category.getId())
+                            .name(category.getName())
+                            .icon(category.getIcon())
+                            .pockets(pocketResponses)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 카테고리 생성
      * @param userId 인증된 사용자 ID (향후 사용자별 카테고리 분리 기능 구현 시 사용)
      * @param request 카테고리 생성 요청 데이터
@@ -69,6 +103,7 @@ public class CategoryService {
     public CategoryCreateResponse createCategory(Long userId, CategoryCreateRequest request) {
         Category category = Category.builder()
                 .name(request.name())
+                .icon(request.icon())
                 .build();
         Category savedCategory = categoryRepository.save(category);
         return mapToCategoryCreateResponse(savedCategory);
@@ -83,7 +118,7 @@ public class CategoryService {
     @Transactional
     public CategoryUpdateResponse updateCategory(Long userId, Long categoryId, CategoryUpdateRequest request) {
         Category category = getCategoryById(categoryId);
-        category.updateName(request.name());
+        category.update(request.name(), request.icon());
         return mapToCategoryUpdateResponse(category);
     }
 
@@ -113,6 +148,7 @@ public class CategoryService {
         return CategoryCreateResponse.builder()
                 .categoryId(category.getId())
                 .name(category.getName())
+                .icon(category.getIcon())
                 .build();
     }
 
@@ -123,6 +159,7 @@ public class CategoryService {
         return CategoryUpdateResponse.builder()
                 .categoryId(category.getId())
                 .name(category.getName())
+                .icon(category.getIcon())
                 .build();
     }
 }
