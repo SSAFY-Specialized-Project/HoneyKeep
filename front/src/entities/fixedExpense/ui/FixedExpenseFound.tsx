@@ -55,7 +55,6 @@ const FixedExpenseFound = ({
           >
             등록
           </button>
-          ㅗ
           <button
             type="button"
             onClick={onModify}
