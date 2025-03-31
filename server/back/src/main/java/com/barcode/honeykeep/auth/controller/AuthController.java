@@ -1,16 +1,16 @@
 package com.barcode.honeykeep.auth.controller;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Duration;
 
 import com.barcode.honeykeep.auth.dto.*;
+import com.barcode.honeykeep.auth.util.JwtTokenProvider;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.barcode.honeykeep.auth.service.AuthService;
 import com.barcode.honeykeep.common.response.ApiResponse;
@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtTokenProvider tokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@RequestBody RegisterRequest request) {
@@ -95,4 +96,24 @@ public class AuthController {
         return ResponseEntity.ok()
                 .body(ApiResponse.success(isValid));
     }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<String>> reissueToken(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken) {
+        TokenResponse newTokens = authService.reissueToken(refreshToken);
+
+        // 응답 생성 (쿠키 포함)
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", newTokens.refreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(Duration.ofMillis(tokenProvider.getRefreshTokenExpiresIn()))
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .body(ApiResponse.success("토큰이 갱신되었습니다", newTokens.accessToken()));
+    }
+
 }
