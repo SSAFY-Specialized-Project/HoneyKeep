@@ -52,10 +52,10 @@ public class MLFixedExpenseClient {
     }
 
     /**
-     * 고정지출을 pandas 기반으로 감지하는 파이썬 기능 요청
+     * 고정지출 감지 기능 요청
      *
      * @param transactions     거래 내역 목록
-     * @param mlEnabledUserIds ML 모델 적용 가능한 사용자 ID 목록 (피드백 10개 이상)
+     * @param enableMlForUser  ML 모델 적용 가능한 사용자 ID 목록 (피드백 10개 이상)
      * @return 감지된 고정지출 후보 목록
      */
     public List<FixedExpenseCandidate> detectFixedExpenses(List<Transaction> transactions, Boolean enableMlForUser) {

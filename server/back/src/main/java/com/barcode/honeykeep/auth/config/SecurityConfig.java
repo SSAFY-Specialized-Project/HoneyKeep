@@ -46,6 +46,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/send-verification",
                                 "/api/v1/auth/verify-email",
                                 "/api/v1/auth/validate-user",
+                                "/api/v1/auth/reissue",
                                 "/api/v1/sample/**",
                                 "/actuator/health",
                                 "/actuator/info")
