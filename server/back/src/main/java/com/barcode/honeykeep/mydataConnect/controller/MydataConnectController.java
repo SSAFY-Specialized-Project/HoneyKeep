@@ -53,22 +53,6 @@ public class MydataConnectController {
 
     /**
      *
-     * 선택한 계좌 연동을 위한 1원 인증 요청 API
-     */
-    @PostMapping("/accounts/auth")
-    public ResponseEntity<ApiResponse<BankAuthForMydataResponse>> requestAccountAuth(
-            @AuthenticationPrincipal UserId userId,
-            @RequestBody BankAuthForMydataRequest request) {
-
-        BankAuthForMydataResponse response = mydataConnectService.requestAccountAuth(
-                userId.value(), request.accountNo()
-        );
-
-        return ResponseEntity.ok(ApiResponse.success("1원 인증 요청 성공", response));
-    }
-
-    /**
-     *
      * 선택한 계좌의 거래내역(단건) 조회 API
      */
     @PostMapping("/accounts/transaction")
@@ -79,21 +63,4 @@ public class MydataConnectController {
         TransactionHistoryResponse response = mydataConnectService.inquireTransactionHistory(userId.value(), request);
         return ResponseEntity.ok(ApiResponse.success("거래내역 조회 성공", response));
     }
-
-    /**
-     *
-     * 선택한 계좌 연동을 위한 1원 인증 검증 요청 API
-     */
-    @PostMapping("/accounts/verify")
-    public ResponseEntity<ApiResponse<Void>> verifyAccountAuth(
-            @AuthenticationPrincipal UserId userId,
-            @RequestBody AccountVerifyForMydataRequest request) {
-
-        mydataConnectService.verifyAccountAuth(userId.value(), request);
-        return ResponseEntity.ok(ApiResponse.success("계좌 인증 및 저장 성공", null));
-    }
-
-
-
-
 }
