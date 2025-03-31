@@ -1,9 +1,12 @@
 package com.barcode.honeykeep.chatbot.service;
 
+import com.barcode.honeykeep.chatbot.dto.GenerationResponse;
 import com.barcode.honeykeep.chatbot.dto.QueryRequest;
 import com.barcode.honeykeep.chatbot.dto.QueryResponse;
 import com.barcode.honeykeep.chatbot.entity.ChatMessage;
+import com.barcode.honeykeep.chatbot.exception.ChatbotErrorCode;
 import com.barcode.honeykeep.chatbot.type.SenderType;
+import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -33,46 +36,65 @@ public class ChatbotService {
      * 4. 없으면 상위 구조 만들어서 Map 생성
      * 5. 마지막에 업데이트 된 메세지 Redis에 추가
      */
-    public QueryResponse query(UserId user, QueryRequest queryRequest) throws JsonProcessingException {
+    public QueryResponse query(UserId user, QueryRequest queryRequest) {
         ObjectMapper objectMapper = new ObjectMapper();
         Long userId = user.value();
 
-        // 질문 받아서 답변 생성
-        String query = queryRequest.getQuery();
-        queryRequest.setConversationId(userId);
-        String answer = chatbotClient.sendQuery(queryRequest);
-        log.info("사용자 {}에 대한 챗봇 답변 생성됨: {}", userId, answer);
-
-        // 사용자별 Redis 키 생성: 예, "message_store:chat_history:123"
-        final String userChatKey = ROOT_KEY + ":" + userId;
-        log.info("사용할 Redis 키: {}", userChatKey);
-
-        // 새 쿼리와 답변 메시지 생성
-        List<Map<String, Object>> newMessages = convertMessagesForRAG(query, answer);
-        log.info("새로운 메시지 생성됨: {}", newMessages);
-
-        // Redis에 해당 키가 있는지 확인 후, 리스트 자료형으로 메시지 추가
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(userChatKey))) {
-            log.info("Redis 키 {} 가 존재합니다. 새 메시지를 리스트에 추가합니다.", userChatKey);
-            // 리스트에 새 메시지들을 오른쪽에 추가 (RPUSH)
-            for (Map<String, Object> msg : newMessages) {
-                String msgJson = objectMapper.writeValueAsString(msg);
-                redisTemplate.opsForList().rightPush(userChatKey, msgJson);
+        try {
+            // 1. 쿼리 유효성 검사
+            String query = queryRequest.getQuery();
+            if (query == null || query.trim().isEmpty()) {
+                throw new CustomException(ChatbotErrorCode.INVALID_QUERY);
             }
-        } else {
-            log.info("Redis 키 {} 가 존재하지 않습니다. 새로운 리스트를 생성합니다.", userChatKey);
-            // 새로운 리스트에 새 메시지들을 추가
-            for (Map<String, Object> msg : newMessages) {
-                String msgJson = objectMapper.writeValueAsString(msg);
-                redisTemplate.opsForList().rightPush(userChatKey, msgJson);
+
+            // 2. 사용자 ID를 conversationId로 설정
+            queryRequest.setConversationId(userId);
+
+            // 3. 챗봇 클라이언트 호출 (예외 발생 시 상세 에러 처리)
+            GenerationResponse generationResponse;
+            try {
+                generationResponse = chatbotClient.sendQuery(queryRequest);
+            } catch (Exception e) {
+                log.error("챗봇 클라이언트 호출 중 오류 발생", e);
+                throw new CustomException(ChatbotErrorCode.CHATBOT_CLIENT_ERROR);
             }
+            log.info("사용자 {}에 대한 챗봇 답변 생성됨: {}", userId, generationResponse.getAnswer());
+
+            // 4. 사용자별 Redis 키 생성: 예, "message_store:chat_history:123"
+            final String userChatKey = ROOT_KEY + ":" + userId;
+            log.info("사용할 Redis 키: {}", userChatKey);
+
+            // 5. 새 쿼리와 답변 메시지 생성
+            List<Map<String, Object>> newMessages = convertMessagesForRAG(query, generationResponse.getAnswer());
+            log.info("새로운 메시지 생성됨: {}", newMessages);
+
+            // 6. Redis에 해당 키가 있는지 확인 후, 리스트 자료형으로 메시지 추가
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(userChatKey))) {
+                log.info("Redis 키 {} 가 존재합니다. 새 메시지를 리스트에 추가합니다.", userChatKey);
+                for (Map<String, Object> msg : newMessages) {
+                    String msgJson = objectMapper.writeValueAsString(msg);
+                    redisTemplate.opsForList().rightPush(userChatKey, msgJson);
+                }
+            } else {
+                log.info("Redis 키 {} 가 존재하지 않습니다. 새로운 리스트를 생성합니다.", userChatKey);
+                for (Map<String, Object> msg : newMessages) {
+                    String msgJson = objectMapper.writeValueAsString(msg);
+                    redisTemplate.opsForList().rightPush(userChatKey, msgJson);
+                }
+            }
+
+            log.info("최종 응답 생성 - 답변: {}", generationResponse.getAnswer());
+            return QueryResponse.builder()
+                    .answer(generationResponse.getAnswer())
+                    .classificationResult(generationResponse.getClassificationResult())
+                    .build();
+        } catch (JsonProcessingException e) {
+            log.error("JSON 처리 중 오류 발생", e);
+            throw new CustomException(ChatbotErrorCode.JSON_PARSE_ERROR);
+        } catch (Exception e) {
+            log.error("예상치 못한 오류 발생", e);
+            throw new CustomException(ChatbotErrorCode.UNEXPECTED_ERROR);
         }
-
-        log.info("최종 응답 생성 - 답변: {}", answer);
-        return QueryResponse.builder()
-                .answer(answer)
-                .sentAt(new Date())
-                .build();
     }
 
     // 질문과 답변 메시지를 RAG 서버 스키마에 맞게 변환하는 헬퍼 메서드
@@ -104,7 +126,7 @@ public class ChatbotService {
      * Redis에 저장된 (type, data.content) 구조의 메시지들을 읽어와
      * ChatMessage(senderId, content) 리스트로 변환합니다.
      */
-    public List<ChatMessage> history(Long userId) throws JsonProcessingException {
+    public List<ChatMessage> history(Long userId) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // 예: "message_store:chat_history:123"
@@ -118,36 +140,35 @@ public class ChatbotService {
 
         if (rawList == null || rawList.isEmpty()) {
             log.info("Redis 키 {}에 저장된 메시지가 없습니다.", userChatKey);
-            return chatMessages;
+            throw new CustomException(ChatbotErrorCode.NO_HISTORY);
         }
 
         // 각 원소(문자열)를 ChatMessage로 변환
         for (Object item : rawList) {
-            // RedisTemplate은 Object 타입을 반환할 수 있으므로, 문자열 변환
             String jsonStr = (item instanceof byte[])
                     ? new String((byte[]) item)
                     : item.toString();
 
-            // JSON 문자열을 Map으로 역직렬화
-            Map<String, Object> map = objectMapper.readValue(jsonStr, new TypeReference<Map<String, Object>>() {});
-
+            Map<String, Object> map;
+            try {
+                map = objectMapper.readValue(jsonStr, new TypeReference<Map<String, Object>>() {});
+            } catch (JsonProcessingException e) {
+                log.error("JSON 파싱 중 오류 발생. 메시지: {}", jsonStr, e);
+                throw new CustomException(ChatbotErrorCode.JSON_PARSE_ERROR);
+            }
             // "type" 필드와 "data" 필드에서 "content" 추출
             String type = (String) map.get("type");
             Map<String, Object> dataMap = (Map<String, Object>) map.get("data");
             String content = dataMap != null ? (String) dataMap.get("content") : "";
 
-            // ChatMessage 객체 생성
             ChatMessage chatMessage = new ChatMessage();
             chatMessage.setContent(content);
 
             // type -> senderId 매핑
             if ("human".equalsIgnoreCase(type)) {
                 chatMessage.setSenderId(SenderType.USER);
-            } else if ("ai".equalsIgnoreCase(type)) {
-                chatMessage.setSenderId(SenderType.BOT);
             } else {
-                // 필요한 경우, 기타 타입 처리
-                chatMessage.setSenderId(SenderType.USER);
+                chatMessage.setSenderId(SenderType.BOT);
             }
 
             chatMessages.add(chatMessage);

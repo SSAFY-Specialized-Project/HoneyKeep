@@ -9,5 +9,4 @@ class ChatbotRequest(BaseModel):
 
 class ChatbotResponse(BaseModel):
     answer: str
-    retrieved_docs: List[str] = []
-    chat_history: Optional[List[str]] = None
+    classification_result: int=Field(..., alias="classificationResult")

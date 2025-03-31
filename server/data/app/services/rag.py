@@ -1,69 +1,26 @@
-import json
 from langchain.chat_models import ChatOpenAI
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import PromptTemplate
+from langchain.chains import ConversationalRetrievalChain, LLMChain
 from langchain.memory import ConversationBufferMemory
-from langchain.memory.chat_message_histories import RedisChatMessageHistory
-from langchain_core.messages.utils import messages_from_dict
 
+from app.services.memory import ReadOnlyRedisChatMessageHistory
+from app.services.prompts import *
 from app.services.document_loader import create_vector_store
 from app.config import Config
-
-
-class ReadOnlyRedisChatMessageHistory(RedisChatMessageHistory):
-    def add_message(self, message) -> None:
-        # 저장하지 않음으로써, 대화 내역 갱신(쓰기)을 무력화
-        pass
-
-    def clear(self) -> None:
-        # 지우기 작업도 필요없다면 아무 동작도 하지 않음
-        pass
-
-    @property
-    def messages(self):
-        # Redis에서 리스트 형식으로 저장된 메시지들을 읽음
-        items = self.redis_client.lrange(self.key, 0, -1)
-        new_items = []
-        for item in items:
-            # Redis에서 반환되는 item이 bytes인 경우, 문자열로 디코딩
-            if isinstance(item, bytes):
-                item = item.decode("utf-8")
-            try:
-                # 첫 번째 디코딩 시도
-                loaded = json.loads(item)
-                # 만약 결과가 여전히 문자열이면, 다시 json.loads 시도
-                if isinstance(loaded, str):
-                    loaded = json.loads(loaded)
-                new_items.append(loaded)
-            except Exception as e:
-                new_items.append(item)
-
-        print(new_items)
-        print(type(new_items))
-
-        return messages_from_dict(new_items)
     
 
 # 벡터스토어 및 리트리버 생성
 vector_store = create_vector_store()
 retriever = vector_store.as_retriever()
 
-# 프롬프트 템플릿 정의
-# 질문 독립화 프롬프트: 대화 내역과 후속 질문을 독립 질문으로 재구성
-CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(
-    "다음 대화 내역과 후속 질문을 독립적인 질문으로 재구성해줘.\n\n"
-    "대화 내역:\n{chat_history}\n"
-    "후속 질문: {question}\n"
-    "독립적인 질문:"
-)
-
 # --- LLM 초기화 ---
 llm = ChatOpenAI(
-    temperature=0,
+    temperature=Config.TEMPERATURE,
     openai_api_key=Config.OPENAI_API_KEY,
-    model_name="gpt-4o"
+    model_name=Config.MODEL_NAME
 )
 
+# 분류 체인 생성 (LLMChain 사용)
+classification_chain = LLMChain(llm=llm, prompt=CLASSIFICATION_PROMPT)
 
 def get_memory(conversation_id: int) -> ConversationBufferMemory:
     """
@@ -106,8 +63,7 @@ def ask_question(query: str, conversation_id: int):
     
     result = conversation_chain({"question": query, "chat_history": memory.chat_memory.messages})
     
-    # chat_history는 Redis에 저장된 메시지들의 리스트 (각 메시지 객체의 .content 속성을 사용)
-    chat_history_text = [msg.content for msg in memory.chat_memory.messages]
+    generated_answer = result["answer"]
     
     # retrieved_docs가 존재한다면 문서의 page_content를 추출
     retrieved_docs = []
@@ -115,4 +71,10 @@ def ask_question(query: str, conversation_id: int):
         for doc in result["source_documents"]:
             retrieved_docs.append(doc.page_content)
     
-    return result["answer"], retrieved_docs, chat_history_text
+    # 추가 분류 체인 실행: 생성된 답변을 10개의 기능 중 어느 것에 해당하는지 분류
+    classification_result = classification_chain.run(
+        answer=generated_answer,
+        retrieved_docs=retrieved_docs[0] if retrieved_docs else "참조할 문서가 없습니다."
+    )
+    
+    return generated_answer, classification_result

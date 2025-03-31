@@ -1,13 +1,9 @@
 package com.barcode.honeykeep.chatbot.dto;
 
-import lombok.Builder;
 import lombok.Data;
 
-import java.util.Date;
-
 @Data
-@Builder
-public class QueryResponse {
+public class GenerationResponse {
     String answer;
     int classificationResult;
 }
