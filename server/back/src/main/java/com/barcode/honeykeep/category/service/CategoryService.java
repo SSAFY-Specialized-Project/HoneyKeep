@@ -87,6 +87,7 @@ public class CategoryService {
                     return CategoryWithPocketsResponse.builder()
                             .categoryId(category.getId())
                             .name(category.getName())
+                            .icon(category.getIcon())
                             .pockets(pocketResponses)
                             .build();
                 })
@@ -102,6 +103,7 @@ public class CategoryService {
     public CategoryCreateResponse createCategory(Long userId, CategoryCreateRequest request) {
         Category category = Category.builder()
                 .name(request.name())
+                .icon(request.icon())
                 .build();
         Category savedCategory = categoryRepository.save(category);
         return mapToCategoryCreateResponse(savedCategory);
@@ -116,7 +118,7 @@ public class CategoryService {
     @Transactional
     public CategoryUpdateResponse updateCategory(Long userId, Long categoryId, CategoryUpdateRequest request) {
         Category category = getCategoryById(categoryId);
-        category.updateName(request.name());
+        category.update(request.name(), request.icon());
         return mapToCategoryUpdateResponse(category);
     }
 
@@ -146,6 +148,7 @@ public class CategoryService {
         return CategoryCreateResponse.builder()
                 .categoryId(category.getId())
                 .name(category.getName())
+                .icon(category.getIcon())
                 .build();
     }
 
@@ -156,6 +159,7 @@ public class CategoryService {
         return CategoryUpdateResponse.builder()
                 .categoryId(category.getId())
                 .name(category.getName())
+                .icon(category.getIcon())
                 .build();
     }
 
