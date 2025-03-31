@@ -1,6 +1,6 @@
 import { apiURL } from "@/shared/lib";
 import { LoginUserRequset, LoginUserResponse } from "./types";
-import { ResponseDTO, ResponseErrorDTO } from "@/shared/api/types";
+import { ResponseDTO, ResponseErrorDTO } from "@/shared/model/types";
 
 const loginUserAPI = async (
   data: LoginUserRequset

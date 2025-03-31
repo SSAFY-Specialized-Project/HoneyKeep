@@ -1,7 +1,8 @@
-import { BankIcon } from "@/shared/ui";
+import { Bank } from "@/shared/model/types";
+import { BankIcon, Icon } from "@/shared/ui";
 
 interface Props {
-  bank: string;
+  bank: Bank;
   account: string;
   currentAmount: number;
   remainingAmount: number;
@@ -26,7 +27,7 @@ const AccountInfo = ({
       >
         <div className="flex justify-between w-full">
           <div className="flex gap-2">
-            <BankIcon />
+            <BankIcon bank={bank} />
             <div className="flex flex-col items-start">
               <strong className="text-text-xl text-gray-900 font-bold">
                 {bank}
@@ -48,7 +49,7 @@ const AccountInfo = ({
               </span>
             </div>
             <button type="button" className="absolute -bottom-0 -left-2">
-              {/* 정보 알려주는 아이콘 */}
+              <Icon size="small" id="notice" />
             </button>
           </div>
         </div>

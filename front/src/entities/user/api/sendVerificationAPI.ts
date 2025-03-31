@@ -1,4 +1,4 @@
-import { ResponseDTO, ResponseErrorDTO } from "@/shared/api/types";
+import { ResponseDTO, ResponseErrorDTO } from "@/shared/model/types";
 import { SendEmailRequest } from "./types";
 import { apiURL } from "@/shared/lib";
 
