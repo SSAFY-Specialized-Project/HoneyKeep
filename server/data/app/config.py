@@ -11,6 +11,10 @@ class Config:
     
     # OpenAI API Key
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
+    # LLM 설정
+    TEMPERATURE = 0
+    MODEL_NAME="gpt-4o"
     
     # 문서 파일 경로
     DOCUMENT_PATH = os.getenv("DOCUMENT_PATH", "./document/documents.txt")
