@@ -13,6 +13,6 @@ export default defineConfig({
     alias: {
         '@': '/src', // 프로젝트 루트 기준 src 폴더를 가리킴
     },
-} 
+  } 
 
 })
