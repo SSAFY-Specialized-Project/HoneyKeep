@@ -1,6 +1,10 @@
 # 1단계: 빌드
 FROM node:20.9.0-alpine AS build
 
+# 빌드 시점에 환경 변수를 받을 수 있도록 ARG 추가
+ARG VITE_BASE_URL
+ENV VITE_BASE_URL=$VITE_BASE_URL
+
 WORKDIR /app
 COPY . .
 RUN npm install
