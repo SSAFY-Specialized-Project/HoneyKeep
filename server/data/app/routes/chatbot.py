@@ -8,7 +8,7 @@ router = APIRouter()
 @router.post("/ask", response_model=str)
 async def ask(request: ChatbotRequest):
     try:
-        answer, retrieved_docs, chat_history = ask_question(request.question, request.conversation_id)
+        answer, retrieved_docs, chat_history = ask_question(request.query, request.conversation_id)
         # return ChatbotResponse(answer=answer, retrieved_docs=retrieved_docs, chat_history=chat_history)
         return answer
     

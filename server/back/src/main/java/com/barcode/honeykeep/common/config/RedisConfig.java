@@ -60,12 +60,6 @@ public class RedisConfig {
         redisTemplate.setKeySerializer(stringSerializer);
         redisTemplate.setHashKeySerializer(stringSerializer);
 
-        // Value Serializer (JSON 직렬화)
-//        Jackson2JsonRedisSerializer<Object> serializer =
-//                new Jackson2JsonRedisSerializer<>(Object.class);
-//
-//        redisTemplate.setValueSerializer(serializer);
-
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
         redisTemplate.setValueSerializer(jsonSerializer);
         redisTemplate.setHashValueSerializer(jsonSerializer);

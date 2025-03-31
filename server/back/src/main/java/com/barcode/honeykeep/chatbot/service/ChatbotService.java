@@ -1,6 +1,7 @@
 package com.barcode.honeykeep.chatbot.service;
 
 import com.barcode.honeykeep.chatbot.dto.QueryRequest;
+import com.barcode.honeykeep.chatbot.dto.QueryResponse;
 import com.barcode.honeykeep.chatbot.entity.ChatMessage;
 import com.barcode.honeykeep.chatbot.type.SenderType;
 import com.barcode.honeykeep.common.vo.UserId;
@@ -13,9 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -34,7 +33,7 @@ public class ChatbotService {
      * 4. 없으면 상위 구조 만들어서 Map 생성
      * 5. 마지막에 업데이트 된 메세지 Redis에 추가
      */
-    public boolean query(UserId user, QueryRequest queryRequest) throws JsonProcessingException {
+    public QueryResponse query(UserId user, QueryRequest queryRequest) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         Long userId = user.value();
 
@@ -42,74 +41,119 @@ public class ChatbotService {
         String query = queryRequest.getQuery();
         queryRequest.setConversationId(userId);
         String answer = chatbotClient.sendQuery(queryRequest);
+        log.info("사용자 {}에 대한 챗봇 답변 생성됨: {}", userId, answer);
 
-        // 사용자별 Redis 키 생성: 예, "chat_history:123"
+        // 사용자별 Redis 키 생성: 예, "message_store:chat_history:123"
         final String userChatKey = ROOT_KEY + ":" + userId;
+        log.info("사용할 Redis 키: {}", userChatKey);
 
-        // 1-1. chat_history:userId 하위 데이터가 있을 때
+        // 새 쿼리와 답변 메시지 생성
+        List<Map<String, Object>> newMessages = convertMessagesForRAG(query, answer);
+        log.info("새로운 메시지 생성됨: {}", newMessages);
+
+        // Redis에 해당 키가 있는지 확인 후, 리스트 자료형으로 메시지 추가
         if (Boolean.TRUE.equals(redisTemplate.hasKey(userChatKey))) {
-
-            String chatroomJson = (String) redisTemplate.opsForValue().get(userChatKey);
-            List<ChatMessage> chatMessages;
-
-            // 2-1. chat_history:userId 해시가 있으면, 해당 사용자(userId)의 채팅방 데이터를 가져옴 (JSON 문자열)
-            if (chatroomJson != null) {
-
-                // 기존 채팅 기록이 있으면 메시지 리스트로 변환
-                chatMessages = objectMapper.readValue(chatroomJson, new TypeReference<List<ChatMessage>>() {});
+            log.info("Redis 키 {} 가 존재합니다. 새 메시지를 리스트에 추가합니다.", userChatKey);
+            // 리스트에 새 메시지들을 오른쪽에 추가 (RPUSH)
+            for (Map<String, Object> msg : newMessages) {
+                String msgJson = objectMapper.writeValueAsString(msg);
+                redisTemplate.opsForList().rightPush(userChatKey, msgJson);
             }
-            // 2-2. chat_history:userId 해시가 없으면
-            else {
-                // 없으면 빈 리스트로 초기화
-                chatMessages = new ArrayList<>();
+        } else {
+            log.info("Redis 키 {} 가 존재하지 않습니다. 새로운 리스트를 생성합니다.", userChatKey);
+            // 새로운 리스트에 새 메시지들을 추가
+            for (Map<String, Object> msg : newMessages) {
+                String msgJson = objectMapper.writeValueAsString(msg);
+                redisTemplate.opsForList().rightPush(userChatKey, msgJson);
             }
-
-            // 새 쿼리와 답변 메시지를 리스트에 추가
-            appendNewQueryAnswer(chatMessages, query, answer);
-
-            // 변경된 리스트를 Redis에 업데이트
-            saveChatroom(userId, chatMessages, objectMapper);
         }
 
-        // 1-2. chat_history:userId 하위 데이터가 없을 때
-        else {
-            // 사용자의 채팅 기록이 없는 경우, 빈 리스트로 새 채팅방 생성
-            List<ChatMessage> chatMessages = new ArrayList<>();
+        log.info("최종 응답 생성 - 답변: {}", answer);
+        return QueryResponse.builder()
+                .answer(answer)
+                .sentAt(new Date())
+                .build();
+    }
 
-            // 새 쿼리와 답변 메시지를 리스트에 추가
-            appendNewQueryAnswer(chatMessages, query, answer);
+    // 질문과 답변 메시지를 RAG 서버 스키마에 맞게 변환하는 헬퍼 메서드
+    // 여기서는 두 개의 메시지(사용자와 봇)를 리스트에 담아 반환합니다.
+    private List<Map<String, Object>> convertMessagesForRAG(String query, String answer) {
+        List<Map<String, Object>> messages = new ArrayList<>();
 
-            // Redis에 새 채팅방 저장
-            saveChatroom(userId, chatMessages, objectMapper);
+        // 사용자 메시지 생성: senderType "human"
+        Map<String, Object> userMsg = new HashMap<>();
+        userMsg.put("type", "human");
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("content", query);
+        userMsg.put("data", userData);
+        messages.add(userMsg);
+
+        // 봇 메시지 생성: senderType "ai"
+        Map<String, Object> botMsg = new HashMap<>();
+        botMsg.put("type", "ai");
+        Map<String, Object> botData = new HashMap<>();
+        botData.put("content", answer);
+        botMsg.put("data", botData);
+        messages.add(botMsg);
+
+        log.info("총 {}개의 메시지를 RAG 형식으로 변환하였습니다.", messages.size());
+        return messages;
+    }
+
+    /**
+     * Redis에 저장된 (type, data.content) 구조의 메시지들을 읽어와
+     * ChatMessage(senderId, content) 리스트로 변환합니다.
+     */
+    public List<ChatMessage> history(Long userId) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // 예: "message_store:chat_history:123"
+        final String userChatKey = "message_store:chat_history:" + userId;
+
+        // Redis 리스트에서 모든 원소(JSON 문자열) 가져오기
+        List<Object> rawList = redisTemplate.opsForList().range(userChatKey, 0, -1);
+
+        // 변환된 메시지를 담을 리스트
+        List<ChatMessage> chatMessages = new ArrayList<>();
+
+        if (rawList == null || rawList.isEmpty()) {
+            log.info("Redis 키 {}에 저장된 메시지가 없습니다.", userChatKey);
+            return chatMessages;
         }
 
-        return true;
-    }
+        // 각 원소(문자열)를 ChatMessage로 변환
+        for (Object item : rawList) {
+            // RedisTemplate은 Object 타입을 반환할 수 있으므로, 문자열 변환
+            String jsonStr = (item instanceof byte[])
+                    ? new String((byte[]) item)
+                    : item.toString();
 
-    // 새로운 쿼리 & 답변 메시지를 생성하여 기존 메시지 리스트에 추가
-    private void appendNewQueryAnswer(List<ChatMessage> messages, String query, String answer) {
-        // 사용자 질문 메시지 추가 (발신자 "user")
-        ChatMessage queryMessage = ChatMessage.builder()
-                .senderId(SenderType.USER)
-                .content(query)
-                .sentAt(new Date())
-                .build();
+            // JSON 문자열을 Map으로 역직렬화
+            Map<String, Object> map = objectMapper.readValue(jsonStr, new TypeReference<Map<String, Object>>() {});
 
-        // 봇 답변 메시지 추가 (발신자 "BOT")
-        ChatMessage answerMessage = ChatMessage.builder()
-                .senderId(SenderType.BOT)
-                .content(answer)
-                .sentAt(new Date())
-                .build();
+            // "type" 필드와 "data" 필드에서 "content" 추출
+            String type = (String) map.get("type");
+            Map<String, Object> dataMap = (Map<String, Object>) map.get("data");
+            String content = dataMap != null ? (String) dataMap.get("content") : "";
 
-        messages.add(queryMessage);
-        messages.add(answerMessage);
-    }
+            // ChatMessage 객체 생성
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setContent(content);
 
-    // 채팅방을 JSON으로 직렬화하여 Redis의 사용자별 키에 저장
-    private void saveChatroom(Long userId, List<ChatMessage> chatMessages, ObjectMapper objectMapper) throws JsonProcessingException {
-        String updatedJson = objectMapper.writeValueAsString(chatMessages);
-        String userChatKey = ROOT_KEY + ":" + userId;
-        redisTemplate.opsForValue().set(userChatKey, updatedJson);
+            // type -> senderId 매핑
+            if ("human".equalsIgnoreCase(type)) {
+                chatMessage.setSenderId(SenderType.USER);
+            } else if ("ai".equalsIgnoreCase(type)) {
+                chatMessage.setSenderId(SenderType.BOT);
+            } else {
+                // 필요한 경우, 기타 타입 처리
+                chatMessage.setSenderId(SenderType.USER);
+            }
+
+            chatMessages.add(chatMessage);
+        }
+
+        log.info("Redis 키 {}에서 총 {}개의 메시지를 변환했습니다.", userChatKey, chatMessages.size());
+        return chatMessages;
     }
 }

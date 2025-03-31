@@ -1,6 +1,8 @@
 package com.barcode.honeykeep.chatbot.controller;
 
 import com.barcode.honeykeep.chatbot.dto.QueryRequest;
+import com.barcode.honeykeep.chatbot.dto.QueryResponse;
+import com.barcode.honeykeep.chatbot.entity.ChatMessage;
 import com.barcode.honeykeep.chatbot.service.ChatbotService;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
@@ -9,10 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,11 +28,21 @@ public class ChatbotController {
      * 사용자의 id를 가지고 mongodb에 빈 채팅방 엔티티를 만들어둡니다.
      */
     @PostMapping("/query")
-    public ResponseEntity<ApiResponse<Boolean>> query(@AuthenticationPrincipal UserId userId, @RequestBody QueryRequest queryRequest) throws JsonProcessingException {
-        boolean isSuccessfullyCreated = chatbotService.query(userId, queryRequest);
+    public ResponseEntity<ApiResponse<QueryResponse>> query(@AuthenticationPrincipal UserId userId, @RequestBody QueryRequest queryRequest) throws JsonProcessingException {
+        QueryResponse queryResponse = chatbotService.query(userId, queryRequest);
 
         return ResponseEntity.ok()
-                .body(ApiResponse.success(true));
+                .body(ApiResponse.success(queryResponse));
     }
 
+    /**
+     * 이전 대화를 가져옵니다.
+     */
+    @GetMapping("/history")
+    public ResponseEntity<ApiResponse<List<ChatMessage>>> history(@AuthenticationPrincipal UserId userId) throws JsonProcessingException {
+        List<ChatMessage> messages = chatbotService.history(userId.value());
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(messages));
+    }
 }
