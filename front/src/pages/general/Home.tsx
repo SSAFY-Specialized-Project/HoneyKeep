@@ -13,6 +13,18 @@ import {
 
 import { CategoryCheck } from "@/entities/category/ui";
 
+import AccountListSkeleton from "@/pages/skeleton/AccountListSkeleton";
+import AccountTransactionSkeleton from "@/pages/skeleton/AccountTransactionSkeleton";
+import AccountPocketSkeleton from "@/pages/skeleton/AccountPocketSkeleton";
+import PocketIsFavoriteSkeleton from "@/pages/skeleton/PocketIsFavoriteSkeleton";
+import MainSkeleton from "@/pages/skeleton/MainSkeleton";
+import PocketCategoryChooseSkeleton from "@/pages/skeleton/PocketCategoryChooseSkeleton";
+import PocketUseSkeleton from "@/pages/skeleton/PocketUseSkeleton";
+import PocketListSkeleton from "@/pages/skeleton/PocketListSkeleton";
+import HoneyPaySkeleton from "@/pages/skeleton/HoneyPaySkeleton";
+import FixedExpenseListSkeleton from "@/pages/skeleton/FixedExpenseListSkeleton";
+import FixedExpenseFoundSkeleton from "@/pages/skeleton/FixedExpenseFoundSkeleton";
+
 import { ContentAddBox } from "@/shared/ui";
 import { BasicHeader } from "@/widgets";
 import { GlobalNavigation } from "@/widgets/navigation/ui";
@@ -74,6 +86,18 @@ const Home = () => {
         onChange={() => {}}
       />
       <GlobalNavigation />
+
+      <AccountListSkeleton />
+      <AccountTransactionSkeleton />
+      <AccountPocketSkeleton />
+      <PocketIsFavoriteSkeleton />
+      <MainSkeleton />
+      <PocketCategoryChooseSkeleton />
+      <PocketUseSkeleton />
+      <PocketListSkeleton />
+      <HoneyPaySkeleton />
+      <FixedExpenseListSkeleton />
+      <FixedExpenseFoundSkeleton />
     </div>
   );
 };
