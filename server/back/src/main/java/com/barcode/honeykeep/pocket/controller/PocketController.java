@@ -7,7 +7,6 @@ import com.barcode.honeykeep.pocket.service.PocketService;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,13 +65,11 @@ public class PocketController {
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> getAllPockets(@AuthenticationPrincipal UserId userId) {
         List<PocketSummaryResponse> pockets = pocketService.getAllPockets(userId.value());
 
-        if (pockets == null || pockets.isEmpty()) {
-            return ResponseEntity.ok()
-                    .body(ApiResponse.noContent("No pockets found", null));
-        }
-
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pockets));
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
     }
 
     /**
@@ -87,15 +84,12 @@ public class PocketController {
             @RequestParam String name) {
         List<PocketSummaryResponse> pockets = pocketService.searchPockets(userId.value(), name);
 
-        if (pockets == null || pockets.isEmpty()) {
-            return ResponseEntity.ok()
-                    .body(ApiResponse.noContent("No pockets found with the given name", null));
-        }
-
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pockets));
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found with the given name", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
     }
-
     /**
      * 포켓 상세 조회
      * @param userId
@@ -202,12 +196,10 @@ public class PocketController {
 
         List<PocketSummaryResponse> pockets = pocketService.getFilteredPockets(userId.value(), filterRequest);
 
-        if (pockets == null || pockets.isEmpty()) {
-            return ResponseEntity.ok()
-                    .body(ApiResponse.noContent("No pockets found with the given filters", null));
-        }
-
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pockets));
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found with the given filters", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
     }
 }

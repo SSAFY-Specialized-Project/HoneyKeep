@@ -107,6 +107,8 @@ services:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
 
       ML_SERVER_URL: http://ml-server:5000
+      DATA_URL: ${DATA_URL}
+      APP_COOKIE_DOMAIN: ${APP_COOKIE_DOMAIN}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s

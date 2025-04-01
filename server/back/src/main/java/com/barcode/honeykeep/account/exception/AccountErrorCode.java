@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 
 public enum AccountErrorCode implements ErrorCode {
     ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 계좌를 찾을 수 없습니다."),
-    ACCOUNT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 계좌에 접근할 권한이 없습니다.");
+    ACCOUNT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 계좌에 접근할 권한이 없습니다."),
+    INSUFFICIENT_FUNDS(HttpStatus.BAD_REQUEST, "잔액이 부족합니다.");
 
 
     private final HttpStatus httpStatus;
