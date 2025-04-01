@@ -135,6 +135,7 @@ public class AccountService {
                     .bankName(account.getBank().getName())
                     .totalPocketAmount(calculateTotalPocketAmount(account))
                     .pocketCount(account.getPockets().size())
+                    .spareAssets(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -166,6 +167,7 @@ public class AccountService {
                 .accountName(account.getAccountName())
                 .totalPocketAmount(calculateTotalPocketAmount(account))
                 .pocketCount(account.getPockets().size())
+                .spareAssets(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
                 .transactionList(account.getTransactions())
                 .pocketList(pocketDtos)
                 .build();
