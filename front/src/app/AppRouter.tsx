@@ -24,6 +24,7 @@ import { Login } from "@/pages/user";
 import { Layout } from "@/shared/ui";
 import { createBrowserRouter } from "react-router";
 import AuthWrapper from "./AuthWrapper";
+import { BaseLayout } from "./layouts";
 
 const AppRouter = createBrowserRouter([
   {
@@ -59,7 +60,7 @@ const AppRouter = createBrowserRouter([
   },
   {
     // 상단 바랑 네비게이션 바 있는 레이아웃
-    element: <Layout />,
+    element: <BaseLayout />,
     children: [
       {
         element: <AuthWrapper />,
