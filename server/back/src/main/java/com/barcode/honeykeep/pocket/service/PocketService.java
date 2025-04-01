@@ -4,15 +4,19 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.service.AccountService;
 import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.category.service.CategoryService;
+import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.dto.*;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.pocket.exception.PocketErrorCode;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
 import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.Schedules;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,14 +81,18 @@ public class PocketService {
     public String createPocketWithLink(Long userId, String link) {
         // redis와 postgresql을 연결할 수 있는 식별자 저장
         String uuid = UUID.randomUUID().toString();
+        log.info("링크로 포켓 생성 시작. UUID: {}, 링크: {}", uuid, link);
 
         // 초기 데이터 저장
         Map<String, Object> initialData = new HashMap<>();
         initialData.put("status", CrawlingStatusType.PENDING);
         redisTemplate.opsForValue().set("crawling:" + uuid, initialData);
+        log.info("Redis에 초기 크롤링 상태(PENDING) 저장, UUID: {}", uuid);
 
         // 비동기 크롤링 시작
+        log.info("비동기 크롤링 호출 시작, UUID: {}", uuid);
         crawlingService.asyncCrawling(uuid, link);
+        log.info("비동기 크롤링 호출 완료, UUID: {}", uuid);
 
         return uuid;
     }
@@ -94,6 +102,8 @@ public class PocketService {
      */
     @Transactional
     public Long saveManualInput(PocketManualRequest pocketManualRequest) {
+        log.info("수기 입력 정보 저장 시작, 크롤링 UUID: {}", pocketManualRequest.getCrawlingUuid());
+
         // 계좌 조회
         Account account = accountService.getAccountById(pocketManualRequest.getAccount().getId());
         Category category = null;
@@ -122,11 +132,17 @@ public class PocketService {
 
         Pocket savedPocket = pocketRepository.save(pocket);
 
+        log.info("수기 입력으로 생성된 포켓 저장 완료. 포켓 ID: {}, 크롤링 UUID: {}",
+                savedPocket.getId(), pocketManualRequest.getCrawlingUuid());
+
         // Redis에서 UUID로 크롤링 데이터 있는지 조회
         Object crawlingData = redisTemplate.opsForValue().get("crawling:" + pocketManualRequest.getCrawlingUuid());
         if (!(crawlingData instanceof HashMap)) {
             PocketCrawlingResult pocketCrawlingResult = (PocketCrawlingResult) crawlingData;
-            System.out.println(pocketCrawlingResult);
+
+            if(pocketCrawlingResult == null) {
+                throw new CustomException(PocketErrorCode.REDIS_SAVE_ERROR);
+            }
 
             // 크롤링 완료된 데이터 업데이트
             if (pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
@@ -138,15 +154,24 @@ public class PocketService {
                 savedPocket.update(null, null, productName, productName, new Money(productPrice), null, link, null, null, null, productImgUrl);
                 savedPocket = pocketRepository.save(savedPocket);
                 redisTemplate.delete("crawling:" + pocketManualRequest.getCrawlingUuid());
-
+                log.info("포켓(ID: {})에 크롤링 결과 업데이트 완료, UUID: {}", savedPocket.getId(), pocketManualRequest.getCrawlingUuid());
+            } else {
+                log.warn("크롤링 결과가 완료 상태가 아님, UUID: {}", pocketManualRequest.getCrawlingUuid());
             }
         }
 
         return savedPocket.getId();
     }
 
-
-
+    /**
+     * 배치 처리로 포켓 정보 업데이트
+     */
+    @Scheduled(cron = "0 0 0 * * *")
+    public void batchUpdate() {
+        log.info("배치 크롤링 시작");
+        crawlingService.batchCrawling();
+        log.info("배치 크롤링 업데이트 성공적으로 완료됨");
+    }
 
     /**
      * 포켓 더모으기 (금액 추가)
