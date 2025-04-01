@@ -180,7 +180,7 @@ const AppRouter = createBrowserRouter([
             element: <Chatbot />,
           },
           {
-            path: "*",
+            path: "/error",
             element: <Error />,
           },
         ],
