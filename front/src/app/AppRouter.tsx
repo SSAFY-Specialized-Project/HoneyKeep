@@ -12,7 +12,7 @@ import {
   FixedPayList,
   FixedPayUpdate,
 } from "@/pages/fixedPay";
-import { Alarm, Chatbot, Error, Home, Landing } from "@/pages/general";
+import { Alarm, Chatbot, Error, Home, Landing, Loading } from "@/pages/general";
 import { Payment, QRPayment, QRSuccess } from "@/pages/payment";
 import {
   PocketCalendar,
@@ -29,6 +29,10 @@ const AppRouter = createBrowserRouter([
   {
     path: "/landing",
     element: <Landing />,
+  },
+  {
+    path: "/loading",
+    element: <Loading />,
   },
   {
     // 상단 바랑 네비게이션 없는 레이아웃
