@@ -1,5 +1,6 @@
 import { BorderInput, CategoryIcon } from '@/shared/ui';
 import { useState } from 'react';
+import SelectCategoryModal from './SelectCategoryModal';
 
 const CreateCategoryForm = () => {
   const [isOpen, setOpen] = useState<boolean>(false);
@@ -40,6 +41,7 @@ const CreateCategoryForm = () => {
           확인
         </button>
       </form>
+      <SelectCategoryModal isOpen={isOpen} setOpen={setOpen} setId={setIconId} />
     </>
   );
 };
