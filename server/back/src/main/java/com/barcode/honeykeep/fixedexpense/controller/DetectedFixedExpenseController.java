@@ -4,6 +4,7 @@ import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseUpdateRequest;
+import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.service.DetectedFixedExpenseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,11 +56,21 @@ public class DetectedFixedExpenseController {
 
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<DetectedFixedExpenseResponse>> deleteDetectedFixedExpense(
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<FixedExpenseResponse>> approveDetectedFixedExpense(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long id) {
-        detectedFixedExpenseService.deleteDetectedFixedExpense(userId.value(), id);
+        FixedExpenseResponse response = detectedFixedExpenseService.approveDetectedFixedExpense(userId.value(), id);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("발견된 고정 지출 등록 성공", response));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<Void>> rejectDetectedFixedExpense(
+            @AuthenticationPrincipal UserId userId,
+            @PathVariable Long id) {
+        detectedFixedExpenseService.rejectDetectedFixedExpense(userId.value(), id);
 
         return ResponseEntity.ok()
                 .body(ApiResponse.success("발견된 고정 지출 삭제 성공", null));

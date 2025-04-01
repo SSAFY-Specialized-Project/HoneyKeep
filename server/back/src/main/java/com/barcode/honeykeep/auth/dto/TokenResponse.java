@@ -1,7 +1,10 @@
 package com.barcode.honeykeep.auth.dto;
 
-import lombok.Builder;
+public record TokenResponse(
+        String accessToken,
+        String refreshToken,
+        long refreshTokenExpiresIn
+) {
 
-@Builder
-public record TokenResponse(String accessToken, String refreshToken) {
+
 }

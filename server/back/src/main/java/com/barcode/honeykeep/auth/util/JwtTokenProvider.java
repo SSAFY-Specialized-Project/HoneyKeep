@@ -134,4 +134,8 @@ public class JwtTokenProvider {
             return claims.get("userId", Long.class);
         }
     }
+
+    public long getRefreshTokenExpiresIn() {
+        return refreshExpireSec;
+    }
 }
