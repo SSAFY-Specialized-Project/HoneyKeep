@@ -1,9 +1,6 @@
 package com.barcode.honeykeep.account.controller;
 
-import com.barcode.honeykeep.account.dto.AccountDetailResponse;
-import com.barcode.honeykeep.account.dto.AccountResponse;
-import com.barcode.honeykeep.account.dto.TransferValidationRequest;
-import com.barcode.honeykeep.account.dto.TransferValidationResponse;
+import com.barcode.honeykeep.account.dto.*;
 import com.barcode.honeykeep.account.service.AccountService;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
@@ -30,14 +27,13 @@ public class AccountController {
         return ResponseEntity.ok().body(ApiResponse.success(accountResponseList));
     }
 
+    //계좌 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AccountDetailResponse>> getAccountDetails(@PathVariable("id") Long id,
                                                           @AuthenticationPrincipal UserId userId) {
         AccountDetailResponse accountDetailResponse = accountService.getAccountDetailById(id, userId.value());
         return ResponseEntity.ok().body(ApiResponse.success(accountDetailResponse));
     }
-
-    //TODO: 돈 보내기 눌렀을 때, 나의 계좌 목록들 응답하는 API 추가
 
 
      //검증 단계 API
@@ -49,4 +45,17 @@ public class AccountController {
         TransferValidationResponse response = accountService.validateTransfer(request, userId.value());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+
+    @PostMapping("/execute")
+    public ResponseEntity<ApiResponse<TransferExecutionResponse>> executeTransfer(
+            @AuthenticationPrincipal UserId userId,
+            @RequestBody TransferExecutionRequest request
+    ){
+        TransferExecutionResponse response = accountService.executeTransfer(request, userId.value());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+
+
 }

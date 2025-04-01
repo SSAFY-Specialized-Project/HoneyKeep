@@ -33,6 +33,10 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("select a from Account a where a.id = :accountId")
     Optional<Account> findAccountForUpdate(@Param("accountId") Long accountId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.accountNumber = :accountNumber")
+    Optional<Account> findAccountForUpdateByAccountNumber(@Param("accountNumber") String accountNumber);
+
 }
 
 
