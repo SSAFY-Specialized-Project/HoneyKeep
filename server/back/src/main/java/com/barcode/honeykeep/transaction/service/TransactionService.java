@@ -2,6 +2,8 @@ package com.barcode.honeykeep.transaction.service;
 
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.service.AccountService;
+import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.common.exception.TransactionErrorCode;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
@@ -84,7 +86,7 @@ public class TransactionService {
      */
     private Transaction getTransactionById(Long transactionId) {
         return transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 거래내역을 찾을 수 없습니다: " + transactionId));
+                .orElseThrow(() -> new CustomException(TransactionErrorCode.TRANSACTION_NOT_FOUND));
     }
 
     /**

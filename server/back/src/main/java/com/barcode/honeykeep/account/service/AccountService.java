@@ -6,6 +6,7 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,11 +41,23 @@ public class AccountService {
 
 
     public AccountDetailResponse getAccountDetailById(Long id, Long userId) {
-        // 개선: 새로 추가된 메서드 활용
         Account account = getAccountById(id);
-        //소유자인지 검증
         validateAccountOwner(account, userId);
 
+        // Pocket 엔티티를 DTO로 변환
+        List<PocketSummaryResponse> pocketDtos = account.getPockets().stream()
+                .map(pocket -> PocketSummaryResponse.builder()
+                        .id(pocket.getId())
+                        .name(pocket.getName())
+                        .accountName(account.getAccountName())
+                        .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                        .savedAmount(pocket.getSavedAmount().getAmountAsLong())
+                        .type(pocket.getType().getType())
+                        .isFavorite(pocket.getIsFavorite())
+                        .imgUrl(pocket.getImgUrl())
+                        .endDate(pocket.getEndDate())
+                        .build())
+                .collect(Collectors.toList());
 
         return AccountDetailResponse.builder()
                 .accountNumber(account.getAccountNumber())
@@ -53,7 +66,7 @@ public class AccountService {
                 .accountName(account.getAccountName())
                 .totalPocketAmount(calculateTotalPocketAmount(account))
                 .pocketCount(account.getPockets().size())
-                .pocketList(account.getPockets())
+                .pocketList(pocketDtos) // DTO 리스트 사용
                 .build();
     }
 

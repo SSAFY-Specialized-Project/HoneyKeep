@@ -9,6 +9,7 @@ import com.barcode.honeykeep.transaction.dto.TransactionMemoResponse;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,12 @@ public class TransactionController {
             @RequestParam Long accountId) {
 
         TransactionListResponse response = transactionService.getTransactions(userId.value(), accountId);
+
+        // 응답이 null이거나 transactions 리스트가 비어 있는지 확인
+        if (response == null || response.transactions() == null || response.transactions().isEmpty()) {
+            return ResponseEntity.ok()
+                    .body(ApiResponse.noContent("해당 계좌의 거래내역이 없습니다", null));
+        }
 
         return ResponseEntity.ok()
                 .body(ApiResponse.success("거래내역 목록 조회 성공", response));

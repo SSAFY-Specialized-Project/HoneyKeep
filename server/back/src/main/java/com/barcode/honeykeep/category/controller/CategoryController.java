@@ -11,6 +11,7 @@ import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,8 +34,15 @@ public class CategoryController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<CategoryCreateResponse>>> getAllCategories(@AuthenticationPrincipal UserId userId) {
+        List<CategoryCreateResponse> categories = categoryService.getAllCategories(userId.value());
+
+        if (categories == null || categories.isEmpty()) {
+            return ResponseEntity.ok()
+                    .body(ApiResponse.noContent("No categories found", null));
+        }
+
         return ResponseEntity.ok()
-                .body(ApiResponse.success(categoryService.getAllCategories(userId.value())));
+                .body(ApiResponse.success(categories));
     }
 
     /**
@@ -47,8 +55,15 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> getPocketsByCategory(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long categoryId) {
+        List<PocketSummaryResponse> pockets = categoryService.getPocketsByCategory(userId.value(), categoryId);
+
+        if (pockets == null || pockets.isEmpty()) {
+            return ResponseEntity.ok()
+                    .body(ApiResponse.noContent("No pockets found in this category", null));
+        }
+
         return ResponseEntity.ok()
-                .body(ApiResponse.success(categoryService.getPocketsByCategory(userId.value(), categoryId)));
+                .body(ApiResponse.success(pockets));
     }
 
     /**
@@ -62,8 +77,13 @@ public class CategoryController {
 
         List<CategoryWithPocketsResponse> response = categoryService.getAllCategoriesWithPockets(userId.value());
 
+        if (response == null || response.isEmpty()) {
+            return ResponseEntity.ok()
+                    .body(ApiResponse.noContent("No categories with pockets found", null));
+        }
+
         return ResponseEntity.ok()
-                .body(ApiResponse.success("모든 카테고리 및 모든 포켓 조회 성공",response));
+                .body(ApiResponse.success("모든 카테고리 및 모든 포켓 조회 성공", response));
     }
 
     /**
