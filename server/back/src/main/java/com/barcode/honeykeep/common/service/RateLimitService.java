@@ -20,10 +20,10 @@ public class RateLimitService {
     // API 카테고리 정의
     @Getter
     public enum ApiCategory {
-        NORMAL_QUERY(30, Duration.ofMinutes(1)),
-        FINANCIAL_TRANSACTION(5, Duration.ofMinutes(1)),
-        AUTHENTICATION(3, Duration.ofSeconds(10)),
-        PAYMENT(5, Duration.ofMinutes(1));
+        NORMAL_QUERY(100, Duration.ofMinutes(1)),
+        FINANCIAL_TRANSACTION(100, Duration.ofMinutes(1)),
+        AUTHENTICATION(100, Duration.ofSeconds(10)),
+        PAYMENT(100, Duration.ofMinutes(1));
 
         private final int limit;
         private final Duration duration;
