@@ -7,7 +7,7 @@ import com.barcode.honeykeep.category.dto.CategoryUpdateResponse;
 import com.barcode.honeykeep.category.dto.CategoryWithPocketsResponse;
 import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.category.repository.CategoryRepository;
-import com.barcode.honeykeep.common.exception.CategoryErrorCode;
+import com.barcode.honeykeep.category.exception.CategoryErrorCode;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.pocket.entity.Pocket;
