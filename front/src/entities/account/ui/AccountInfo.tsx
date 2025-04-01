@@ -26,7 +26,7 @@ const AccountInfo = ({
       >
         <div className="flex justify-between w-full">
           <div className="flex gap-2">
-            <BankIcon />
+            <BankIcon bank="시티은행" />
             <div className="flex flex-col items-start">
               <strong className="text-text-xl text-gray-900 font-bold">
                 {bank}
