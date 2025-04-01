@@ -1,6 +1,6 @@
 import { Bank } from "@/shared/model/types";
 
-export interface AccountDTO {
+export interface Account {
   accountNumber: string;
   accountBalance: number;
   accountName: string;
