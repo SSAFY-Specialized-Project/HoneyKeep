@@ -15,6 +15,7 @@ import {
 import { Alarm, Chatbot, Error, Home, Landing, Loading } from "@/pages/general";
 import { Payment, QRPayment, QRSuccess } from "@/pages/payment";
 import {
+  Description,
   PocketCalendar,
   PocketCreate,
   PocketDetail,
@@ -29,6 +30,10 @@ const AppRouter = createBrowserRouter([
   {
     path: "/landing",
     element: <Landing />,
+  },
+  {
+    path: "/i",
+    element: <Description />,
   },
   {
     path: "/loading",
