@@ -16,6 +16,7 @@ class TestcontainersConfiguration {
         return new MongoDBContainer(DockerImageName.parse("mongo:latest"));
     }
 
+
     @Bean
     @ServiceConnection(name = "redis")
     GenericContainer<?> redisContainer() {

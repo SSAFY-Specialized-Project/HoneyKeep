@@ -47,7 +47,7 @@ public class Transaction {
     private String memo;
 
     @Builder
-    protected Transaction(Account account, Pocket pocket, String name, Money amount, Money balance, LocalDateTime date, TransactionType type) {
+    protected Transaction(Account account, Pocket pocket, String name, Money amount, Money balance, LocalDateTime date, TransactionType type, String memo) {
         this.account = account;
         this.pocket = pocket;
         this.name = name;
@@ -55,6 +55,7 @@ public class Transaction {
         this.balance = balance;
         this.date = date;
         this.type = type;
+        this.memo = memo;
     }
 
     public void updateMemo(String memo) {

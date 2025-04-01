@@ -41,7 +41,7 @@ def save_model(model):
         pickle.dump(model, f)
 
 # 모델 학습 함수
-def train(data):    
+def train(data):
     # 트랜잭션 데이터를 데이터프레임으로 변환
     df = pd.DataFrame(data['detectedFixedExpenses'])
     
@@ -194,7 +194,7 @@ def train(data):
     
     # 학습 결과 반환
     result = {
-        'status': 'success',
+        'status': 'success', 
         'metrics': metrics,
         'feature_importance': {k: float(v) for k, v in feature_importance.items()},
         'training_samples': int(len(df)),

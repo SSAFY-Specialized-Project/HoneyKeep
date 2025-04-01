@@ -1,6 +1,8 @@
 package com.barcode.honeykeep.account.dto;
 
+import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.transaction.entity.Transaction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,9 +30,17 @@ public class AccountDetailResponse {
 
     // 계좌에 연결된 모든 포켓들의 총 금액 (포켓의 totalAmount 합산)
     private BigDecimal totalPocketAmount;
+
     // 연동된 포켓들의 개수
     private int pocketCount;
 
+    //여유 자산
+    private BigDecimal spareAssets;
+
+    //거래 내역
+    private List<Transaction> transactionList;
+
     //연동된 포켓 목록
-    private List<Pocket> pocketList;
+    private List<PocketSummaryResponse> pocketList;
+
 }

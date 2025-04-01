@@ -4,6 +4,7 @@ import com.barcode.honeykeep.category.dto.CategoryCreateRequest;
 import com.barcode.honeykeep.category.dto.CategoryCreateResponse;
 import com.barcode.honeykeep.category.dto.CategoryUpdateRequest;
 import com.barcode.honeykeep.category.dto.CategoryUpdateResponse;
+import com.barcode.honeykeep.category.dto.CategoryWithPocketsResponse;
 import com.barcode.honeykeep.category.service.CategoryService;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
@@ -22,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 public class CategoryController {
-    
+
     private final CategoryService categoryService;
 
     /**
@@ -32,8 +33,13 @@ public class CategoryController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<CategoryCreateResponse>>> getAllCategories(@AuthenticationPrincipal UserId userId) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(categoryService.getAllCategories(userId.value())));
+        List<CategoryCreateResponse> categories = categoryService.getAllCategories(userId.value());
+
+        return categories == null || categories.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No categories found", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(categories));
     }
 
     /**
@@ -46,8 +52,30 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> getPocketsByCategory(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long categoryId) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(categoryService.getPocketsByCategory(userId.value(), categoryId)));
+        List<PocketSummaryResponse> pockets = categoryService.getPocketsByCategory(userId.value(), categoryId);
+
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found in this category", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
+    }
+
+    /**
+     * 모든 카테고리와 각 카테고리에 속한 포켓들을 함께 조회
+     * @param userId 인증된 사용자
+     * @return 카테고리와 포켓 정보가 포함된 응답 리스트
+     */
+    @GetMapping("/with-pockets")
+    public ResponseEntity<ApiResponse<List<CategoryWithPocketsResponse>>> getAllCategoriesWithPockets(
+            @AuthenticationPrincipal UserId userId) {
+        List<CategoryWithPocketsResponse> response = categoryService.getAllCategoriesWithPockets(userId.value());
+
+        return response == null || response.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No categories with pockets found", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success("모든 카테고리 및 모든 포켓 조회 성공", response));
     }
 
     /**
@@ -97,4 +125,5 @@ public class CategoryController {
         return ResponseEntity.ok()
                 .body(ApiResponse.success("카테고리가 성공적으로 삭제되었습니다.", null));
     }
+
 }

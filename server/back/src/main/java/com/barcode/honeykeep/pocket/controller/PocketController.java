@@ -92,8 +92,13 @@ public class PocketController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> getAllPockets(@AuthenticationPrincipal UserId userId) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pocketService.getAllPockets(userId.value())));
+        List<PocketSummaryResponse> pockets = pocketService.getAllPockets(userId.value());
+
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
     }
 
     /**
@@ -106,10 +111,14 @@ public class PocketController {
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> searchPockets(
             @AuthenticationPrincipal UserId userId,
             @RequestParam String name) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pocketService.searchPockets(userId.value(), name)));
-    }
+        List<PocketSummaryResponse> pockets = pocketService.searchPockets(userId.value(), name);
 
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found with the given name", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
+    }
     /**
      * 포켓 상세 조회
      * @param userId
@@ -214,7 +223,12 @@ public class PocketController {
         PocketFilterRequest filterRequest = new PocketFilterRequest(
                 categoryId, pocketType, isFavorite, startDateTime, endDateTime);
 
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pocketService.getFilteredPockets(userId.value(), filterRequest)));
+        List<PocketSummaryResponse> pockets = pocketService.getFilteredPockets(userId.value(), filterRequest);
+
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found with the given filters", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
     }
 }
