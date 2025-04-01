@@ -1,7 +1,6 @@
 package com.barcode.honeykeep.transaction.service;
 
 import com.barcode.honeykeep.account.entity.Account;
-import com.barcode.honeykeep.account.service.AccountService;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
@@ -27,15 +26,11 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final AccountService accountService;
 
     /**
      * 거래내역 목록 조회
      */
     public TransactionListResponse getTransactions(Long userId, Long accountId) {
-        // 계좌 소유자 검증
-        Account account = accountService.getAccountById(accountId);
-        accountService.validateAccountOwner(account, userId);
 
         // 계좌의 거래내역 조회 (최신순)
         List<Transaction> transactions = transactionRepository.findByAccountIdOrderByDateDesc(accountId);
@@ -55,7 +50,6 @@ public class TransactionService {
     public TransactionDetailResponse getTransaction(Long userId, Long transactionId) {
         Transaction transaction = getTransactionById(transactionId);
 
-        accountService.validateAccountOwner(transaction.getAccount(), userId);
 
         return mapToTransactionDetailResponse(transaction);
     }
@@ -67,7 +61,6 @@ public class TransactionService {
     public TransactionMemoResponse updateTransactionMemo(Long userId, Long transactionId, TransactionMemoRequest request) {
         Transaction transaction = getTransactionById(transactionId);
 
-        accountService.validateAccountOwner(transaction.getAccount(), userId);
 
         transaction.updateMemo(request.memo());
 
