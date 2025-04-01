@@ -59,13 +59,16 @@ public class Pocket extends BaseEntity {
 
     private String imgUrl;
 
+    private String crawlingUuid;
+
     @OneToMany(mappedBy = "pocket")
     private List<Transaction> transactions = new ArrayList<>();
 
     @Builder
     protected Pocket(Account account, Category category, String name, String productName,
                      Money totalAmount, Money savedAmount, String link, LocalDateTime startDate,
-                     LocalDateTime endDate, Boolean isFavorite, PocketType type, String imgUrl) {
+                     LocalDateTime endDate, Boolean isFavorite, PocketType type, String imgUrl,
+                     String crawlingUuid) {
         this.account = account;
         this.category = category;
         this.name = name;
@@ -79,6 +82,7 @@ public class Pocket extends BaseEntity {
         this.type = type;
         this.imgUrl = imgUrl;
         this.transactions = new ArrayList<>();
+        this.crawlingUuid = crawlingUuid;
     }
 
     public void setFavorite(Boolean isFavorite) {
