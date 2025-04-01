@@ -3,6 +3,7 @@ package com.barcode.honeykeep.pocket.controller;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pocket.dto.*;
+import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.pocket.service.PocketService;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,29 @@ public class PocketController {
             @RequestBody PocketCreateRequest pocketCreateRequest) {
         return ResponseEntity.ok()
                 .body(ApiResponse.success(pocketService.createPocket(userId.value(), pocketCreateRequest)));
+    }
+
+    /**
+     * 사용자가 링크를 제출하면 UUID를 반환 (크롤링 API 호출)
+     */
+    @PostMapping("/link")
+    public ResponseEntity<ApiResponse<String>> submitLink(@AuthenticationPrincipal UserId userId,
+                                                          @RequestBody PocketCrawlingRequest pocketCrawlingRequest) {
+        String uuid = pocketService.createPocketWithLink(userId.value(), pocketCrawlingRequest.getLink());
+
+        return ResponseEntity.ok().body(ApiResponse.success(uuid));
+    }
+
+    /**
+     * 사용자가 링크 입력 후 수기 입력 데이터를 제출하면 Pocket 엔티티를 생성/업데이트하여 반환
+     */
+    @PostMapping("/link-input")
+    public ResponseEntity<ApiResponse<Void>> submitManualInput(@RequestBody PocketManualRequest pocketManualRequest) {
+        pocketService.saveManualInput(pocketManualRequest);
+
+        return ResponseEntity.ok().body(
+                ApiResponse.success(null)
+        );
     }
 
     /**

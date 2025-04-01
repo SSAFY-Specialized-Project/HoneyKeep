@@ -8,14 +8,20 @@ import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.dto.*;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
+import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,6 +33,8 @@ public class PocketService {
     private final PocketRepository pocketRepository;
     private final AccountService accountService;
     private final CategoryService categoryService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final CrawlingService crawlingService;
 
     /**
      * 포켓 생성
@@ -60,6 +68,78 @@ public class PocketService {
 
         return mapToPocketCreateResponse(savedPocket);
     }
+
+    /**
+     * 링크로 추가하여 포켓 생성
+     * 링크를 입력하면 크롤링 실행
+     */
+    @Transactional
+    public String createPocketWithLink(Long userId, String link) {
+        // redis와 postgresql을 연결할 수 있는 식별자 저장
+       String uuid = UUID.randomUUID().toString();
+
+        // 초기 데이터 저장
+        Map<String, Object> initialData = new HashMap<>();
+        initialData.put("status", CrawlingStatusType.PENDING);
+        redisTemplate.opsForValue().set("crawling:" + uuid, initialData);
+
+        // 비동기 크롤링 시작
+        crawlingService.asyncCrawling(uuid, link);
+
+        return uuid;
+    }
+
+    /**
+     * 링크 입력 후 사용자가 수기로 입력하는 정보 저장
+     */
+    public void saveManualInput(PocketManualRequest pocketManualRequest) {
+        // 계좌 조회
+        Account account = accountService.getAccountById(pocketManualRequest.getAccount().getId());
+        Category category = null;
+
+        // 카테고리 조회
+        if (pocketManualRequest.getCategoryId() != null) {
+            category = categoryService.getCategoryById(pocketManualRequest.getCategoryId());
+        }
+
+        // 포켓 생성
+        Pocket pocket = Pocket.builder()
+                .account(account)
+                .category(category)
+                .name(null)
+                .productName(null)
+                .totalAmount(null)
+                .savedAmount(Money.zero())
+                .link(null)
+                .startDate(pocketManualRequest.getStartDate())
+                .endDate(pocketManualRequest.getEndDate())
+                .isFavorite(false)
+                .type(PocketType.GATHERING)
+                .imgUrl(null)
+                .crawlingUuid(pocketManualRequest.getCrawlingUuid())
+                .build();
+
+        Pocket savedPocket = pocketRepository.save(pocket);
+
+        // Redis에서 UUID로 크롤링 데이터 있는지 조회
+        Object crawlingData = redisTemplate.opsForValue().get("crawling:" + pocketManualRequest.getCrawlingUuid());
+        if (crawlingData != null) {
+            PocketCrawlingResult pocketCrawlingResult = (PocketCrawlingResult) crawlingData;
+
+            // 크롤링 완료된 데이터 업데이트
+            if(pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
+                String productName = pocketCrawlingResult.getProductName();
+                BigDecimal productPrice = pocketCrawlingResult.getProductPrice();
+                String productImgUrl = pocketCrawlingResult.getProductImgUrl();
+                String link = pocketCrawlingResult.getLink();
+
+                savedPocket.update(null, null, productName, productName, new Money(productPrice), null, link, null, null, null, productImgUrl);
+                savedPocket = pocketRepository.save(savedPocket);
+            }
+        }
+    }
+
+
 
     /**
      * 포켓 더모으기 (금액 추가)

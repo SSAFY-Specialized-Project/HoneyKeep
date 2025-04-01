@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PocketRepository extends JpaRepository<Pocket, Long> {
@@ -76,4 +77,8 @@ public interface PocketRepository extends JpaRepository<Pocket, Long> {
      */
     List<Pocket> findByAccountUserIdAndEndDateBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate);
 
+    /**
+     * Crawling UUID가 존재하는 포켓 조회
+     */
+    Optional<Pocket> findByCrawlingUuid(String crawlingUuid);
 }
