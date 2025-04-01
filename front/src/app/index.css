@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "pretnedard", "sans-serif";
+  --font-sans: "Pretendard", "sans-serif";
 
   --color-brand-primary-100: #FFF7C3;
   --color-brand-primary-200: #FFE890;

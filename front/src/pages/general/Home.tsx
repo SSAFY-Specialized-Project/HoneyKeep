@@ -1,5 +1,5 @@
-import { MyAccountInfo } from "@/features/account/ui";
-import { Link } from "react-router";
+import { MyAccountInfo } from '@/features/account/ui';
+import { Link } from 'react-router';
 
 const Home = () => {
   return (
@@ -8,7 +8,7 @@ const Home = () => {
       {/* <MyPocketInfo /> */}
       <Link
         to="/pocket/create"
-        className="w-full py-3 mt-3 bg-brand-primary-500 rounded-2xl text-white text-title-md font-bold text-center"
+        className="bg-brand-primary-500 text-title-md mt-3 w-full rounded-2xl py-3 text-center font-bold text-white"
       >
         포켓 만들기
       </Link>

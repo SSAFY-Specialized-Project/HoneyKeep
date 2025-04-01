@@ -6,3 +6,9 @@ export interface CategoryWithPocket {
   icon: number;
   pockets: Pocket[];
 }
+
+export interface createCategoryRequest {
+  categoryId: number,
+  name: string,
+  icon: number
+}

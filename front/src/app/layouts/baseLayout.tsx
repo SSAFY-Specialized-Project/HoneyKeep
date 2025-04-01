@@ -1,5 +1,5 @@
 import { Layout } from "@/shared/ui";
-import { BasicHeader } from "@/widgets";
+import { BasicHeader } from "@/widgets/header/ui";
 import { GlobalNavigation } from "@/widgets/navigation/ui";
 
 const BaseLayout = () => {
