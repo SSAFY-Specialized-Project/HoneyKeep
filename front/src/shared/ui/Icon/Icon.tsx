@@ -16,7 +16,7 @@ const Icon = ({ size, id }: Props) => {
 
   return (
     <div
-      className={`${SIZE[size]} rounded-lg bg-gray-100 flex items-center justify-center`}
+      className={`${SIZE[size]} rounded-lg flex items-center justify-center`}
     >
       <svg
         width={SIZE_PROPS[size]}

@@ -24,6 +24,9 @@ import { Login } from "@/pages/user";
 import { Layout } from "@/shared/ui";
 import { createBrowserRouter } from "react-router";
 import AuthWrapper from "./AuthWrapper";
+import { BaseLayout } from "./layouts";
+import { Suspense } from "react";
+import MainSkeleton from "@/pages/skeleton/MainSkeleton";
 
 const AppRouter = createBrowserRouter([
   {
@@ -59,7 +62,7 @@ const AppRouter = createBrowserRouter([
   },
   {
     // 상단 바랑 네비게이션 바 있는 레이아웃
-    element: <Layout />,
+    element: <BaseLayout />,
     children: [
       {
         element: <AuthWrapper />,
@@ -72,7 +75,11 @@ const AppRouter = createBrowserRouter([
           {
             // 홈
             path: "/home",
-            element: <Home />,
+            element: (
+              <Suspense fallback={<MainSkeleton />}>
+                <Home />
+              </Suspense>
+            ),
           },
           {
             // 알람 설정

@@ -284,9 +284,6 @@ const MainSkeleton: React.FC = () => {
     <>
       <style>{animationStyle}</style>
       <div style={styles.container}>
-        {/* 헤더 */}
-        <div style={styles.header}>{/* 회색 네모 요소들 제거 */}</div>
-
         {/* 계좌 섹션 */}
         <div style={styles.accountSection}>
           {/* 계좌 아이템 1 */}
@@ -391,23 +388,6 @@ const MainSkeleton: React.FC = () => {
             <div style={styles.futureAmount}></div>
             <div style={styles.transferButton}></div>
           </div>
-
-          {/* 더 보기 버튼 */}
-          <div style={styles.viewMoreButton}></div>
-        </div>
-
-        {/* 포켓 만들기 버튼 */}
-        <div style={styles.createPocketButton}></div>
-
-        {/* 하단 탭 네비게이션 */}
-        <div style={styles.bottomNavigation}>
-          {Array(5)
-            .fill(0)
-            .map((_, index) => (
-              <div key={index} style={styles.navItem}>
-                {/* 회색 네모 요소들 제거 */}
-              </div>
-            ))}
         </div>
       </div>
     </>
