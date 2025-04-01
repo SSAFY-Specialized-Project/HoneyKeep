@@ -1,6 +1,6 @@
 // generateCertification.ts
-import {base64ToArrayBuffer, arrayBufferToBase64} from './index';
-import {ResponseDTO, ResponseErrorDTO} from "@/shared/api/types.ts";
+import {arrayBufferToBase64} from './index';
+import {ResponseDTO} from "@/shared/model/types.ts";
 
 // 전역적인 메모리 내 개인키 참조 (직접 접근 불가능, 사용만 가능)
 let currentPrivateKey: CryptoKey | null = null;

@@ -1,3 +1,3 @@
 export interface RegisterCertificateRequest {
-    publicKeyBase64: string,
+    publicKey: string,
 }

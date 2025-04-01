@@ -8,6 +8,7 @@ const registerCertificateAPI = async (
     const accessToken = localStorage.getItem('accessToken');
 
     try{
+        console.log(JSON.stringify(data));
         const response = await fetch(apiURL("/cert/register"), {
             method: "POST",
             headers: {
