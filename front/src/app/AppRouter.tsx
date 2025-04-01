@@ -69,11 +69,13 @@ const AppRouter = createBrowserRouter([
             // 홈
             path: "/",
             element: <Home />,
+            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
             // 홈
             path: "/home",
             element: <Home />,
+            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
             // 알람 설정
