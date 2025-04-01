@@ -5,7 +5,6 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration(proxyBeanMethods = false)
@@ -15,12 +14,6 @@ class TestcontainersConfiguration {
     @ServiceConnection
     MongoDBContainer mongoDbContainer() {
         return new MongoDBContainer(DockerImageName.parse("mongo:latest"));
-    }
-
-    @Bean
-    @ServiceConnection
-    MySQLContainer<?> mysqlContainer() {
-        return new MySQLContainer<>(DockerImageName.parse("mysql:latest"));
     }
 
     @Bean

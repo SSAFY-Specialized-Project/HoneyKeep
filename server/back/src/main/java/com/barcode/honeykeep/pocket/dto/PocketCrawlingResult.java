@@ -1,10 +1,7 @@
 package com.barcode.honeykeep.pocket.dto;
 
 import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -12,6 +9,7 @@ import java.math.BigDecimal;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class PocketCrawlingResult {
     String productName;
     BigDecimal productPrice;

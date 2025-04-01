@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PocketService {
-    
+
     private final PocketRepository pocketRepository;
     private final AccountService accountService;
     private final CategoryService categoryService;
@@ -76,7 +76,7 @@ public class PocketService {
     @Transactional
     public String createPocketWithLink(Long userId, String link) {
         // redis와 postgresql을 연결할 수 있는 식별자 저장
-       String uuid = UUID.randomUUID().toString();
+        String uuid = UUID.randomUUID().toString();
 
         // 초기 데이터 저장
         Map<String, Object> initialData = new HashMap<>();
@@ -92,7 +92,8 @@ public class PocketService {
     /**
      * 링크 입력 후 사용자가 수기로 입력하는 정보 저장
      */
-    public void saveManualInput(PocketManualRequest pocketManualRequest) {
+    @Transactional
+    public Long saveManualInput(PocketManualRequest pocketManualRequest) {
         // 계좌 조회
         Account account = accountService.getAccountById(pocketManualRequest.getAccount().getId());
         Category category = null;
@@ -123,11 +124,12 @@ public class PocketService {
 
         // Redis에서 UUID로 크롤링 데이터 있는지 조회
         Object crawlingData = redisTemplate.opsForValue().get("crawling:" + pocketManualRequest.getCrawlingUuid());
-        if (crawlingData != null) {
+        if (!(crawlingData instanceof HashMap)) {
             PocketCrawlingResult pocketCrawlingResult = (PocketCrawlingResult) crawlingData;
+            System.out.println(pocketCrawlingResult);
 
             // 크롤링 완료된 데이터 업데이트
-            if(pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
+            if (pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
                 String productName = pocketCrawlingResult.getProductName();
                 BigDecimal productPrice = pocketCrawlingResult.getProductPrice();
                 String productImgUrl = pocketCrawlingResult.getProductImgUrl();
@@ -135,9 +137,14 @@ public class PocketService {
 
                 savedPocket.update(null, null, productName, productName, new Money(productPrice), null, link, null, null, null, productImgUrl);
                 savedPocket = pocketRepository.save(savedPocket);
+                redisTemplate.delete("crawling:" + pocketManualRequest.getCrawlingUuid());
+
             }
         }
+
+        return savedPocket.getId();
     }
+
 
 
 

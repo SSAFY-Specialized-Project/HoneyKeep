@@ -44,22 +44,27 @@ public class PocketController {
      * 사용자가 링크를 제출하면 UUID를 반환 (크롤링 API 호출)
      */
     @PostMapping("/link")
-    public ResponseEntity<ApiResponse<String>> submitLink(@AuthenticationPrincipal UserId userId,
+    public ResponseEntity<ApiResponse<PocketCreateWithLinkResponse>> submitLink(@AuthenticationPrincipal UserId userId,
                                                           @RequestBody PocketCrawlingRequest pocketCrawlingRequest) {
         String uuid = pocketService.createPocketWithLink(userId.value(), pocketCrawlingRequest.getLink());
 
-        return ResponseEntity.ok().body(ApiResponse.success(uuid));
+        return ResponseEntity.ok().body(ApiResponse.success(PocketCreateWithLinkResponse.builder()
+                .productUuid(uuid)
+                .build()));
     }
 
     /**
      * 사용자가 링크 입력 후 수기 입력 데이터를 제출하면 Pocket 엔티티를 생성/업데이트하여 반환
      */
     @PostMapping("/link-input")
-    public ResponseEntity<ApiResponse<Void>> submitManualInput(@RequestBody PocketManualRequest pocketManualRequest) {
-        pocketService.saveManualInput(pocketManualRequest);
+    public ResponseEntity<ApiResponse<PocketManualInputResponse>> submitManualInput(@RequestBody PocketManualRequest pocketManualRequest) {
+        Long pocketId = pocketService.saveManualInput(pocketManualRequest);
 
         return ResponseEntity.ok().body(
-                ApiResponse.success(null)
+                ApiResponse.success(PocketManualInputResponse.builder()
+                        .pocketId(pocketId)
+                        .build()
+                )
         );
     }
 
