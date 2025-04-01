@@ -25,8 +25,6 @@ import { Layout } from "@/shared/ui";
 import { createBrowserRouter } from "react-router";
 import AuthWrapper from "./AuthWrapper";
 import { BaseLayout } from "./layouts";
-import { Suspense } from "react";
-import MainSkeleton from "@/pages/skeleton/MainSkeleton";
 
 const AppRouter = createBrowserRouter([
   {
@@ -71,15 +69,13 @@ const AppRouter = createBrowserRouter([
             // 홈
             path: "/",
             element: <Home />,
+            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
             // 홈
             path: "/home",
-            element: (
-              <Suspense fallback={<MainSkeleton />}>
-                <Home />
-              </Suspense>
-            ),
+            element: <Home />,
+            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
             // 알람 설정

@@ -1,12 +1,12 @@
 import { Bank } from "@/shared/model/types";
-import { BankIcon, Icon } from "@/shared/ui";
+import { BankIcon } from "@/shared/ui";
 
 interface Props {
   bank: Bank;
   account: string;
   currentAmount: number;
   remainingAmount: number;
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onClickSend: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -18,12 +18,14 @@ const AccountInfo = ({
   onClick,
   onClickSend,
 }: Props) => {
+  const accountName = account.split(" ")[1] + " " + account.split(" ")[2];
+
   return (
     <li className="list-none w-full shadow-custom rounded-[1.25rem]">
-      <button
-        type="button"
+      <div
+        role="button"
         onClick={onClick}
-        className="flex flex-col rounded-[1.25rem] w-full p-5 items-end gap-3"
+        className="flex flex-col rounded-[1.25rem] w-full p-5 items-end gap-3 cursor-pointer"
       >
         <div className="flex justify-between w-full">
           <div className="flex gap-2">
@@ -33,7 +35,7 @@ const AccountInfo = ({
                 {bank}
               </strong>
               <span className="text-text-sm text-gray-600 font-semibold">
-                {account}
+                {accountName}
               </span>
             </div>
           </div>
@@ -48,9 +50,6 @@ const AccountInfo = ({
                 {remainingAmount} 원
               </span>
             </div>
-            <button type="button" className="absolute -bottom-0 -left-2">
-              <Icon size="small" id="notice" />
-            </button>
           </div>
         </div>
         <button
@@ -60,7 +59,7 @@ const AccountInfo = ({
         >
           송금하기
         </button>
-      </button>
+      </div>
     </li>
   );
 };
