@@ -1,3 +1,4 @@
+import { addCommas } from "@/shared/lib";
 import {
   ArrowRight,
   Plus,
@@ -25,6 +26,8 @@ export default function Description() {
     faq4: false,
     faq5: false,
   });
+
+  console.log(addCommas(1000000));
 
   // FAQ 항목의 토글 기능
   const toggleFaq = (faqId) => {
