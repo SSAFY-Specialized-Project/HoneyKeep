@@ -7,6 +7,8 @@ import com.barcode.honeykeep.category.dto.CategoryUpdateResponse;
 import com.barcode.honeykeep.category.dto.CategoryWithPocketsResponse;
 import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.category.repository.CategoryRepository;
+import com.barcode.honeykeep.common.exception.CategoryErrorCode;
+import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
@@ -138,7 +140,7 @@ public class CategoryService {
      */
     public Category getCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 카테고리를 찾을 수 없습니다: " + categoryId));
+                .orElseThrow(() -> new CustomException(CategoryErrorCode.CATEGORY_NOT_FOUND));
     }
 
     /**

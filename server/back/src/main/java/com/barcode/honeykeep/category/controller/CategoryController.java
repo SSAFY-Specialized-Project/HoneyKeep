@@ -33,8 +33,13 @@ public class CategoryController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<CategoryCreateResponse>>> getAllCategories(@AuthenticationPrincipal UserId userId) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(categoryService.getAllCategories(userId.value())));
+        List<CategoryCreateResponse> categories = categoryService.getAllCategories(userId.value());
+
+        return categories == null || categories.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No categories found", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(categories));
     }
 
     /**
@@ -47,8 +52,13 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> getPocketsByCategory(
             @AuthenticationPrincipal UserId userId,
             @PathVariable Long categoryId) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(categoryService.getPocketsByCategory(userId.value(), categoryId)));
+        List<PocketSummaryResponse> pockets = categoryService.getPocketsByCategory(userId.value(), categoryId);
+
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found in this category", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
     }
 
     /**
@@ -59,11 +69,13 @@ public class CategoryController {
     @GetMapping("/with-pockets")
     public ResponseEntity<ApiResponse<List<CategoryWithPocketsResponse>>> getAllCategoriesWithPockets(
             @AuthenticationPrincipal UserId userId) {
-
         List<CategoryWithPocketsResponse> response = categoryService.getAllCategoriesWithPockets(userId.value());
 
-        return ResponseEntity.ok()
-                .body(ApiResponse.success("모든 카테고리 및 모든 포켓 조회 성공",response));
+        return response == null || response.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No categories with pockets found", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success("모든 카테고리 및 모든 포켓 조회 성공", response));
     }
 
     /**
