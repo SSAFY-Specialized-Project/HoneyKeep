@@ -9,7 +9,7 @@ CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(
     "독립적인 질문:"
 )
 
-# 10개의 기능 목록 (예시)
+# 기능 목록
 FUNCTIONALITIES = """
 1. 포켓 생성
 2. 포켓 상세
