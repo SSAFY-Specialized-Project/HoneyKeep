@@ -29,4 +29,7 @@ public class AccountResponse {
     private BigDecimal totalPocketAmount;
     // 연동된 포켓들의 개수
     private int pocketCount;
+
+    //여유 자산
+    private BigDecimal spareAssets;
 }

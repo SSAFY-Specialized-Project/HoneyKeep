@@ -34,9 +34,13 @@ public class AccountDetailResponse {
     // 연동된 포켓들의 개수
     private int pocketCount;
 
+    //여유 자산
+    private BigDecimal spareAssets;
+
     //거래 내역
     private List<Transaction> transactionList;
 
     //연동된 포켓 목록
     private List<PocketSummaryResponse> pocketList;
+
 }
