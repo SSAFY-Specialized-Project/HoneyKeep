@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -73,6 +74,11 @@ public class CategoryService {
         return categories.stream()
                 .map(category -> {
                     List<Pocket> pockets = pocketRepository.findByAccountUserIdAndCategory_Id(userId, category.getId());
+
+                    if (pockets == null || pockets.isEmpty()) {
+                        return null;
+                    }
+
                     List<PocketSummaryResponse> pocketResponses = pockets.stream()
                             .map(pocket -> PocketSummaryResponse.builder()
                                     .id(pocket.getId())
@@ -93,6 +99,7 @@ public class CategoryService {
                             .pockets(pocketResponses)
                             .build();
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -103,6 +110,13 @@ public class CategoryService {
      */
     @Transactional
     public CategoryCreateResponse createCategory(Long userId, CategoryCreateRequest request) {
+
+        // 요청 데이터 유효성 검증
+        validateCategoryRequest(request);
+
+        // 카테고리 이름 중복 검증
+        validateCategoryNameDuplicate(request.name());
+
         Category category = Category.builder()
                 .name(request.name())
                 .icon(request.icon())
@@ -119,7 +133,17 @@ public class CategoryService {
      */
     @Transactional
     public CategoryUpdateResponse updateCategory(Long userId, Long categoryId, CategoryUpdateRequest request) {
+
+        // 요청 데이터 유효성 검증
+        validateCategoryRequest(request);
+
         Category category = getCategoryById(categoryId);
+
+        // 이름이 변경되었고 중복된 이름인 경우 검증
+        if (!category.getName().equals(request.name())) {
+            validateCategoryNameDuplicate(request.name());
+        }
+
         category.update(request.name(), request.icon());
         return mapToCategoryUpdateResponse(category);
     }
@@ -163,5 +187,44 @@ public class CategoryService {
                 .name(category.getName())
                 .icon(category.getIcon())
                 .build();
+    }
+
+    /**
+     * 카테고리 요청 데이터 유효성 검증
+     * @param request 카테고리 요청 데이터 (생성 또는 수정)
+     * @throws CustomException 유효성 검증 실패 시 발생
+     */
+    private void validateCategoryRequest(Object request) {
+        // 요청 자체가 null인 경우
+        if (request == null) {
+            throw new CustomException(CategoryErrorCode.EMPTY_REQUEST_DATA);
+        }
+
+        String name = null;
+        if (request instanceof CategoryCreateRequest) {
+            name = ((CategoryCreateRequest) request).name();
+        } else if (request instanceof CategoryUpdateRequest) {
+            name = ((CategoryUpdateRequest) request).name();
+        }
+
+        // 이름이 null이거나 비어있는 경우
+        if (name == null || name.trim().isEmpty()) {
+            throw new CustomException(CategoryErrorCode.INVALID_CATEGORY_NAME);
+        }
+    }
+
+    /**
+     * 카테고리 이름 중복 검증
+     * @param name 검증할 카테고리 이름
+     * @throws CustomException 중복된 이름이 있을 경우 발생
+     */
+    private void validateCategoryNameDuplicate(String name) {
+        List<Category> categories = categoryRepository.findAll();
+        boolean isDuplicate = categories.stream()
+                .anyMatch(category -> category.getName().equalsIgnoreCase(name));
+
+        if (isDuplicate) {
+            throw new CustomException(CategoryErrorCode.DUPLICATE_CATEGORY_NAME);
+        }
     }
 }
