@@ -177,7 +177,8 @@ export async function signData(data: string): Promise<string> {
         const signature = await window.crypto.subtle.sign(
             {
                 name: "RSA-PSS",
-                saltLength: 32, // 권장 솔트 길이
+                saltLength: 32,
+                hash: {name: "SHA-256"},
             },
             currentPrivateKey!,
             dataBuffer

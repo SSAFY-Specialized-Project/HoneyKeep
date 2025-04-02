@@ -1,48 +1,18 @@
-import { ResponseDTO, ResponseErrorDTO } from '@/shared/api/types';
-import { apiURL } from '@/shared/lib';
 import {RegisterCertificateRequest} from "@/entities/certification/api/types.ts";
+import {customFetchAPI} from "@/shared/api";
 
-const registerCertificateAPI = async (
-    data: RegisterCertificateRequest
-): Promise<ResponseDTO<any>> => {
-    const accessToken = localStorage.getItem('accessToken');
-
-    try{
-        console.log(JSON.stringify(data));
-        const response = await fetch(apiURL("/cert/register"), {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(data)
-        });
-
-        if(!response.ok){
-            const responseData:ResponseErrorDTO = await response.json();
-            const error = new Error(responseData.message) as Error & {status:number, name:string}
-            error.status = responseData.status;
-            error.name = responseData.name;
-            throw error;
-        }
-
-        const responseData:ResponseDTO<boolean> = await response.json();
-        return responseData;
-
-    }catch(error){
-
-        if(error instanceof Error && "status" in error){
-            throw error;
-        }
-
-        const networkError: ResponseErrorDTO = {
-            status: 500,
-            name: "NetworkError",
-            message: "에기치 못한 에러가 발생했습니다.",
-        };
-
-        throw networkError;
-    }
+interface RegisterCertificateResponse{
+    id: number,
+    serialNumber: string,
+    expiryDate: Date,
+    status: string,
 }
 
-export default registerCertificateAPI;
+export const registerCertificateAPI = (
+    data: RegisterCertificateRequest
+)=> customFetchAPI<RegisterCertificateResponse, RegisterCertificateRequest>({
+    url: "/cert/register",
+    method: "POST",
+    credentials: "include",
+    data,
+})
