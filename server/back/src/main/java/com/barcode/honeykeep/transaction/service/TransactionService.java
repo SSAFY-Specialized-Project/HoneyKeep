@@ -1,9 +1,8 @@
 package com.barcode.honeykeep.transaction.service;
 
 import com.barcode.honeykeep.account.entity.Account;
-import com.barcode.honeykeep.account.service.AccountService;
 import com.barcode.honeykeep.common.exception.CustomException;
-import com.barcode.honeykeep.common.exception.TransactionErrorCode;
+import com.barcode.honeykeep.transaction.exception.TransactionErrorCode;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;

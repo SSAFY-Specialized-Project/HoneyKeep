@@ -1,8 +1,8 @@
 package com.barcode.honeykeep.mydataConnect.dto;
 
-import lombok.Builder;
+import java.util.List;
 
-public record BankConnectForMydataRequest(String bankCode) {
-    @Builder
-    public BankConnectForMydataRequest {}
+public record BankConnectForMydataRequest(
+        List<String> bankCodes
+) {
 }
