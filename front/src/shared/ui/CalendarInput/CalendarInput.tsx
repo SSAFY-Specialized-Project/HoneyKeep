@@ -1,4 +1,4 @@
-import { useInputFocus } from "@/shared/hooks";
+import { useInputFocus } from '@/shared/hooks';
 
 interface Props {
   id: string;
@@ -15,13 +15,11 @@ const CalendarInput = ({ id, name, label, value, type, onChange }: Props) => {
 
   return (
     <div
-      className={`w-full border h-[4.375rem] px-4 pt-[2.25rem] relative rounded-2xl
-        ${isActive ? "bg-white" : "bg-gray-100"}`}
+      className={`relative h-[4.375rem] w-full rounded-2xl border px-4 pt-[2.25rem] ${isActive ? 'bg-white' : 'bg-gray-100'}`}
     >
       <label
         htmlFor={id}
-        className={`absolute transition-all duration-300 ease-out z-10
-          ${isActive ? "text-text-sm font-medium left-4 top-2" : "text-text-xl text-gray-400 font-semibold left-4 top-5"}`}
+        className={`absolute z-10 transition-all duration-300 ease-out ${isActive ? 'text-text-sm top-2 left-4 font-medium' : 'text-text-xl top-5 left-4 font-semibold text-gray-400'}`}
       >
         {label}
       </label>
@@ -31,9 +29,8 @@ const CalendarInput = ({ id, name, label, value, type, onChange }: Props) => {
         id={id}
         name={name}
         onChange={onChange}
-        placeholder={`${isActive ? "이메일 입력" : ""}`}
-        className={`cursor-pointer focus:outline-none z-10
-         `}
+        placeholder={`${isActive ? '이메일 입력' : ''}`}
+        className={`z-10 cursor-pointer focus:outline-none`}
         ref={inputRef}
       />
     </div>
