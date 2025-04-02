@@ -40,8 +40,13 @@ public class MydataConnectController {
     @PostMapping("/token")
     public ResponseEntity<ApiResponse<MydataTokenResponse>> requestMydataToken(
             @AuthenticationPrincipal UserId userId,
-            @RequestHeader("X-Electronic-Signature") String signature) {
+            @RequestHeader("X-Signature") String signature) {
 
+
+        /**
+         * 1743556104696
+         * 1743556108144
+         */
         // 1. 전자서명 검증
         Map<String, Object> dataToVerify = Map.of("timestamp", System.currentTimeMillis());
         if (!signVerifyService.verifySignature(userId.value(), signature, dataToVerify)) {
