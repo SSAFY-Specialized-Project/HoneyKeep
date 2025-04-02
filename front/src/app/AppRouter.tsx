@@ -16,6 +16,7 @@ import {
   MyAgree,
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
+import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 
 const AppRouter = createBrowserRouter([
   {
@@ -163,11 +164,6 @@ const AppRouter = createBrowserRouter([
             element: <PocketCreate />,
           },
           {
-            // 포켓 상세
-            path: '/pocket/detail',
-            element: <PocketDetail />,
-          },
-          {
             path: '/category/create',
             element: <CategoryCreate />,
           },
@@ -180,6 +176,11 @@ const AppRouter = createBrowserRouter([
           {
             path: '/error',
             element: <Error />,
+          },
+          // 예시 페이지
+          {
+            path: '/e',
+            element: <ExamplePage />,
           },
         ],
       },
