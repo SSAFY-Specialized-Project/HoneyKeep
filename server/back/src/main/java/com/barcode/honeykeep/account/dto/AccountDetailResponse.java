@@ -1,8 +1,7 @@
 package com.barcode.honeykeep.account.dto;
 
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
-import com.barcode.honeykeep.pocket.entity.Pocket;
-import com.barcode.honeykeep.transaction.entity.Transaction;
+import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -38,7 +37,7 @@ public class AccountDetailResponse {
     private BigDecimal spareAssets;
 
     //거래 내역
-    private List<Transaction> transactionList;
+    private List<TransactionDetailResponse> transactionList;
 
     //연동된 포켓 목록
     private List<PocketSummaryResponse> pocketList;

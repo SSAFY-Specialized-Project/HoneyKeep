@@ -8,6 +8,7 @@ import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import lombok.extern.slf4j.Slf4j;
@@ -145,7 +146,7 @@ public class AccountService {
         Account account = getAccountById(id);
         validateAccountOwner(account, userId);
 
-        // Pocket 엔티티를 DTO로 변환
+        // Pocket 엔티티를 DTO로 변환 (기존 코드)
         List<PocketSummaryResponse> pocketDtos = account.getPockets().stream()
                 .map(pocket -> PocketSummaryResponse.builder()
                         .id(pocket.getId())
@@ -160,6 +161,21 @@ public class AccountService {
                         .build())
                 .collect(Collectors.toList());
 
+        // Transaction 엔티티를 TransactionDetailResponse DTO로 변환
+        List<TransactionDetailResponse> transactionDtos = account.getTransactions().stream()
+                .map(transaction -> TransactionDetailResponse.builder()
+                        .id(transaction.getId())
+                        .name(transaction.getName())
+                        .amount(transaction.getAmount().getAmountAsLong())
+                        .balance(transaction.getBalance().getAmountAsLong())
+                        .date(transaction.getDate())
+                        .type(transaction.getType())
+                        .accountId(account.getId())
+                        .accountName(account.getAccountName())
+                        .memo(transaction.getMemo())
+                        .build())
+                .collect(Collectors.toList());
+
         return AccountDetailResponse.builder()
                 .accountNumber(account.getAccountNumber())
                 .accountBalance(account.getAccountBalance().getAmount())
@@ -168,7 +184,7 @@ public class AccountService {
                 .totalPocketAmount(calculateTotalPocketAmount(account))
                 .pocketCount(account.getPockets().size())
                 .spareAssets(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
-                .transactionList(account.getTransactions())
+                .transactionList(transactionDtos) // TransactionDetailResponse DTO 리스트 사용
                 .pocketList(pocketDtos)
                 .build();
     }
