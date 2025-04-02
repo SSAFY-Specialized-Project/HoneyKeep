@@ -34,41 +34,41 @@ public class MydataConnectController {
     @Value("${app.cookie.domain}")
     private String cookieDomain;
 
-    /**
-     * 마이데이터 서비스 이용을 위한 토큰 발급 API (전자서명 기반)
-     */
-    @PostMapping("/token")
-    public ResponseEntity<ApiResponse<MydataTokenResponse>> requestMydataToken(
-            @AuthenticationPrincipal UserId userId,
-            @RequestHeader("X-Signature") String signature,
-            @RequestHeader("X-Timestamp") String timestamp) {
-        // 1. 전자서명 검증
-        String method = "POST";
-        String url = "/api/v1/mydata/token";
-
-        String dataToVerify = method + "\n" + url + "\n" + timestamp + "\n";
-
-        if (!signVerifyService.verifySignature(userId.value(), dataToVerify, signature)) {
-            throw new CustomException(CertErrorCode.SIGNATURE_VERIFICATION_FAILED);
-        }
-
-        // 2. 마이데이터 액세스 토큰 발급. 실제로는 마이데이터 중계기관에서 발급 받는다.
-        String bankToken = tokenProvider.generateAccessToken(userId.value());
-
-        ResponseCookie bankTokenCookie = ResponseCookie.from("bankToken", bankToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/api/v1/mydata")
-                .maxAge(300)
-                .domain(cookieDomain)
-                .sameSite("Lax")
-                .build();
-
-        // 3. 토큰 저장 및 반환
-        return ResponseEntity.ok()
-                .header("Set-Cookie", bankTokenCookie.toString())
-                .body(ApiResponse.success("마이데이터 토큰 발급 성공", new MydataTokenResponse(bankToken)));
-    }
+//    /**
+//     * 마이데이터 서비스 이용을 위한 토큰 발급 API (전자서명 기반)
+//     */
+//    @PostMapping("/token")
+//    public ResponseEntity<ApiResponse<MydataTokenResponse>> requestMydataToken(
+//            @AuthenticationPrincipal UserId userId,
+//            @RequestHeader("X-Signature") String signature,
+//            @RequestHeader("X-Timestamp") String timestamp) {
+//        // 1. 전자서명 검증
+//        String method = "POST";
+//        String url = "/api/v1/mydata/token";
+//
+//        String dataToVerify = method + "\n" + url + "\n" + timestamp + "\n";
+//
+//        if (!signVerifyService.verifySignature(userId.value(), dataToVerify, signature)) {
+//            throw new CustomException(CertErrorCode.SIGNATURE_VERIFICATION_FAILED);
+//        }
+//
+//        // 2. 마이데이터 액세스 토큰 발급. 실제로는 마이데이터 중계기관에서 발급 받는다.
+//        String bankToken = tokenProvider.generateAccessToken(userId.value());
+//
+//        ResponseCookie bankTokenCookie = ResponseCookie.from("bankToken", bankToken)
+//                .httpOnly(true)
+//                .secure(true)
+//                .path("/api/v1/mydata")
+//                .maxAge(300)
+//                .domain(cookieDomain)
+//                .sameSite("Lax")
+//                .build();
+//
+//        // 3. 토큰 저장 및 반환
+//        return ResponseEntity.ok()
+//                .header("Set-Cookie", bankTokenCookie.toString())
+//                .body(ApiResponse.success("마이데이터 토큰 발급 성공", new MydataTokenResponse(bankToken)));
+//    }
 
     /**
      * 마이데이터 연동 가능한 은행 목록 조회 API
@@ -76,10 +76,10 @@ public class MydataConnectController {
     @GetMapping("/banks")
     public ResponseEntity<ApiResponse<List<BankListForMydataResponse>>> getAvailableBanks(
             @AuthenticationPrincipal UserId userId,
-            @CookieValue(value = "bankToken") String bankToken) {
+            @CookieValue(value = "authToken") String authToken) {
 
         // 쿠키가 없으면 토큰 검증 로직 추가
-        if (bankToken == null || !tokenProvider.validateToken(bankToken)) {
+        if (authToken == null || !tokenProvider.validateToken(authToken)) {
             throw new CustomException(AuthErrorCode.JWT_TOKEN_EXPIRED);
         }
 
@@ -95,11 +95,11 @@ public class MydataConnectController {
     @PostMapping("/connect")
     public ResponseEntity<ApiResponse<String>> connect(
             @AuthenticationPrincipal UserId userId,
-            @CookieValue(value = "bankToken") String bankToken,
+            @CookieValue(value = "authToken") String authToken,
             @RequestBody BankConnectForMydataRequest request) {
 
         // 쿠키가 없으면 토큰 검증 로직 추가
-        if (bankToken == null || !tokenProvider.validateToken(bankToken)) {
+        if (authToken == null || !tokenProvider.validateToken(authToken)) {
             throw new CustomException(AuthErrorCode.JWT_TOKEN_EXPIRED);
         }
 

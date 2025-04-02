@@ -24,16 +24,6 @@ public class CertController {
     private final CertService certService;
     private final MydataConnectService mydataConnectService;
 
-    @GetMapping("/status")
-    public ResponseEntity<ApiResponse<CertStatusResponse>> checkCertStatus(
-            @AuthenticationPrincipal UserId userId) {
-
-        CertStatusResponse response = certService.checkCertStatus(userId.value());
-
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(response));
-    }
-
     /**
      * 선택한 계좌 연동을 위한 1원 인증 요청 API
      */
