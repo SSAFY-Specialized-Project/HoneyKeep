@@ -57,15 +57,12 @@ public class PocketService {
                 .account(account)
                 .category(category)
                 .name(request.name())
-                .productName(request.productName())
                 .totalAmount(request.totalAmount())
                 .savedAmount(request.savedAmount() != null ? request.savedAmount() : Money.zero())
-                .link(request.link())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .isFavorite(false)
                 .type(PocketType.GATHERING)
-                .imgUrl(request.imgUrl())
                 .build();
 
         Pocket savedPocket = pocketRepository.save(pocket);
@@ -340,7 +337,7 @@ public class PocketService {
      */
     private Pocket getPocketById(Long pocketId) {
         return pocketRepository.findById(pocketId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 포켓을 찾을 수 없습니다: " + pocketId));
+                .orElseThrow(() -> new CustomException(PocketErrorCode.POCKET_NOT_FOUND));
     }
     
     /**
@@ -398,7 +395,6 @@ public class PocketService {
                 .categoryName(pocket.getCategory().getName())
                 .totalAmount(pocket.getTotalAmount().getAmountAsLong())
                 .savedAmount(pocket.getSavedAmount().getAmountAsLong())
-                .link(pocket.getLink())
                 .imgUrl(pocket.getImgUrl())
                 .startDate(pocket.getStartDate())
                 .endDate(pocket.getEndDate())
