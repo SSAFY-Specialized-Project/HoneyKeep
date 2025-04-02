@@ -28,7 +28,7 @@ const AccountPocketInfo = ({
       >
         <div className="flex justify-between items-center w-full">
           <div className="flex gap-3">
-            <BankIcon />
+            <BankIcon bank="시티은행" />
             <div className="flex flex-col">
               <span className="text-text-md font-medium text-gray-800">
                 {account}
