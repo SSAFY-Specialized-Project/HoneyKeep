@@ -3,6 +3,7 @@ package com.barcode.honeykeep.pay.controller;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pay.dto.PayRequest;
+import com.barcode.honeykeep.pay.dto.QrResponse;
 import com.barcode.honeykeep.pay.service.PayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +26,16 @@ public class PayController {
      * @return uuid
      */
     @PostMapping("/qr")
-    public ResponseEntity<ApiResponse<String>> createQr() {
+    public ResponseEntity<ApiResponse<QrResponse>> createQr() {
         log.info("QR 생성 요청 시작");
         String uuid = payService.createQr();
+
         log.info("QR 생성 완료, UUID: {}", uuid);
-        return ResponseEntity.ok(ApiResponse.success(uuid));
+        return ResponseEntity.ok(ApiResponse.success(
+                QrResponse.builder()
+                .qrCode(uuid)
+                .build())
+        );
     }
 
     /**
@@ -40,14 +46,14 @@ public class PayController {
      * 4. 반환은 성공/실패 코드와 메세지만 있으면 된다.
      */
     @PostMapping("/payment")
-    public ResponseEntity<ApiResponse<String>> pay(@AuthenticationPrincipal UserId userId,
+    public ResponseEntity<ApiResponse<Boolean>> pay(@AuthenticationPrincipal UserId userId,
                                                    @RequestBody PayRequest payRequest) {
         log.info("결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
         boolean isSuccess = payService.pay(userId, payRequest);
 
         if (isSuccess) {
             log.info("결제 성공, userId: {}", userId.value());
-            return ResponseEntity.ok(ApiResponse.success("정상적으로 결제되었습니다."));
+            return ResponseEntity.ok(ApiResponse.success(true));
         } else {
             log.warn("결제 실패, userId: {}, payRequest: {}", userId.value(), payRequest);
             return ResponseEntity.ok(ApiResponse.badRequest("잘못된 요청입니다."));
