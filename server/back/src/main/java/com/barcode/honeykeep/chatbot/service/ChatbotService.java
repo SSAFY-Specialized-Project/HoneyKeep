@@ -97,9 +97,6 @@ public class ChatbotService {
         } catch (JsonProcessingException e) {
             log.error("JSON 처리 중 오류 발생", e);
             throw new CustomException(ChatbotErrorCode.JSON_PARSE_ERROR);
-        } catch (Exception e) {
-            log.error("예상치 못한 오류 발생", e);
-            throw new CustomException(ChatbotErrorCode.UNEXPECTED_ERROR);
         }
     }
 

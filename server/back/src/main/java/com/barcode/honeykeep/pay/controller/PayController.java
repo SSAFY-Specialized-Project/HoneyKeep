@@ -1,9 +1,11 @@
 package com.barcode.honeykeep.pay.controller;
 
+import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pay.dto.PayRequest;
 import com.barcode.honeykeep.pay.dto.QrResponse;
+import com.barcode.honeykeep.pay.exception.PayErrorCode;
 import com.barcode.honeykeep.pay.service.PayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,8 +57,8 @@ public class PayController {
             log.info("결제 성공, userId: {}", userId.value());
             return ResponseEntity.ok(ApiResponse.success(true));
         } else {
-            log.warn("결제 실패, userId: {}, payRequest: {}", userId.value(), payRequest);
-            return ResponseEntity.ok(ApiResponse.badRequest("잘못된 요청입니다."));
+            log.error("결제 실패, userId: {}, payRequest: {}", userId.value(), payRequest);
+            throw new CustomException(PayErrorCode.PAYMENT_FAILED);
         }
     }
 }

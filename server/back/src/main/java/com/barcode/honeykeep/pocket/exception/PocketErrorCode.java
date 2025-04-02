@@ -4,7 +4,7 @@ import com.barcode.honeykeep.common.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum PocketErrorCode implements ErrorCode {
-    CRAWLING_ERROR(HttpStatus.BAD_REQUEST, "크롤링 중 에러가 발생했습니다."),
+    CRAWLING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "크롤링 중 에러가 발생했습니다."),
     REDIS_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Redis 데이터 저장에서 에러가 발생했습니다."),
     PRICE_PARSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "금액 파싱 중 에러가 발생했습니다.");
 
