@@ -1,17 +1,10 @@
 import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
 import { Login } from '@/pages/user';
-import { Layout } from '@/shared/ui';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
 import { BaseLayout, HistoryLayout } from './layouts';
-import {
-  PocketCalendar,
-  PocketCreate,
-  PocketCreateStep,
-  PocketDetail,
-  PocketList,
-} from '@/pages/pocket';
+import { PocketCalendar, PocketCreate, PocketCreateStep, PocketList } from '@/pages/pocket';
 import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
 import {
   AccountConnect,
@@ -23,6 +16,8 @@ import {
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
 import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
+import ExamplePage from '@/entities/pocket/ui/ExamplePage';
+import { Layout } from '@/shared/ui';
 
 const AppRouter = createBrowserRouter([
   {
@@ -188,11 +183,6 @@ const AppRouter = createBrowserRouter([
             element: <PocketCreateStep />,
           },
           {
-            // 포켓 상세
-            path: '/pocket/detail',
-            element: <PocketDetail />,
-          },
-          {
             path: '/category/create',
             element: <CategoryCreate />,
           },
@@ -205,6 +195,11 @@ const AppRouter = createBrowserRouter([
           {
             path: '/error',
             element: <Error />,
+          },
+          // 예시 페이지
+          {
+            path: '/e',
+            element: <ExamplePage />,
           },
         ],
       },
