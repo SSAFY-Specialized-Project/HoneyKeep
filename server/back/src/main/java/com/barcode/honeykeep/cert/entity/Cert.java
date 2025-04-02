@@ -30,7 +30,7 @@ public class Cert extends BaseEntity {
     private String certificateData;
 
     // 인증서에 포함된 공개키 - Base64 인코딩
-    @Column(name = "public_key", columnDefinition = "TEXT")
+    @Column(name = "public_key", columnDefinition = "TEXT", unique = true)
     private String publicKey;
 
     // 인증서 일련번호
@@ -98,6 +98,11 @@ public class Cert extends BaseEntity {
     // 인증서 취소
     public void revoke() {
         this.status = CertStatus.REVOKED;
+    }
+
+    // 인증서 만료
+    public void expire() {
+        this.status = CertStatus.EXPIRED;
     }
 
     // 1원 인증 완료 표시

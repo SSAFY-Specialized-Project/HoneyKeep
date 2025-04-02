@@ -1,5 +1,6 @@
-package com.barcode.honeykeep.common.exception;
+package com.barcode.honeykeep.transaction.exception;
 
+import com.barcode.honeykeep.common.exception.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

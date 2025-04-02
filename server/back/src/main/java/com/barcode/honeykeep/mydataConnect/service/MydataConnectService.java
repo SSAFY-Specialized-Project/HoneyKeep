@@ -1,23 +1,6 @@
 package com.barcode.honeykeep.mydataConnect.service;
 
-import com.barcode.honeykeep.account.repository.AccountRepository;
-import com.barcode.honeykeep.auth.entity.User;
-import com.barcode.honeykeep.auth.exception.AuthErrorCode;
-import com.barcode.honeykeep.user.repository.UserRepository;
-import com.barcode.honeykeep.common.exception.CustomException;
-import com.barcode.honeykeep.common.external.BankApiClient;
-import com.barcode.honeykeep.common.external.dto.ConnectableBankDto;
-import com.barcode.honeykeep.mydataConnect.dto.*;
-import com.barcode.honeykeep.mydataConnect.entity.LinkedInstitution;
-import com.barcode.honeykeep.mydataConnect.entity.UserBankToken;
-import com.barcode.honeykeep.mydataConnect.exception.MydataErrorCode;
-import com.barcode.honeykeep.mydataConnect.repository.BankForMydataRepository;
-import com.barcode.honeykeep.mydataConnect.repository.LinkedInstitutionRepository;
-import com.barcode.honeykeep.mydataConnect.repository.UserBankTokenRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,6 +10,35 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.entity.Bank;
+import com.barcode.honeykeep.account.repository.AccountRepository;
+import com.barcode.honeykeep.auth.entity.User;
+import com.barcode.honeykeep.auth.exception.AuthErrorCode;
+import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.common.external.BankApiClient;
+import com.barcode.honeykeep.common.external.dto.ConnectableBankDto;
+import com.barcode.honeykeep.common.vo.Money;
+import com.barcode.honeykeep.mydataConnect.dto.AccountForMydataDto;
+import com.barcode.honeykeep.mydataConnect.dto.AccountForMydataResponse;
+import com.barcode.honeykeep.mydataConnect.dto.AccountVerifyForMydataRequest;
+import com.barcode.honeykeep.mydataConnect.dto.BankAuthForMydataResponse;
+import com.barcode.honeykeep.mydataConnect.dto.BankListForMydataResponse;
+import com.barcode.honeykeep.mydataConnect.dto.TransactionHistoryRequest;
+import com.barcode.honeykeep.mydataConnect.dto.TransactionHistoryResponse;
+import com.barcode.honeykeep.mydataConnect.entity.LinkedInstitution;
+import com.barcode.honeykeep.mydataConnect.entity.UserBankToken;
+import com.barcode.honeykeep.mydataConnect.exception.MydataErrorCode;
+import com.barcode.honeykeep.mydataConnect.repository.BankForMydataRepository;
+import com.barcode.honeykeep.mydataConnect.repository.LinkedInstitutionRepository;
+import com.barcode.honeykeep.mydataConnect.repository.UserBankTokenRepository;
+import com.barcode.honeykeep.user.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -66,18 +78,22 @@ public class MydataConnectService {
     }
 
     @Transactional
-    public String connectInstitution(Long userId, String bankCode) {
-        String accessToken = UUID.randomUUID().toString();          // 연동 토큰 생성
-        LocalDateTime expiresAt = LocalDateTime.now().plusHours(1); // 1시간 유효
+    public String connectInstitution(Long userId, List<String> bankCodes) {
+        String accessToken = UUID.randomUUID().toString();
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(1);
 
-        UserBankToken token = UserBankToken.builder()
-                .userId(userId)
-                .bankCode(bankCode)
-                .accessToken(accessToken)
-                .expiresAt(expiresAt)
-                .build();
+        // 각 은행 코드마다 토큰 생성
+        for (String bankCode : bankCodes) {
+            UserBankToken token = UserBankToken.builder()
+                    .userId(userId)
+                    .bankCode(bankCode)
+                    .accessToken(accessToken)
+                    .expiresAt(expiresAt)
+                    .build();
 
-        userBankTokenRepository.save(token);
+            userBankTokenRepository.save(token);
+        }
+        
         return accessToken;
     }
 
@@ -104,7 +120,51 @@ public class MydataConnectService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
+    public BankAuthForMydataResponse requestAccountAuth(Long userId, String accountNo) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
+
+        return bankApiClient.requestAccountAuth(user.getUserKey(), accountNo);
+    }
+
+    @Transactional
+    public void verifyAccountAuth(Long userId, AccountVerifyForMydataRequest request) {
+        // 인증번호 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
+
+        Map<String, Object> result = bankApiClient.verifyAccountAuthCode(
+                user.getUserKey(), request.accountNo(), request.authCode());
+
+        String status = (String) result.get("status");
+        if (!"SUCCESS".equals(status)) {
+            throw new CustomException(MydataErrorCode.ACCOUNT_AUTH_FAILED);
+        }
+
+        // 계좌 단건 조회
+        AccountForMydataDto dto = bankApiClient.getAccount(user.getUserKey(), request.accountNo());
+        Bank bankForMydata = bankForMydataRepository.findById(dto.bankCode())
+                .orElseThrow(() -> new CustomException(MydataErrorCode.BANK_NOT_FOUND));
+
+        // 연동한 계좌 저장
+        Account accountForMydata = Account.builder()
+                .user(user)
+                .bank(bankForMydata)
+                .accountName(dto.accountName())
+                .accountNumber(dto.accountNo())
+                .accountExpiryDate(LocalDate.parse(dto.accountExpiryDate(),
+                        DateTimeFormatter.ofPattern("yyyyMMdd")))
+                .accountBalance(new Money(new BigDecimal(dto.accountBalance())))
+                .dailyTransferLimit(new Money(new BigDecimal(dto.dailyTransferLimit())))
+                .oneTimeTransferLimit(new Money(new BigDecimal(dto.oneTimeTransferLimit())))
+                .lastTransactionDate(parseNullableDate(dto.lastTransactionDate()))
+                .build();
+
+        accountForMydataRepository.save(accountForMydata);
+    }
+
+
     public TransactionHistoryResponse inquireTransactionHistory(Long userId, TransactionHistoryRequest request) {
         // 유저 조회
         User user = userRepository.findById(userId)
