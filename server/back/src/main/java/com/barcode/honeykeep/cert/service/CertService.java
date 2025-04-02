@@ -12,13 +12,12 @@ import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.Base64;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import com.barcode.honeykeep.cert.dto.*;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;
@@ -45,10 +44,6 @@ import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
-import com.barcode.honeykeep.cert.dto.AccountConfirmRequest;
-import com.barcode.honeykeep.cert.dto.AccountVerificationRequest;
-import com.barcode.honeykeep.cert.dto.RegisterCertificateRequest;
-import com.barcode.honeykeep.cert.dto.RegisterCertificateResponse;
 import com.barcode.honeykeep.cert.entity.Cert;
 import com.barcode.honeykeep.cert.exception.CertErrorCode;
 import com.barcode.honeykeep.cert.repository.CertRepository;
@@ -72,10 +67,6 @@ import lombok.extern.slf4j.Slf4j;
 public class CertService {
     private final CertRepository certRepository;
     private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
-
-    private final RedisTemplate<String, Object> redisTemplate;
 
     // CA 관련 설정
     @Value("${cert.ca.keystore.path:classpath:certs/ca-keystore.p12}")
@@ -223,6 +214,36 @@ public class CertService {
         }
     }
 
+    public CertStatusResponse checkCertStatus(Long userId) {
+        Optional<Cert> certOptional = certRepository.findByUser_Id(userId);
+
+        return certOptional.map(cert -> {
+            LocalDateTime now = LocalDateTime.now();
+
+            String determinedStatus = switch (cert.getStatus()) {
+                case REVOKED    -> "REVOKED";
+                case ACTIVE     -> {
+                    if (cert.getExpiryDate() != null && cert.getExpiryDate().isBefore(now)) {
+                        yield "EXPIRED";
+                    } else {
+                        yield "ACTIVE";
+                    }
+                }
+                 default        -> throw new IllegalStateException("Unexpected DB status: " + cert.getStatus());
+            };
+
+            // 결정된 상태와 함께 DTO 반환
+            return new CertStatusResponse(
+                    determinedStatus,
+                    cert.getSerialNumber(),
+                    cert.getExpiryDate(),
+                    cert.getIssueDate()
+            );
+        }).orElseGet(() ->
+                new CertStatusResponse("NONE", null, null, null)
+        );
+    }
+
     /**
      * 공개키 Base64 디코딩 유틸리티
      */
@@ -286,4 +307,5 @@ public class CertService {
 
         return keyStore;
     }
+
 }
