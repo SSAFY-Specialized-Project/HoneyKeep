@@ -59,6 +59,7 @@ public class Pocket extends BaseEntity {
 
     private String imgUrl;
 
+    @Column(name = "crawling_uuid", nullable = true)
     private String crawlingUuid;
 
     @OneToMany(mappedBy = "pocket")
