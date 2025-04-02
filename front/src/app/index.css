@@ -1,8 +1,8 @@
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css");
-@import "tailwindcss";
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css');
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: "pretnedard", "sans-serif";
+  --font-sans: 'Pretendard', 'sans-serif';
 
   --color-brand-primary-100: #fef6e8;
   --color-brand-primary-200: #ffe0a3;

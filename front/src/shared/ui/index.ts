@@ -9,3 +9,4 @@ export { default as NavItem } from "./NavItem/NavItem";
 export { default as ImageContainer } from "./ImageContainer/ImageContainer";
 export { default as CategoryIcon } from "./CategoryIcon/CategoryIcon";
 export { default as Icon } from "./Icon/Icon";
+export { default as BorderInput } from "./BorderInput/BorderInput";

@@ -9,3 +9,15 @@ export type Bank = "시티은행"
     | "우리은행"
     | "국민은행";
 
+export interface ResponseDTO<T> {
+    status: number;
+    message: string;
+    data: T;
+    timestamp: string;
+}
+      
+export interface ResponseErrorDTO {
+    status: number;
+    name: string;
+    message: string;
+}

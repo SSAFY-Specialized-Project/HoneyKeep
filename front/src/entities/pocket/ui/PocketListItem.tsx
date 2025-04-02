@@ -1,7 +1,13 @@
 import { ImageContainer } from "@/shared/ui";
-import { PocketDTO } from "../model/types";
 
-const PocketListItem = ({ name, imgUrl, totalAmount, endDate }: PocketDTO) => {
+interface Props {
+  name: string;
+  imgUrl: string;
+  totalAmount: number;
+  endDate: string;
+}
+
+const PocketListItem = ({ name, imgUrl, totalAmount, endDate }: Props) => {
   return (
     <li>
       <div className="flex gap-3">

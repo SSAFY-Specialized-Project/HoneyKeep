@@ -1,11 +1,13 @@
 import { NavLink } from "react-router";
+import { Icon } from "@/shared/ui";
 
 interface Props {
+  icon: string;
   path: string;
   text: string;
 }
 
-const NavItem = ({ path, text }: Props) => {
+const NavItem = ({ path, text, icon }: Props) => {
   return (
     <NavLink
       to={path}
@@ -14,7 +16,7 @@ const NavItem = ({ path, text }: Props) => {
         flex flex-col gap-1 items-center`
       }
     >
-      <div className="w-6 h-6 bg-gray-900"></div>
+      <Icon id={icon} size="small" />
       <span>{text}</span>
     </NavLink>
   );

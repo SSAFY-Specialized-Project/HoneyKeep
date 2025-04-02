@@ -9,11 +9,11 @@ const Layout = ({ headerSlot, navbarSlot }: Props) => {
   return (
     <div className="w-lvw h-lvh">
       <div
-        className="max-w-[600px] min-w-[375px] h-full mx-auto relative"
+        className="max-w-[600px] min-w-[375px] h-full mx-auto relative flex flex-col"
         id="topLayout"
       >
         {headerSlot}
-        <div className="w-full h-full">
+        <div className="flex-grow overflow-auto">
           <Outlet />
         </div>
         {navbarSlot}
