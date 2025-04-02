@@ -4,7 +4,6 @@
 @theme {
   --font-sans: "Pretendard", "sans-serif";
 
-<<<<<<< HEAD
   --color-brand-primary-100: #fff7c3;
   --color-brand-primary-200: #ffe890;
   --color-brand-primary-300: #ffd95e;
@@ -16,19 +15,6 @@
   --color-gray-200: #d8d8d8;
   --color-gray-300: #bcbcbc;
   --color-gray-400: #a0a0a0;
-=======
-  --color-brand-primary-100: #FFF7C3;
-  --color-brand-primary-200: #FFE890;
-  --color-brand-primary-300: #FFD95E;
-  --color-brand-primary-400: #FFEB7A;
-  --color-brand-primary-500: #FA0;
-  --color-brand-primary-600: #D1A323;
-  
-  --color-gray-100: #F5F5F5;
-  --color-gray-200: #D8D8D8;
-  --color-gray-300: #BCBCBC;
-  --color-gray-400: #A0A0A0;
->>>>>>> da9875ac981a37c263047ab310e8d1f460f84e23
   --color-gray-500: #858585;
   --color-gray-600: #6a6a6a;
   --color-gray-700: #505050;

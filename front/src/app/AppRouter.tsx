@@ -1,3 +1,12 @@
+import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
+import { Login } from '@/pages/user';
+import { Layout } from '@/shared/ui';
+import { createBrowserRouter } from 'react-router';
+import AuthWrapper from './AuthWrapper';
+import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
+import { BaseLayout, HistoryLayout } from './layouts';
+import { PocketCalendar, PocketCreate, PocketDetail, PocketList } from '@/pages/pocket';
+import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
 import {
   AccountConnect,
   AccountDetail,
@@ -6,18 +15,17 @@ import {
   Certification,
   MyAgree,
 } from '@/pages/account';
-import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
-import { Alarm, Chatbot, Error, Home } from '@/pages/general';
-import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
-import { PocketCalendar, PocketCreate, PocketDetail, PocketList } from '@/pages/pocket';
-import { Login } from '@/pages/user';
-import { Layout } from '@/shared/ui';
-import { createBrowserRouter } from 'react-router';
-import AuthWrapper from './AuthWrapper';
-import { BaseLayout, HistoryLayout } from './layouts';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
 
 const AppRouter = createBrowserRouter([
+  {
+    path: '/landing',
+    element: <Landing />,
+  },
+  {
+    path: '/loading',
+    element: <Loading />,
+  },
   {
     // 상단 바랑 네비게이션 없는 레이아웃
     element: <Layout />,
@@ -170,7 +178,7 @@ const AppRouter = createBrowserRouter([
             element: <Chatbot />,
           },
           {
-            path: '*',
+            path: '/error',
             element: <Error />,
           },
         ],
