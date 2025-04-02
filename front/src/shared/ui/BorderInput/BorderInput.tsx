@@ -12,7 +12,10 @@ const BorderInput = ({ type, label, labelText, placeholder, value, onChange, reg
   return (
     <div className="flex w-full flex-col gap-2.5">
       <div>
-        <label htmlFor={label} className={`${labelText ? 'text-text-sm' : 'sr-only'}`}>
+        <label
+          htmlFor={label}
+          className={`${labelText ? 'text-text-sm text-gray-700' : 'sr-only'}`}
+        >
           {labelText}
         </label>
         <input

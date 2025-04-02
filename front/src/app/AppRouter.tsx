@@ -5,7 +5,13 @@ import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
 import { BaseLayout, HistoryLayout } from './layouts';
-import { PocketCalendar, PocketCreate, PocketDetail, PocketList } from '@/pages/pocket';
+import {
+  PocketCalendar,
+  PocketCreate,
+  PocketCreateStep,
+  PocketDetail,
+  PocketList,
+} from '@/pages/pocket';
 import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
 import {
   AccountConnect,
@@ -16,6 +22,7 @@ import {
   MyAgree,
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
+import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 
 const AppRouter = createBrowserRouter([
   {
@@ -161,6 +168,24 @@ const AppRouter = createBrowserRouter([
             // 포켓 생성
             path: '/pocket/create',
             element: <PocketCreate />,
+            children: [
+              {
+                path: 'link',
+                element: <PocketCreateLink />,
+              },
+              {
+                path: 'favorite',
+                element: null,
+              },
+              {
+                path: 'direct',
+                element: null,
+              },
+            ],
+          },
+          {
+            path: '/pocket/create/step',
+            element: <PocketCreateStep />,
           },
           {
             // 포켓 상세

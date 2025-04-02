@@ -1,13 +1,13 @@
-import loginUserAPI from "@/entities/user/api/loginUserAPI";
-import registerUserAPI from "@/entities/user/api/registerUserAPI";
-import sendVerificationAPI from "@/entities/user/api/sendVerificationAPI";
-import validateUserAPI from "@/entities/user/api/validateUserAPI";
-import verifyEmailCodeAPI from "@/entities/user/api/verifyEmailCodeAPI";
-import { ResponseErrorDTO } from "@/shared/api/types";
-import { useCountdownTimer } from "@/shared/hooks";
-import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import loginUserAPI from '@/entities/user/api/loginUserAPI';
+import registerUserAPI from '@/entities/user/api/registerUserAPI';
+import sendVerificationAPI from '@/entities/user/api/sendVerificationAPI';
+import validateUserAPI from '@/entities/user/api/validateUserAPI';
+import verifyEmailCodeAPI from '@/entities/user/api/verifyEmailCodeAPI';
+import { ResponseErrorDTO } from '@/shared/model/types';
+import { useCountdownTimer } from '@/shared/hooks';
+import { useMutation } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 const useLogin = () => {
   const navigate = useNavigate();
@@ -17,37 +17,36 @@ const useLogin = () => {
   });
 
   // 이메일 state
-  const [email, setEmail] = useState<string>("");
+  const [email, setEmail] = useState<string>('');
   const [emailCheck, setEmailCheck] = useState<boolean>(false);
-  const [emailError, setEmailError] = useState<string>("에러");
-  const [emailText, setEmailText] = useState<string>("인증요청");
+  const [emailError, setEmailError] = useState<string>('에러');
+  const [emailText, setEmailText] = useState<string>('인증요청');
 
   // 이메일 인증 state
-  const [certification, setCertification] = useState<string>("");
-  const [certificationText, setCertificationText] =
-    useState<string>("인증하기");
+  const [certification, setCertification] = useState<string>('');
+  const [certificationText, setCertificationText] = useState<string>('인증하기');
   const [certificationCheck, setCertificationCheck] = useState<boolean>(false);
-  const [certificationError, setCertificationError] = useState<string>("");
+  const [certificationError, setCertificationError] = useState<string>('');
 
   // 전화번호 state
-  const [phone, setPhone] = useState<string>("");
+  const [phone, setPhone] = useState<string>('');
   const [phoneCheck, setPhoneCheck] = useState<boolean>(false);
 
   // 이름 state
-  const [name, setName] = useState<string>("");
+  const [name, setName] = useState<string>('');
   const [nameCheck, setNameCheck] = useState<boolean>(false);
 
   // 주민등록번호 state
-  const [registerFirst, setRegisterFirst] = useState<string>("");
-  const [registerSecond, setRegisterSecond] = useState<string>("");
+  const [registerFirst, setRegisterFirst] = useState<string>('');
+  const [registerSecond, setRegisterSecond] = useState<string>('');
   const [registerCheck, setRegisterCheck] = useState<boolean>(false);
-  const [registerError, setRegisterError] = useState<string>("");
+  const [registerError, setRegisterError] = useState<string>('');
 
   // 동의사항 state
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
 
   // 비밀번호 state
-  const [password, setPassword] = useState<string>("");
+  const [password, setPassword] = useState<string>('');
   const [passwordCheck, setPasswordCheck] = useState<boolean>(true);
   const [isPasswordOpen, setPasswordOpen] = useState<boolean>(false);
 
@@ -64,9 +63,8 @@ const useLogin = () => {
       setEmailCheck(regex.test(email));
     }
 
-    if (email.trim().length > 0 && !emailCheck)
-      setEmailError("이메일 형식이 올바르지 않습니다.");
-    else setEmailError("");
+    if (email.trim().length > 0 && !emailCheck) setEmailError('이메일 형식이 올바르지 않습니다.');
+    else setEmailError('');
   }, [email, emailCheck]);
 
   useEffect(() => {
@@ -85,10 +83,10 @@ const useLogin = () => {
     const regex = /^[1-4]$/;
     if (registerFirst.length > 0) setRegisterCheck(true);
     if (registerSecond.length > 0) {
-      if (regex.test(registerSecond)) setRegisterError("");
-      else setRegisterError("주민등록번호 형식이 올바르지 않습니다.");
+      if (regex.test(registerSecond)) setRegisterError('');
+      else setRegisterError('주민등록번호 형식이 올바르지 않습니다.');
     } else {
-      setRegisterError("");
+      setRegisterError('');
     }
   }, [registerFirst, registerSecond]);
 
@@ -118,9 +116,7 @@ const useLogin = () => {
     setRegisterFirst(value);
   };
 
-  const handleRegisterSecondInput = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleRegisterSecondInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.currentTarget) return;
 
     const value = e.currentTarget.value;
@@ -146,10 +142,10 @@ const useLogin = () => {
 
     if (response.status == 200) {
       startTimer();
-      setEmailText("재요청");
+      setEmailText('재요청');
     } else if (response.status == 500) {
-      setEmailError("이메일 발송에 실패했습니다.");
-      setEmailText("재요청");
+      setEmailError('이메일 발송에 실패했습니다.');
+      setEmailText('재요청');
       pauseTimer();
     }
   };
@@ -158,11 +154,11 @@ const useLogin = () => {
     mutationFn: validateUserAPI,
     onSuccess: (response) => {
       if (response.data) {
-        console.log("로그인!");
+        console.log('로그인!');
         setAlready(true);
         setCertificationCheck(true);
       } else {
-        console.log("회원가입!");
+        console.log('회원가입!');
         setAlready(false);
         setCertificationCheck(true);
       }
@@ -183,17 +179,12 @@ const useLogin = () => {
   const verifyCodeMutation = useMutation({
     mutationFn: verifyEmailCodeAPI,
     onSuccess: () => {
-      setCertificationText("인증완료");
+      setCertificationText('인증완료');
       pauseTimer();
       validateUserMutation.mutate({
         name,
-        identityNumber: registerFirst + "-" + registerSecond,
-        phoneNumber:
-          phone.slice(0, 3) +
-          "-" +
-          phone.slice(3, 7) +
-          "-" +
-          phone.slice(7, 11),
+        identityNumber: registerFirst + '-' + registerSecond,
+        phoneNumber: phone.slice(0, 3) + '-' + phone.slice(3, 7) + '-' + phone.slice(7, 11),
         email,
       });
     },
@@ -212,12 +203,12 @@ const useLogin = () => {
     mutationFn: loginUserAPI,
     onSuccess: (response) => {
       const accessToken = response.data.accessToken;
-      localStorage.setItem("accessToken", accessToken);
-      navigate("/home");
+      localStorage.setItem('accessToken', accessToken);
+      navigate('/home');
     },
     onError: (error: ResponseErrorDTO) => {
       if (error.status == 401) {
-        console.log("로그인 실패");
+        console.log('로그인 실패');
         setPasswordCheck(false);
       }
     },
@@ -234,20 +225,15 @@ const useLogin = () => {
     if (password.length == 6) {
       if (isAlready) {
         // 로그인
-        console.log("로그인 호출됨");
+        console.log('로그인 호출됨');
         loginUserMutation.mutate({ email, password });
       } else {
         // 회원가입
-        console.log("회원가입 호출됨");
+        console.log('회원가입 호출됨');
         registerUserMutation.mutate({
           name,
-          identityNumber: registerFirst + "-" + registerSecond,
-          phoneNumber:
-            phone.slice(0, 3) +
-            "-" +
-            phone.slice(3, 7) +
-            "-" +
-            phone.slice(7, 11),
+          identityNumber: registerFirst + '-' + registerSecond,
+          phoneNumber: phone.slice(0, 3) + '-' + phone.slice(3, 7) + '-' + phone.slice(7, 11),
           email,
           password,
         });

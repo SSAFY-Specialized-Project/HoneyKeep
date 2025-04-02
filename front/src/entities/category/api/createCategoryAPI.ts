@@ -1,9 +1,10 @@
 import { customFetchAPI } from "@/shared/api"
-import { createCategoryRequest } from "../model/types"
+import { createCategoryRequest, createCategoryResponse } from "@/entities/category/model/types"
 
-const createCategoryAPI = () => customFetchAPI<createCategoryRequest, createCategoryRequest>({
+const createCategoryAPI = (data: createCategoryRequest) => customFetchAPI<createCategoryResponse, createCategoryRequest>({
   url: "/categories",
   method: "POST",
+  data
 })
 
 export default createCategoryAPI;

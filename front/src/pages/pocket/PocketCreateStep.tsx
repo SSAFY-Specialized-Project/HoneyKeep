@@ -1,8 +1,9 @@
-import { PocketChoiceTab } from '@/entities/pocket/ui';
-import { Icon } from '@/shared/ui';
-import { Outlet } from 'react-router';
+import { Icon, ToggleButton } from '@/shared/ui';
+import { useState } from 'react';
 
-const PocketCreate = () => {
+const PocketCreateStep = () => {
+  const [isActive, setActive] = useState<boolean>(false);
+
   return (
     <div className="flex h-full flex-col gap-4 p-5">
       <div>
@@ -12,10 +13,9 @@ const PocketCreate = () => {
         </div>
         <span className="text-title-sm text-gray-500">어떤 지출이 예정되어 있나요?</span>
       </div>
-      <PocketChoiceTab />
-      <Outlet />
+      <ToggleButton isActive={isActive} setActive={setActive} />
     </div>
   );
 };
 
-export default PocketCreate;
+export default PocketCreateStep;

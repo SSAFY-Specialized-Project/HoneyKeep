@@ -58,6 +58,15 @@ export interface PocketFilterResponse {
   pocket: Pocket[];
 }
 
+// 포켓 생성 링크 요청
+export interface PocketCreateLinkRequest {
+  link: string;
+}
+
+export interface PocketCreateLinkResponse {
+  productUuid: string;
+}
+
 // 포켓 생성 요청
 export interface PocketCreateRequest {
   name: string;
