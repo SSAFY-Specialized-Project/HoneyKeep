@@ -2,16 +2,18 @@ import { ResponseDTO, ResponseErrorDTO } from "@/shared/model/types";
 import { apiURL } from "@/shared/lib";
 import refreshTokenAPI from "./refreshTokenAPI";
 
-const customFetchAPI = async <T, P> ({
+const customFetchAPI = async <T, P, H extends Record<string, string> = Record<string, string>> ({
   url,
   method,
   credentials = "same-origin",
   data,
+  headers,
 }:{
   url: string;
   method: "GET"| "POST"| "PUT"| "DELETE"| "PATCH";
   credentials?: RequestCredentials,
   data?: P;
+  headers?: H;
 }):Promise<ResponseDTO<T>> => {
 
   const body = data ? JSON.stringify(data) : null;
@@ -19,12 +21,16 @@ const customFetchAPI = async <T, P> ({
 
   try{
 
+    const defaultHeaders: Record<string, string> = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const mergedHeaders = { ...defaultHeaders, ...headers };
+
     const response = await fetch(apiURL(url), {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`
-      },
+      headers: mergedHeaders,
       credentials,
       body: body
     })
@@ -44,7 +50,7 @@ const customFetchAPI = async <T, P> ({
 
             localStorage.setItem("accessToken", refreshResponse.data);
 
-            return customFetchAPI({url, method, credentials, data});
+            return customFetchAPI({url, method, credentials, data, headers});
 
           }
 
