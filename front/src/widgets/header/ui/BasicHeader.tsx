@@ -1,9 +1,11 @@
+import { Icon } from "@/shared/ui";
+
 const BasicHeader = () => {
   return (
-    <header className="w-full h-1/30 bg-blue p-5 flex justify-end items-center">
+    <header className="w-full bg-blue p-5 flex justify-end items-center bg-blue-200">
       <div className="flex gap-5">
-        <div className="w-8 h-8">페이</div>
-        <div className="w-8 h-8">알림</div>
+        <Icon id={"qr-code"} size="big" />
+        <Icon id={"alarm"} size="big" />
       </div>
     </header>
   );
