@@ -60,39 +60,33 @@ public class MydataConnectService {
     public void connect(Long userId, List<String> bankCodes) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-        String userKey = user.getUserKey();
 
-        List<AccountForMydataDto> accounts = bankApiClient.getAccounts(userKey);
-        List<Account> toSaveAccounts = new ArrayList<>();
+        List<AccountForMydataDto> accounts = bankApiClient.getAccounts(user.getUserKey());
 
-        for (String code : bankCodes) {
-            Bank bank = bankRepository.findByCode(code)
-                    .orElseThrow(() -> new CustomException(MydataErrorCode.BANK_NOT_FOUND));
+        // 선택된 은행 코드와 일치하는 계좌만 필터링한 후 엔티티로 변환한다.
+        List<Account> newAccounts = accounts.stream()
+                .filter(account -> bankCodes.contains(account.bankCode())) // 선택된 은행만 필터링
+                .filter(account -> !accountRepository.existsAccountByAccountNumber(account.accountNo())) // 기존 계좌 제외
+                .map(account -> {
+                    Bank bank = bankRepository.findByCode(account.bankCode())
+                            .orElseThrow(() -> new CustomException(MydataErrorCode.BANK_NOT_FOUND));
 
-            List<AccountForMydataDto> accountsFilteredByBank = accounts.stream()
-                    .filter(a -> a.bankCode().equals(code))
-                    .toList();
+                    return Account.builder()
+                            .user(user)
+                            .bank(bank)
+                            .accountName(account.accountName())
+                            .accountNumber(account.accountNo())
+                            .accountExpiryDate(account.accountExpiryDateAsLocalDate())
+                            .accountBalance(account.accountBalanceAsMoney())
+                            .dailyTransferLimit(account.dailyTransferLimitAsMoney())
+                            .oneTimeTransferLimit(account.oneTimeTransferLimitAsMoney())
+                            .lastTransactionDate(account.lastTransactionDateAsLocalDate())
+                            .build();
+                })
+                .toList();
 
-            for (AccountForMydataDto a : accountsFilteredByBank) {
-                if (accountRepository.existsAccountByAccountNumber(a.accountNo())) continue;
-
-                Account account = Account.builder()
-                        .user(user)
-                        .bank(bank)
-                        .accountName(a.accountName())
-                        .accountNumber(a.accountNo())
-                        .accountExpiryDate(a.accountExpiryDateAsLocalDate())
-                        .accountBalance(a.accountBalanceAsMoney())
-                        .dailyTransferLimit(a.dailyTransferLimitAsMoney())
-                        .oneTimeTransferLimit(a.oneTimeTransferLimitAsMoney())
-                        .lastTransactionDate(a.lastTransactionDateAsLocalDate())
-                        .build();
-
-                toSaveAccounts.add(account);
-            }
-        }
-
-        toSaveAccounts = accountRepository.saveAll(toSaveAccounts);
+        // 저장
+        accountRepository.saveAll(newAccounts);
 
         // TODO: 연동 결과 뭐주지??
     }

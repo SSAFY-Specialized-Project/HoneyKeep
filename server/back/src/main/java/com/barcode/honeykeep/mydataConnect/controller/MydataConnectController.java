@@ -59,7 +59,7 @@ public class MydataConnectController {
                 .httpOnly(true)
                 .secure(true)
                 .path("/api/v1/mydata")
-                .maxAge(999999)
+                .maxAge(300)
                 .domain(cookieDomain)
                 .sameSite("Lax")
                 .build();
