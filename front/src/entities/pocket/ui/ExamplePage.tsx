@@ -2,6 +2,7 @@ import TransactionSuccess from '@/pages/pocket/TransactionSuccess';
 import PocketCreateSuccess from '@/pages/pocket/PocketCreateSuccess';
 import PocketDetail from '@/pages/pocket/PocketDetail';
 import PocketSaveSuccess from '@/pages/pocket/PocketSaveSuccess';
+import PaymentComplete from '@/pages/payment/PaymentComplete';
 
 export default function ExampleTransactionSuccessPage() {
   return (
@@ -51,6 +52,11 @@ export default function ExampleTransactionSuccessPage() {
         totalSavedAmount={120000}
         usedDate="2025.04.02"
         accountName="신한은행 통장"
+      />
+      <PaymentComplete
+        merchantName="스타벅스 역삼대로점"
+        amount={5800}
+        accountName="우리은행 저축예금"
       />
     </div>
   );
