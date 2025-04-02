@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -73,6 +74,11 @@ public class CategoryService {
         return categories.stream()
                 .map(category -> {
                     List<Pocket> pockets = pocketRepository.findByAccountUserIdAndCategory_Id(userId, category.getId());
+
+                    if (pockets == null || pockets.isEmpty()) {
+                        return null;
+                    }
+
                     List<PocketSummaryResponse> pocketResponses = pockets.stream()
                             .map(pocket -> PocketSummaryResponse.builder()
                                     .id(pocket.getId())
@@ -93,6 +99,7 @@ public class CategoryService {
                             .pockets(pocketResponses)
                             .build();
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
