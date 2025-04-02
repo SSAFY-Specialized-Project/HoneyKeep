@@ -1,6 +1,6 @@
-import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
+import { Alarm, Chatbot, Error, Landing, Loading } from '@/pages/general';
 import { Login } from '@/pages/user';
-import { Layout } from '@/shared/ui';
+import { Home, Layout } from 'lucide-react';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
@@ -16,6 +16,7 @@ import {
   MyAgree,
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
+import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 
 const AppRouter = createBrowserRouter([
   {
@@ -163,11 +164,6 @@ const AppRouter = createBrowserRouter([
             element: <PocketCreate />,
           },
           {
-            // 포켓 상세
-            path: '/pocket/detail',
-            element: <PocketDetail />,
-          },
-          {
             path: '/category/create',
             element: <CategoryCreate />,
           },
@@ -180,6 +176,11 @@ const AppRouter = createBrowserRouter([
           {
             path: '/error',
             element: <Error />,
+          },
+          // 예시 페이지
+          {
+            path: '/e',
+            element: <ExamplePage />,
           },
         ],
       },
