@@ -3,7 +3,6 @@ package com.barcode.honeykeep.pocket.controller;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pocket.dto.*;
-import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.pocket.service.PocketService;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
@@ -230,5 +229,39 @@ public class PocketController {
                         .body(ApiResponse.noContent("No pockets found with the given filters", null))
                 : ResponseEntity.ok()
                         .body(ApiResponse.success(pockets));
+    }
+
+    /**
+     * 포켓 사용 시작 처리
+     * @param pocketId 사용 시작할 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    @PatchMapping("/{pocketId}/start-using")
+    public ResponseEntity<ApiResponse<PocketUpdateResponse>> startUsingPocket(
+            @AuthenticationPrincipal UserId userId,
+            @PathVariable Long pocketId) {
+
+        PocketUpdateResponse response = pocketService.startUsingPocket(pocketId);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("포켓 사용중 처리 완료", response));
+    }
+
+    /**
+     * 포켓 결제 완료 처리
+     * @param pocketId 결제에 사용된 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    @PatchMapping("/{pocketId}/complete")
+    public ResponseEntity<ApiResponse<PocketUpdateResponse>> completePocketPayment(
+            @AuthenticationPrincipal UserId userId,
+            @PathVariable Long pocketId) {
+
+        PocketUpdateResponse response = pocketService.completePocketPayment(pocketId);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("포켓 사용완료 처리 성공", response));
     }
 }

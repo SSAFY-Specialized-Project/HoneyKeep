@@ -63,7 +63,7 @@ public class PocketService {
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .isFavorite(false)
-                .type(PocketType.GATHERING)
+                .type(PocketType.UNUSED)
                 .isActivated(isActivated)
                 .build();
 
@@ -124,7 +124,7 @@ public class PocketService {
                 .startDate(pocketManualRequest.getStartDate())
                 .endDate(pocketManualRequest.getEndDate())
                 .isFavorite(false)
-                .type(PocketType.GATHERING)
+                .type(PocketType.UNUSED)
                 .imgUrl(null)
                 .crawlingUuid(pocketManualRequest.getCrawlingUuid())
                 .build();
@@ -458,5 +458,37 @@ public class PocketService {
                 .progressPercentage(Math.min(progressPercentage, 100.0)) // 100%를 넘지 않도록
                 .updatedAt(pocket.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * 포켓 사용 시작 처리
+     * @param pocketId 사용 시작할 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    public PocketUpdateResponse startUsingPocket(Long pocketId) {
+        Pocket pocket = getPocketById(pocketId);
+
+        pocket.updateType(PocketType.USING);
+
+        pocketRepository.save(pocket);
+
+        return mapToPocketUpdateResponse(pocket);
+    }
+
+    /**
+     * 포켓 사용 완료 처리
+     * @param pocketId 결제에 사용된 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    public PocketUpdateResponse completePocketPayment(Long pocketId) {
+        Pocket pocket = getPocketById(pocketId);
+
+        pocket.updateType(PocketType.USED);
+
+        pocketRepository.save(pocket);
+
+        return mapToPocketUpdateResponse(pocket);
     }
 }

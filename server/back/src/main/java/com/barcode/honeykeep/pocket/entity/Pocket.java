@@ -55,6 +55,7 @@ public class Pocket extends BaseEntity {
 
     private Boolean isFavorite = false;
 
+    @Enumerated(EnumType.STRING)
     private PocketType type;
 
     private String imgUrl;
@@ -116,5 +117,9 @@ public class Pocket extends BaseEntity {
         if (endDate != null) this.endDate = endDate;
         if (isFavorite != null) this.isFavorite = isFavorite;
         if (imgUrl != null) this.imgUrl = imgUrl;
+    }
+
+    public void updateType(PocketType type) {
+        this.type = type;
     }
 }
