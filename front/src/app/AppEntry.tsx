@@ -5,8 +5,11 @@ import { RouterProvider } from 'react-router/dom';
 import AppRouter from './AppRouter';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
+import { useFCMStore } from '@/shared/store';
 
 registerSW();
+
+useFCMStore.getState().initializeFCM();
 
 const queryClient = new QueryClient();
 
