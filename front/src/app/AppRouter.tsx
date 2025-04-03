@@ -1,3 +1,11 @@
+import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
+import { Login } from '@/pages/user';
+import { createBrowserRouter } from 'react-router';
+import AuthWrapper from './AuthWrapper';
+import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
+import { BaseLayout, HistoryLayout } from './layouts';
+import { PocketCalendar, PocketCreate, PocketCreateStep, PocketList } from '@/pages/pocket';
+import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
 import {
   AccountConnect,
   AccountDetail,
@@ -5,34 +13,28 @@ import {
   AccountTransfer,
   Certification,
   MyAgree,
-} from "@/pages/account";
-import {
-  FixedPayCreate,
-  FixedPayDetail,
-  FixedPayList,
-  FixedPayUpdate,
-} from "@/pages/fixedPay";
-import { Alarm, Chatbot, Error, Home } from "@/pages/general";
-import { Payment, QRPayment, QRSuccess } from "@/pages/payment";
-import {
-  PocketCalendar,
-  PocketCreate,
-  PocketDetail,
-  PocketList,
-} from "@/pages/pocket";
-import { Login } from "@/pages/user";
-import { Layout } from "@/shared/ui";
-import { createBrowserRouter } from "react-router";
-import AuthWrapper from "./AuthWrapper";
+} from '@/pages/account';
+import CategoryCreate from '@/pages/pocket/CategoryCreate';
+import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
+import ExamplePage from '@/entities/pocket/ui/ExamplePage';
+import { Layout } from '@/shared/ui';
 
 const AppRouter = createBrowserRouter([
+  {
+    path: '/landing',
+    element: <Landing />,
+  },
+  {
+    path: '/loading',
+    element: <Loading />,
+  },
   {
     // 상단 바랑 네비게이션 없는 레이아웃
     element: <Layout />,
     children: [
       {
         // 로그인
-        path: "/login",
+        path: '/login',
         element: <Login />,
       },
       {
@@ -40,17 +42,17 @@ const AppRouter = createBrowserRouter([
         children: [
           {
             // 결제
-            path: "/payment",
+            path: '/payment',
             element: <Payment />,
           },
           {
             // QR 결제
-            path: "/qrPayment",
+            path: '/qrPayment',
             element: <QRPayment />,
           },
           {
             // QR 결제 완료
-            path: "/qrSuccess",
+            path: '/qrSuccess',
             element: <QRSuccess />,
           },
         ],
@@ -59,54 +61,56 @@ const AppRouter = createBrowserRouter([
   },
   {
     // 상단 바랑 네비게이션 바 있는 레이아웃
-    element: <Layout />,
+    element: <BaseLayout />,
     children: [
       {
         element: <AuthWrapper />,
         children: [
           {
             // 홈
-            path: "/",
+            path: '/',
             element: <Home />,
+            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
             // 홈
-            path: "/home",
+            path: '/home',
             element: <Home />,
+            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
             // 알람 설정
-            path: "/alarm",
+            path: '/alarm',
             element: <Alarm />,
           },
           {
             // 포켓 목록
-            path: "/pocket/list",
+            path: '/pocket/list',
             element: <PocketList />,
           },
           {
             // 포켓 캘린더
-            path: "/pocket/calendar",
+            path: '/pocket/calendar',
             element: <PocketCalendar />,
           },
           {
             // 고정 지출
-            path: "/fixedPay/list",
+            path: '/fixedExpense/list',
             element: <FixedPayList />,
           },
           {
             // 고정 지출 생성
-            path: "/fixedPay/create",
+            path: '/fixedPay/create',
             element: <FixedPayCreate />,
           },
           {
             // 고정 지출 수정
-            path: "/fixedPay/update",
+            path: '/fixedPay/update',
             element: <FixedPayUpdate />,
           },
           {
             // 고정 지출 상세
-            path: "/fixedPay/:id",
+            path: '/fixedPay/:id',
             element: <FixedPayDetail />,
           },
         ],
@@ -115,7 +119,7 @@ const AppRouter = createBrowserRouter([
   },
   {
     // 뒤로가기만 있는 레이아웃
-    element: <Layout />,
+    element: <HistoryLayout />,
     children: [
       {
         element: <AuthWrapper />,
@@ -123,57 +127,79 @@ const AppRouter = createBrowserRouter([
           // 계좌 연결
           {
             // 마이데이터 약관 동의
-            path: "/myAgree",
+            path: '/myAgree',
             element: <MyAgree />,
           },
           {
             // 자체 인증서
-            path: "/certification",
+            path: '/certification',
             element: <Certification />,
           },
           {
             // 연결 은행 선택
-            path: "/accountConnect",
+            path: '/accountConnect',
             element: <AccountConnect />,
           },
 
           // 계좌 상세
           {
             // 내 게좌 목록
-            path: "/accountList",
+            path: '/accountList',
             element: <AccountList />,
           },
           {
             // 내 계좌 상세
-            path: "/accountDetail/:account",
+            path: '/accountDetail/:account',
             element: <AccountDetail />,
           },
           {
             // 계좌 이체
-            path: "/accountTransfer/:account",
+            path: '/accountTransfer/:account',
             element: <AccountTransfer />,
           },
 
           // 포켓
           {
             // 포켓 생성
-            path: "/pocket/create",
+            path: '/pocket/create',
             element: <PocketCreate />,
+            children: [
+              {
+                path: 'link',
+                element: <PocketCreateLink />,
+              },
+              {
+                path: 'favorite',
+                element: null,
+              },
+              {
+                index: true,
+                element: null,
+              },
+            ],
           },
           {
-            // 포켓 상세
-            path: "/pocket/detail",
-            element: <PocketDetail />,
+            path: '/pocket/create/step',
+            element: <PocketCreateStep />,
+          },
+          {
+            path: '/category/create',
+            element: <CategoryCreate />,
           },
 
           // 챗봇
           {
-            path: "/chatbot",
+            path: '/chatbot',
             element: <Chatbot />,
           },
           {
-            path: "*",
+            path: '/error',
             element: <Error />,
+          },
+          // 예시 페이지
+          {
+            path: '/e',
+            element: <ExamplePage />,
           },
         ],
       },

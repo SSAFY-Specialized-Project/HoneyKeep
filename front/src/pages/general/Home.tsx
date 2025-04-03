@@ -1,5 +1,20 @@
+import { MyAccountInfo } from '@/features/account/ui';
+import { MyPocketInfo } from '@/features/pocket/ui';
+import { Link } from 'react-router';
+
 const Home = () => {
-  return <div>홈입니다.</div>;
+  return (
+    <div className="flex flex-col gap-4 px-5 pt-5">
+      <MyAccountInfo />
+      <MyPocketInfo />
+      <Link
+        to="/pocket/create"
+        className="bg-brand-primary-500 text-title-md mt-3 w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+      >
+        포켓 만들기
+      </Link>
+    </div>
+  );
 };
 
 export default Home;

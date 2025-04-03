@@ -1,22 +1,24 @@
-import { Outlet } from "react-router";
+import { Outlet } from 'react-router';
 
 interface Props {
   headerSlot?: React.ReactNode;
   navbarSlot?: React.ReactNode;
+  modalSlot?: React.ReactNode;
 }
 
-const Layout = ({ headerSlot, navbarSlot }: Props) => {
+const Layout = ({ headerSlot, navbarSlot, modalSlot }: Props) => {
   return (
-    <div className="w-lvw h-lvh">
+    <div className="h-lvh w-lvw">
       <div
-        className="max-w-[600px] min-w-[375px] h-full mx-auto relative"
+        className="relative mx-auto flex h-full max-w-[600px] min-w-[375px] flex-col"
         id="topLayout"
       >
         {headerSlot}
-        <div className="w-full h-full">
+        <div className="flex-grow overflow-auto pb-5">
           <Outlet />
         </div>
         {navbarSlot}
+        {modalSlot}
       </div>
     </div>
   );
