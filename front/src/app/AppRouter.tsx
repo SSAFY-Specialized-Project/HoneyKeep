@@ -18,6 +18,7 @@ import CategoryCreate from '@/pages/pocket/CategoryCreate';
 import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 import { Layout } from '@/shared/ui';
+import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
 
 const AppRouter = createBrowserRouter([
   {
@@ -170,11 +171,11 @@ const AppRouter = createBrowserRouter([
               },
               {
                 path: 'favorite',
-                element: null,
+                element: <PocketFavoriteList />,
               },
               {
                 path: 'direct',
-                element: null,
+                element: <PocketCreateDirect />,
               },
             ],
           },

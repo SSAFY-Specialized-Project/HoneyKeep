@@ -1,9 +1,13 @@
 import { AccountInputDropdown } from '@/entities/account/ui';
 import CategoryInputDropDown from '@/entities/category/ui/CategoryInputDropDown';
 import { BorderInput, Icon, ToggleButton } from '@/shared/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 
 const PocketCreateStep = () => {
+  const location = useLocation();
+  const crawlingUuid = location.state?.crawlingUuid || null;
+
   const [isActive, setActive] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -11,6 +15,17 @@ const PocketCreateStep = () => {
 
   const [accountId, setAccountId] = useState<number | null>(null);
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
+  const [disabled, setDisabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    // setDisabled(
+    //   startDate == null ||
+    //     endDate == null ||
+    //     accountId == null ||
+    //     chargeAmount == null ||
+    //     crawlingUuid == null,
+    // );
+  }, [startDate, endDate, accountId, chargeAmount, crawlingUuid]);
 
   const handleStartDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStartDate(e.currentTarget.value);
@@ -30,6 +45,8 @@ const PocketCreateStep = () => {
       setChargeAmount(newValue);
     }
   };
+
+  const handleCreatePocket = () => {};
 
   return (
     <div className="flex h-full flex-col gap-4 p-5">
@@ -99,6 +116,14 @@ const PocketCreateStep = () => {
           </div>
         )}
       </div>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={handleCreatePocket}
+        className="bg-brand-primary-500 text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
+      >
+        생성하기
+      </button>
     </div>
   );
 };
