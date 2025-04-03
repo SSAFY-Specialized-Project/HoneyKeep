@@ -15,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountDetailResponse {
+    private Long accountId;
 
     // 계좌 번호
     private String accountNumber;
@@ -34,7 +35,7 @@ public class AccountDetailResponse {
     private int pocketCount;
 
     //여유 자산
-    private BigDecimal spareAssets;
+    private BigDecimal spareBalance;
 
     //거래 내역
     private List<TransactionDetailResponse> transactionList;

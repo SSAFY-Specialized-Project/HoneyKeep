@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountResponse {
+    private Long accountId;
 
     // 계좌 번호
     private String accountNumber;
@@ -31,5 +32,5 @@ public class AccountResponse {
     private int pocketCount;
 
     //여유 자산
-    private BigDecimal spareAssets;
+    private BigDecimal spareBalance;
 }
