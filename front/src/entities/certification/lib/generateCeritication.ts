@@ -1,6 +1,5 @@
 // generateCertification.ts
 import {arrayBufferToBase64} from './index';
-import {ResponseDTO} from "@/shared/model/types.ts";
 
 // 전역적인 메모리 내 개인키 참조 (직접 접근 불가능, 사용만 가능)
 let currentPrivateKey: CryptoKey | null = null;
@@ -11,7 +10,7 @@ let currentPrivateKey: CryptoKey | null = null;
 export async function generateKeyPair(): Promise<{
     publicKeyBase64: string;
 }> {
-    try {
+    try {        
         // RSA 알고리즘으로 2048비트 키 쌍 생성 (서명과 암호화에 모두 사용)
         const keyPair = await window.crypto.subtle.generateKey(
             {
@@ -103,7 +102,7 @@ async function storeKeyInIndexedDB(privateKey: CryptoKey, keyUsage: string): Pro
  * IndexedDB에서 개인키를 가져오는 함수
  */
 export async function loadPrivateKey(keyUsage: string = "sign"): Promise<boolean> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const request = indexedDB.open("SecureKeyDB", 1);
 
         request.onupgradeneeded = (event) => {
@@ -193,54 +192,6 @@ export async function signData(data: string): Promise<string> {
 }
 
 /**
- * TODO: input/output 타입 정하기!
- * 결제/이체 요청 데이터에 서명하는 함수
- * @param requestData 결제/이체 요청 데이터 객체
- * @returns 원본 데이터와 서명을 포함한 객체
- */
-export async function signPaymentRequest(requestData: any): Promise<{ data: any; signature: string }> {
-    // 데이터를 정렬된 문자열로 변환하여 일관된 서명 보장
-    const dataString = JSON.stringify(requestData, Object.keys(requestData).sort());
-
-    // 데이터에 서명
-    const signature = await signData(dataString);
-
-    return {
-        data: requestData,
-        signature
-    };
-}
-
-/**
- * TODO: input/output 타입 정하기!
- * 결제/이체 요청 보내는 함수
- */
-export async function sendPaymentRequest(paymentData: any): Promise<ResponseDTO<any>> {
-    try {
-        // 결제 데이터에 서명
-        const signedData = await signPaymentRequest(paymentData);
-
-        // 서명된 데이터와 함께 서버에 요청
-        const response = await fetch('/api/v1/payment/request', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(signedData)
-        });
-
-        if (!response.ok) {
-            throw new Error('결제 요청 실패');
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('결제 요청 오류:', error);
-        throw error;
-    }
-}
-
-/**
  * 저장된 개인키가 있는지 확인하는 함수
  */
 export async function hasStoredPrivateKey(keyUsage: string = "sign"): Promise<boolean> {
@@ -249,57 +200,4 @@ export async function hasStoredPrivateKey(keyUsage: string = "sign"): Promise<bo
     }
 
     return await loadPrivateKey(keyUsage);
-}
-
-/**
- * 개인키 삭제 함수
- */
-export async function clearPrivateKey(keyUsage?: string): Promise<void> {
-    // 메모리에서 개인키 참조 제거
-    currentPrivateKey = null;
-
-    // IndexedDB에서 키 삭제
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("SecureKeyDB", 1);
-
-        request.onerror = () => {
-            resolve(); // 실패해도 일단 진행
-        };
-
-        request.onsuccess = (event) => {
-            try {
-                const db = (event.target as IDBOpenDBRequest).result;
-
-                if (!db.objectStoreNames.contains("keys")) {
-                    resolve();
-                    return;
-                }
-
-                const transaction = db.transaction(["keys"], "readwrite");
-                const store = transaction.objectStore("keys");
-
-                if (keyUsage) {
-                    // 특정 용도의 키만 삭제
-                    store.delete(`userPrivateKey_${keyUsage}`);
-                } else {
-                    // 모든 키 삭제를 위해 키 조회
-                    const getAllRequest = store.getAll();
-                    getAllRequest.onsuccess = () => {
-                        const keys = getAllRequest.result;
-                        keys.forEach(key => {
-                            store.delete(key.id);
-                        });
-                    };
-                }
-
-                transaction.oncomplete = () => {
-                    db.close();
-                    resolve();
-                };
-            } catch (error) {
-                console.error("키 삭제 오류:", error);
-                resolve();
-            }
-        };
-    });
 }
