@@ -1,7 +1,6 @@
 package com.barcode.honeykeep.pay.dto;
 
 import lombok.*;
-
 import java.math.BigDecimal;
 
 @Getter
@@ -9,10 +8,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @ToString
-public class PayRequest {
+public class PayDto {
     Long accountId;
     BigDecimal amount;
-    String uuid;
     String productName;
     Long pocketId;
 }

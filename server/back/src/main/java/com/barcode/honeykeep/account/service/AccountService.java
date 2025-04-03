@@ -130,13 +130,14 @@ public class AccountService {
 
         return accounts.stream().map(account -> {
             return AccountResponse.builder()
+                    .accountId(account.getId())
                     .accountNumber(account.getAccountNumber())
                     .accountBalance(account.getAccountBalance().getAmount())
                     .accountName(account.getAccountName())
                     .bankName(account.getBank().getName())
                     .totalPocketAmount(calculateTotalPocketAmount(account))
                     .pocketCount(account.getPockets().size())
-                    .spareAssets(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -177,13 +178,14 @@ public class AccountService {
                 .collect(Collectors.toList());
 
         return AccountDetailResponse.builder()
+                .accountId(account.getId())
                 .accountNumber(account.getAccountNumber())
                 .accountBalance(account.getAccountBalance().getAmount())
                 .bankName(account.getBank().getName())
                 .accountName(account.getAccountName())
                 .totalPocketAmount(calculateTotalPocketAmount(account))
                 .pocketCount(account.getPockets().size())
-                .spareAssets(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
                 .transactionList(transactionDtos) // TransactionDetailResponse DTO 리스트 사용
                 .pocketList(pocketDtos)
                 .build();

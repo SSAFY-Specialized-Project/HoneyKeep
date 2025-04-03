@@ -3,10 +3,12 @@ package com.barcode.honeykeep.pay.controller;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
+import com.barcode.honeykeep.pay.dto.OnlinePayRequest;
 import com.barcode.honeykeep.pay.dto.PayRequest;
 import com.barcode.honeykeep.pay.dto.QrResponse;
 import com.barcode.honeykeep.pay.exception.PayErrorCode;
 import com.barcode.honeykeep.pay.service.PayService;
+import com.barcode.honeykeep.webauthn.service.WebAuthnTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class PayController {
 
     private final PayService payService;
+    private final WebAuthnTokenService webAuthnTokenService;
 
     /**
      * 1. 클라이언트에서 QR 생성을 위한 UUID를 요청
@@ -49,32 +52,44 @@ public class PayController {
      */
     @PostMapping("/payment")
     public ResponseEntity<ApiResponse<Boolean>> pay(@AuthenticationPrincipal UserId userId,
-                                                   @RequestBody PayRequest payRequest) {
-        /**
-         * webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
-         * 비즈니스 로직 전에 authToken 검증 메서드 부르기.
-         * 그냥 메서드 하나만 불러도 되고, try catch 문으로 자세하게 예외 처리 해도 ok
-         * 
-         * authToken 스펙은 다음과 같음...
-         * {
-         *      "authenticatorId": "default",   -> 장치 뭐 사용했는지(일단은 다 기본값일 거임)
-         *      "authTime": 1743646734,         -> unix 타임스탬프. 인증 완료한 시점
-         *      "authType": "WEBAUTHN",         -> 인증 유형 (WebAuthn)
-         *      "userId": "1",                  -> 유저 번호
-         *      "authLevel": "STRONG",          -> "STRONG" 이어야 인증받은 것
-         *      "iat": 1743646734,              -> issuedAt. 토큰이 발행된 시점
-         *      "exp": 2743646733               -> 만료 시점
-         * }
-         *
-         */
-        log.info("결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
+                                                    @RequestBody PayRequest payRequest,
+                                                    @CookieValue(value = "authToken") String authToken) {
+        log.info("QR 결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
+
+        // 인증서 검증
+        webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
+
         boolean isSuccess = payService.pay(userId, payRequest);
 
         if (isSuccess) {
-            log.info("결제 성공, userId: {}", userId.value());
+            log.info("QR 결제 성공, userId: {}", userId.value());
             return ResponseEntity.ok(ApiResponse.success(true));
         } else {
-            log.error("결제 실패, userId: {}, payRequest: {}", userId.value(), payRequest);
+            log.error("QR 결제 실패, userId: {}, payRequest: {}", userId.value(), payRequest);
+            throw new CustomException(PayErrorCode.PAYMENT_FAILED);
+        }
+    }
+
+    /**
+     * 온라인 결제 요청을 처리한다.
+     * 결제와 process는 동일하고, QR 검증 부분만 제외한다.
+     */
+
+    @PostMapping("/online")
+    public ResponseEntity<ApiResponse<Boolean>> onlinePay(@AuthenticationPrincipal UserId userId,
+                                                          @RequestBody OnlinePayRequest onlinePayRequest,
+                                                          @CookieValue(value = "authToken") String authToken) {
+        // 인증서 검증
+        webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
+
+        log.info("온라인 결제 요청 시작, userId: {}, payRequest: {}", userId, onlinePayRequest);
+        boolean isSuccess = payService.onlinePay(userId, onlinePayRequest);
+
+        if (isSuccess) {
+            log.info("온라인 결제 성공, userId: {}", userId.value());
+            return ResponseEntity.ok(ApiResponse.success(true));
+        } else {
+            log.error("온라인 결제 실패, userId: {}, payRequest: {}", userId.value(), onlinePayRequest);
             throw new CustomException(PayErrorCode.PAYMENT_FAILED);
         }
     }
