@@ -18,5 +18,6 @@ public record PocketCreateResponse(
         LocalDateTime endDate,
         Boolean isFavorite,
         String type,
+        Boolean isActivated,
         LocalDateTime createdAt
 ) {}

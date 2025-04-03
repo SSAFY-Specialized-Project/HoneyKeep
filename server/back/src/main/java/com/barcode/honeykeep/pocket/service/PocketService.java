@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.annotation.Schedules;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +52,8 @@ public class PocketService {
             category = categoryService.getCategoryById(request.categoryId());
         }
 
+        boolean isActivated = !request.totalAmount().isGreaterThan(account.getAccountBalance());
+
         Pocket pocket = Pocket.builder()
                 .account(account)
                 .category(category)
@@ -63,6 +64,7 @@ public class PocketService {
                 .endDate(request.endDate())
                 .isFavorite(false)
                 .type(PocketType.GATHERING)
+                .isActivated(isActivated)
                 .build();
 
         Pocket savedPocket = pocketRepository.save(pocket);
@@ -323,7 +325,7 @@ public class PocketService {
                         return !filterRequest.endDate().isBefore(pocketStart) &&
                                 !filterRequest.startDate().isAfter(pocketEnd);
                     })
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         // DTO로 변환
@@ -360,6 +362,7 @@ public class PocketService {
                 .endDate(pocket.getEndDate())
                 .isFavorite(pocket.getIsFavorite())
                 .type(pocket.getType().getType())
+                .isActivated(pocket.getIsActivated())
                 .createdAt(pocket.getCreatedAt())
                 .updatedAt(pocket.getUpdatedAt())
                 .build();
@@ -376,6 +379,7 @@ public class PocketService {
                 .totalAmount(pocket.getTotalAmount().getAmountAsLong())
                 .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .type(pocket.getType().getType())
+                .isActivated(pocket.getIsActivated())
                 .isFavorite(pocket.getIsFavorite())
                 .imgUrl(pocket.getImgUrl())
                 .endDate(pocket.getEndDate())
@@ -400,6 +404,7 @@ public class PocketService {
                 .endDate(pocket.getEndDate())
                 .isFavorite(pocket.getIsFavorite())
                 .type(pocket.getType().getType())
+                .isActivated(pocket.getIsActivated())
                 .createdAt(pocket.getCreatedAt())
                 .build();
     }
@@ -441,7 +446,7 @@ public class PocketService {
     private PocketGatherResponse mapToPocketGatherResponse(Pocket pocket, Long previousAmount, Long addedAmount) {
         Long currentAmount = pocket.getSavedAmount().getAmountAsLong();
         Long totalAmount = pocket.getTotalAmount().getAmountAsLong();
-        Double progressPercentage = totalAmount > 0 ? (double) currentAmount / totalAmount * 100 : 0;
+        double progressPercentage = totalAmount > 0 ? (double) currentAmount / totalAmount * 100 : 0;
         
         return PocketGatherResponse.builder()
                 .id(pocket.getId())
