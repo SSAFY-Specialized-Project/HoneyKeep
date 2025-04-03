@@ -5,8 +5,8 @@ import { WebAuthnAuthenticationButton, WebAuthnRegistrationButton } from '@/enti
 const Home = () => {
     return (
         <div className="flex flex-col gap-2 px-5 pt-5">
-            <WebAuthnRegistrationButton />
-            <WebAuthnAuthenticationButton />
+            {/* <WebAuthnRegistrationButton /> */}
+            {/* <WebAuthnAuthenticationButton /> */}
             <MyAccountInfo/>
             {/* <MyPocketInfo /> */}
             <Link
