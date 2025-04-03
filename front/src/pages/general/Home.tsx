@@ -6,7 +6,7 @@ const Home = () => {
   return (
     <div className="flex flex-col gap-4 px-5 pt-5">
       <MyAccountInfo />
-      {/* <MyPocketInfo /> */}
+      <MyPocketInfo />
       <Link
         to="/pocket/create"
         className="bg-brand-primary-500 text-title-md mt-3 w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"

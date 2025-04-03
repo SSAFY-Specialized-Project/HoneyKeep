@@ -4,9 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { getCategoryListAPI } from '../api';
 import CategoryCheck from './CategoryCheck';
 
-const CategoryInputDropDown = () => {
+interface Props {
+  categoryId: number | null;
+  setCategoryId: React.Dispatch<React.SetStateAction<number | null>>;
+}
+
+const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
   const [isOpen, setOpen] = useState<boolean>(false);
-  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [categoryName, setCategoryName] = useState<string>('');
   const [categoryIcon, setCategoryIcon] = useState<number | null>(null);
 
@@ -17,7 +21,7 @@ const CategoryInputDropDown = () => {
   });
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       <button
         className="flex w-full items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
         onClick={() => {
@@ -37,7 +41,7 @@ const CategoryInputDropDown = () => {
         <Icon size="small" isRotate={isOpen} id="chevron-down" />
       </button>
       <ul
-        className={`shadow-custom flex flex-col gap-2.5 rounded-2xl transition-all duration-300 ${isOpen ? 'max-h-50 overflow-auto opacity-100' : 'max-h-0 opacity-0'}`}
+        className={`shadow-custom flex flex-col gap-2.5 rounded-2xl py-3 transition-all duration-300 ${isOpen ? 'max-h-50 overflow-auto opacity-100' : 'max-h-0 opacity-0'}`}
       >
         {categoryData && categoryData.data != null
           ? categoryData.data.map((item) => {
@@ -51,6 +55,7 @@ const CategoryInputDropDown = () => {
                       setCategoryId(item.categoryId);
                       setCategoryIcon(item.icon);
                       setCategoryName(item.name);
+                      setOpen(false);
                     }}
                   />
                 </li>
@@ -58,6 +63,13 @@ const CategoryInputDropDown = () => {
             })
           : null}
       </ul>
+      <button
+        type="button"
+        onClick={() => {}}
+        className="flex w-full items-center justify-center rounded-2xl border border-gray-200 py-4"
+      >
+        <span className="text-text-xl text-gray-900">새 카테고리 추가</span>
+      </button>
     </div>
   );
 };

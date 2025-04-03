@@ -1,15 +1,26 @@
 import { AccountInputDropdown } from '@/entities/account/ui';
 import CategoryInputDropDown from '@/entities/category/ui/CategoryInputDropDown';
+import createPocketWithLinkAPI from '@/entities/pocket/api/createPocketWithLinkAPI';
+import { convertCurrentTime } from '@/shared/lib';
 import { BorderInput, Icon, ToggleButton } from '@/shared/ui';
+import { SearchLoadingModal } from '@/widgets/modal/ui';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
+
+type YYYYMMDD = `${number}-${number}-${number}`;
 
 const PocketCreateStep = () => {
-  const location = useLocation();
-  const crawlingUuid = location.state?.crawlingUuid || null;
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const crawlingUuid = queryClient.getQueryData<string>(['product-uuid']);
+
+  if (!crawlingUuid) {
+    console.log('크롤링 uuid 없습니다~');
+    navigate('/home');
+  }
 
   const [isActive, setActive] = useState<boolean>(false);
-  const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [chargeAmount, setChargeAmount] = useState<string>('');
 
@@ -17,19 +28,13 @@ const PocketCreateStep = () => {
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
   const [disabled, setDisabled] = useState<boolean>(true);
 
-  useEffect(() => {
-    // setDisabled(
-    //   startDate == null ||
-    //     endDate == null ||
-    //     accountId == null ||
-    //     chargeAmount == null ||
-    //     crawlingUuid == null,
-    // );
-  }, [startDate, endDate, accountId, chargeAmount, crawlingUuid]);
+  const [categoryId, setCategoryId] = useState<number | null>(null);
 
-  const handleStartDate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartDate(e.currentTarget.value);
-  };
+  const [isLoading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    setDisabled(accountId == null || categoryId == null || Number(chargeAmount) <= 0);
+  }, [accountId, categoryId, chargeAmount]);
 
   const handleEndDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEndDate(e.currentTarget.value);
@@ -46,10 +51,37 @@ const PocketCreateStep = () => {
     }
   };
 
-  const handleCreatePocket = () => {};
+  const createPocketMutate = useMutation({
+    mutationFn: createPocketWithLinkAPI,
+    onSuccess: () => {
+      setLoading(true);
+    },
+    onError: () => {},
+  });
+
+  const handleCreatePocket = () => {
+    const newEndDate = convertCurrentTime(endDate as YYYYMMDD);
+
+    if (newEndDate == null || accountId == null || categoryId == null || !crawlingUuid) return;
+
+    const data = {
+      endDate: newEndDate,
+      account: {
+        id: accountId,
+      },
+      categoryId,
+      totalAmount: {
+        amount: Number(chargeAmount),
+      },
+      isFavorite: false,
+      crawlingUuid,
+    };
+
+    createPocketMutate.mutate(data);
+  };
 
   return (
-    <div className="flex h-full flex-col gap-4 p-5">
+    <div className="relative flex h-full flex-col gap-4 p-5">
       <div>
         <div className="flex items-center gap-3">
           <Icon size="big" id="money-bag" />
@@ -62,27 +94,14 @@ const PocketCreateStep = () => {
         <ToggleButton isActive={isActive} setActive={setActive} />
       </div>
       <div className={`w-full justify-between gap-15 ${isActive ? 'flex' : 'hidden'}`}>
-        <BorderInput
-          type="date"
-          label="startDate"
-          labelText="시작일"
-          value={startDate}
-          onChange={handleStartDate}
-        />
-        <BorderInput
-          type="date"
-          label="endDate"
-          labelText="끝일"
-          value={endDate}
-          onChange={handleEndDate}
-        />
+        <BorderInput type="date" label="endDate" value={endDate} onChange={handleEndDate} />
       </div>
       <AccountInputDropdown
         accountId={accountId}
         setAccountId={setAccountId}
         setAccountBalance={setAccountBalance}
       />
-      <CategoryInputDropDown />
+      <CategoryInputDropDown categoryId={categoryId} setCategoryId={setCategoryId} />
       <div className="flex flex-col gap-3">
         <BorderInput
           type="text"
@@ -124,6 +143,7 @@ const PocketCreateStep = () => {
       >
         생성하기
       </button>
+      <SearchLoadingModal isLoading={isLoading} />
     </div>
   );
 };

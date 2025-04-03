@@ -67,6 +67,20 @@ export interface PocketCreateLinkResponse {
   productUuid: string;
 }
 
+export interface PocketCreateWithLinkRequest {
+  endDate: string;
+  account: { id: number};
+  categoryId: number;
+  totalAmount: {amount: number};
+  isFavorite: boolean;
+  crawlingUuid: string;
+}
+
+export interface PocketCreateWithLinkResponse {
+  pocketId: number;
+}
+
+
 // 포켓 생성 요청
 export interface PocketCreateRequest {
   name: string;

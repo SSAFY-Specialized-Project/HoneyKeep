@@ -4,7 +4,14 @@ import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
 import { BaseLayout, HistoryLayout } from './layouts';
-import { PocketCalendar, PocketCreate, PocketCreateStep, PocketList } from '@/pages/pocket';
+import {
+  PocketCalendar,
+  PocketCreate,
+  PocketCreateStep,
+  PocketCreateSuccess,
+  PocketDetailPage,
+  PocketList,
+} from '@/pages/pocket';
 import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
 import {
   AccountConnect,
@@ -180,8 +187,16 @@ const AppRouter = createBrowserRouter([
             ],
           },
           {
-            path: '/pocket/create/step',
+            path: '/pocket/create/link/step',
             element: <PocketCreateStep />,
+          },
+          {
+            path: '/pocket/success',
+            element: <PocketCreateSuccess />,
+          },
+          {
+            path: '/pocket/detail/:id',
+            element: <PocketDetailPage />,
           },
           {
             path: '/category/create',

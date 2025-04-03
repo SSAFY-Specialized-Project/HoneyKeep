@@ -1,6 +1,7 @@
 import { Bank } from "@/shared/model/types";
 
 export interface Account {
+  accountId: number;
   accountNumber: string;
   accountBalance: number;
   accountName: string;

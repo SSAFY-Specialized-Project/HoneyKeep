@@ -30,7 +30,7 @@ const AccountInfoDropDown = ({ accountId, setAccountId, setAccountBalance }: Pro
   return (
     <div>
       <button
-        className="flex w-full justify-between rounded-2xl border border-gray-200 px-4 py-5"
+        className="flex w-full items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
         onClick={() => {
           setOpen(!isOpen);
         }}
@@ -38,7 +38,7 @@ const AccountInfoDropDown = ({ accountId, setAccountId, setAccountBalance }: Pro
         {accountId && bankName ? (
           <div className="flex gap-3">
             <BankIcon bank={bankName} />
-            <div className="flex flex-col">
+            <div className="flex flex-col items-start">
               <span className="text-text-md font-semibold text-gray-900">{accountName}</span>
               <div className="text-text-sm flex gap-2 text-gray-600">
                 <span>{bankName}</span>
@@ -65,10 +65,11 @@ const AccountInfoDropDown = ({ accountId, setAccountId, setAccountBalance }: Pro
                     checked={accountNumber == item.accountNumber}
                     onChange={() => {
                       setBankName(item.bankName);
-                      setAccountId(null);
+                      setAccountId(item.accountId);
                       setAccountName(item.accountName);
                       setAccountNumber(item.accountNumber);
                       setAccountBalance(item.accountBalance);
+                      setOpen(false);
                     }}
                   />
                 </li>

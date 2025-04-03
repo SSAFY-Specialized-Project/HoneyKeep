@@ -1,10 +1,11 @@
 import { createPocketLinkAPI } from '@/entities/pocket/api';
 import { BorderInput } from '@/shared/ui';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const PocketCreateLink = () => {
+  const queryClient = useQueryClient();
   const [url, setURL] = useState<string>('');
   const navigate = useNavigate();
 
@@ -17,9 +18,15 @@ const PocketCreateLink = () => {
 
       const productUuid = data.productUuid;
 
-      console.log('성공', productUuid);
+      queryClient.setQueryDefaults(['product-uuid'], {
+        staleTime: 1000 * 60 * 5,
+        gcTime: 1000 * 60 * 5,
+      });
+      queryClient.setQueryData(['product-uuid'], productUuid);
 
-      navigate('/pocket/create/step', { state: productUuid });
+      console.log('uuid 저장 완료!');
+
+      navigate('/pocket/create/link/step');
     },
     onError: () => {},
   });
