@@ -113,6 +113,10 @@ services:
       CERT_CA_KEYSTORE_PATH: ${CERT_CA_KEYSTORE_PATH}
       CERT_CA_KEYSTORE_PASSWORD: ${CERT_CA_KEYSTORE_PASSWORD}
       CERT_CA_KEY_ALIAS: ${CERT_CA_KEY_ALIAS}
+
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID}
+      WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME}
+      WEBAUTHN_RP_ORIGIN: ${WEBAUTHN_RP_ORIGIN}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 10s
