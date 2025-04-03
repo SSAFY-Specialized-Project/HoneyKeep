@@ -6,6 +6,8 @@ import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.Money;
+import com.barcode.honeykeep.notification.dto.AccountTransferNotificationDTO;
+import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import com.barcode.honeykeep.transaction.type.TransactionType;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +29,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final TransactionService transactionService;
+    private final NotificationService notificationService;
 
     //이체 하기 전 실행 로직
     //출금 계좌와 입금 계좌를 단순 조회하여 정보를 반환
@@ -110,6 +114,24 @@ public class AccountService {
                 TransactionType.DEPOSIT
         );
 
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 9-1. 출금 알림 DTO 생성 (출금 계좌 사용자에게 보냄)
+        AccountTransferNotificationDTO withdrawalNotification = AccountTransferNotificationDTO.builder()
+                .title("출금 " + transferAmount + "원")
+                .body("내 "+withdrawAccount.getAccountName() + " -> " + depositAccount.getAccountName() + " " + depositAccount.getUser().getName())
+                .transferDate(now)
+                .build();
+        notificationService.sendWithdrawalNotification(withdrawAccount.getUser().getId(), withdrawalNotification);
+
+        // 9-2. 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
+        AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
+                .title("입금 " + transferAmount + "원")
+                .body(depositAccount.getUser().getName() + " -> " + withdrawAccount.getAccountName())
+                .transferDate(now)
+                .build();
+        notificationService.sendDepositNotification(depositAccount.getUser().getId(), depositNotification);
 
 
         return TransferExecutionResponse.builder()
