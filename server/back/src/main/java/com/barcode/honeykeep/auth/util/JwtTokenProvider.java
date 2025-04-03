@@ -2,6 +2,7 @@ package com.barcode.honeykeep.auth.util;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.Map;
 
 import com.barcode.honeykeep.common.vo.UserId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,34 @@ public class JwtTokenProvider {
                 .setExpiration(expiration)
                 .signWith(SignatureAlgorithm.HS256, jwtSecret)
                 .compact();
+    }
+    
+    // String userId를 받는 오버로딩 메서드 추가
+    public String generateAccessToken(String userId) {
+        return generateAccessToken(Long.parseLong(userId));
+    }
+
+    // 클레임을 포함한 토큰 생성
+    public String generateTokenWithClaims(Map<String, Object> claims) {
+        long now = System.currentTimeMillis();
+        Date issuedAt = new Date(now);
+        Date expiration = new Date(now + jwtExpireSec * 1000L);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .signWith(SignatureAlgorithm.HS256, jwtSecret)
+                .compact();
+    }
+
+    // 토큰에서 모든 클레임 추출
+    public Claims getAllClaimsFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(jwtSecret)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     // Refresh Token 생성
@@ -115,6 +144,12 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.get("userId", Long.class);
+    }
+
+    // String 형태로 userId 반환
+    public String getUserIdFromToken(String token) {
+        Long userId = getUserId(token);
+        return userId != null ? String.valueOf(userId) : null;
     }
 
     // 만료된 토큰에서 userId 조회

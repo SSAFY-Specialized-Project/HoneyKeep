@@ -3,6 +3,7 @@ package com.barcode.honeykeep.mydataConnect.controller;
 import java.util.List;
 
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
+import com.barcode.honeykeep.webauthn.service.WebAuthnTokenService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class MydataConnectController {
 
     private final MydataConnectService mydataConnectService;
-    private final SignatureVerificationService signVerifyService;
-    private final JwtTokenProvider tokenProvider;
+    private final WebAuthnTokenService tokenService;
 
     @Value("${app.cookie.domain}")
     private String cookieDomain;
@@ -78,10 +78,7 @@ public class MydataConnectController {
             @AuthenticationPrincipal UserId userId,
             @CookieValue(value = "authToken") String authToken) {
 
-        // 쿠키가 없으면 토큰 검증 로직 추가
-        if (authToken == null || !tokenProvider.validateToken(authToken)) {
-            throw new CustomException(AuthErrorCode.JWT_TOKEN_EXPIRED);
-        }
+        tokenService.validateAuthToken(authToken, userId.value().toString());
 
         List<BankListForMydataResponse> bankList = mydataConnectService.getBankListWithStatus(userId.value());
 
@@ -98,10 +95,7 @@ public class MydataConnectController {
             @CookieValue(value = "authToken") String authToken,
             @RequestBody BankConnectForMydataRequest request) {
 
-        // 쿠키가 없으면 토큰 검증 로직 추가
-        if (authToken == null || !tokenProvider.validateToken(authToken)) {
-            throw new CustomException(AuthErrorCode.JWT_TOKEN_EXPIRED);
-        }
+        tokenService.validateAuthToken(authToken, userId.value().toString());
 
         mydataConnectService.connect(userId.value(), request.bankCodes());
 

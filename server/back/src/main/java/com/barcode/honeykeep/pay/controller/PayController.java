@@ -50,6 +50,23 @@ public class PayController {
     @PostMapping("/payment")
     public ResponseEntity<ApiResponse<Boolean>> pay(@AuthenticationPrincipal UserId userId,
                                                    @RequestBody PayRequest payRequest) {
+        /**
+         * webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
+         * 비즈니스 로직 전에 authToken 검증 메서드 부르기.
+         * 그냥 메서드 하나만 불러도 되고, try catch 문으로 자세하게 예외 처리 해도 ok
+         * 
+         * authToken 스펙은 다음과 같음...
+         * {
+         *      "authenticatorId": "default",   -> 장치 뭐 사용했는지(일단은 다 기본값일 거임)
+         *      "authTime": 1743646734,         -> unix 타임스탬프. 인증 완료한 시점
+         *      "authType": "WEBAUTHN",         -> 인증 유형 (WebAuthn)
+         *      "userId": "1",                  -> 유저 번호
+         *      "authLevel": "STRONG",          -> "STRONG" 이어야 인증받은 것
+         *      "iat": 1743646734,              -> issuedAt. 토큰이 발행된 시점
+         *      "exp": 2743646733               -> 만료 시점
+         * }
+         *
+         */
         log.info("결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
         boolean isSuccess = payService.pay(userId, payRequest);
 

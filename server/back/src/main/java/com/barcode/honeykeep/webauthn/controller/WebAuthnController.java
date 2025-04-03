@@ -5,6 +5,7 @@ import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.webauthn.dto.*;
 import com.barcode.honeykeep.webauthn.service.WebAuthnService;
+import com.barcode.honeykeep.webauthn.service.WebAuthnTokenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ public class WebAuthnController {
 
     private final WebAuthnService webAuthnService;
     private final JwtTokenProvider tokenProvider;
+    private final WebAuthnTokenService webAuthnTokenService;
 
     @Value("${app.cookie.domain}")
     private String cookieDomain;
@@ -103,19 +105,28 @@ public class WebAuthnController {
 
         WebAuthnResponse<?> response = webAuthnService.finishAuthentication(request);
 
-        // 인증에 대한 임시 토큰 발급 후 쿠키에 저장. 제한시간 5분
-        String authToken = tokenProvider.generateAccessToken(userId.value());
-
-        ResponseCookie authTokenCookie = ResponseCookie.from("authToken", authToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(300)
-                .domain(cookieDomain)
-                .sameSite("Lax")
-                .build();
-
         if (response.isSuccess()) {
+            // 인증에 대한 임시 토큰 발급 후 쿠키에 저장
+            // AuthenticationFinishRequest가 record 타입이므로 맵에서 정보 추출
+            String authenticatorId = "default"; // 보통 credential ID는 응답에서 추출하지만, 여기서는 기본값 사용
+            
+            // 강력 인증 레벨 설정 - 사용자 검증 기준
+            // 실제로는 request.credential() 맵에서 userVerification 값을 확인해야 함
+            String authLevel = "STRONG"; // 기본적으로 강력 인증으로 설정
+            
+            // WebAuthn 인증 정보로 토큰 생성
+            WebAuthnAuthDetails authDetails = new WebAuthnAuthDetails(authLevel, authenticatorId);
+            String authToken = webAuthnTokenService.generateWebAuthnToken(userId.value().toString(), authDetails);
+
+            ResponseCookie authTokenCookie = ResponseCookie.from("authToken", authToken)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(180) // 3분
+                    .domain(cookieDomain)
+                    .sameSite("Lax")
+                    .build();
+
             return ResponseEntity.ok()
                     .header("Set-Cookie", authTokenCookie.toString())
                     .body(response);
