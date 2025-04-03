@@ -4,6 +4,7 @@ interface Props {
   amount: number;
   monthCount: number;
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onModify: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onDelete: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -13,6 +14,7 @@ const FixedExpenseInfo = ({
   amount,
   monthCount,
   onClick,
+  onModify,
   onDelete,
 }: Props) => {
   return (
@@ -20,7 +22,7 @@ const FixedExpenseInfo = ({
       <button
         type="button"
         onClick={onClick}
-        className="flex flex-col w-full p-5 rounded-[1.25rem] gap-3"
+        className="flex flex-col w-full p-5 rounded-[1.25rem] gap-3 cursor-pointer"
       >
         <div className="flex justify-start items-center w-full gap-2">
           <strong className="text-text-xl text-gray-900 font-bold">
@@ -41,13 +43,22 @@ const FixedExpenseInfo = ({
           <span className="text-text-md text-extra">
             지난 {monthCount}개월 동안 고정지출
           </span>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="text-text-md text-gray-600"
-          >
-            삭제
-          </button>
+          <div className="flex gap-6">
+            <button
+              type="button"
+              onClick={onModify}
+              className="text-text-md text-gray-600 cursor-pointer"
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="text-text-md text-gray-600 cursor-pointer"
+            >
+              삭제
+            </button>
+            </div>
         </div>
       </button>
     </li>

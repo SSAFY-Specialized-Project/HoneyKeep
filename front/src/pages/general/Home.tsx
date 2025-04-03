@@ -1,6 +1,5 @@
 import {MyAccountInfo} from '@/features/account/ui';
 import {Link} from 'react-router';
-import { WebAuthnAuthenticationButton, WebAuthnRegistrationButton } from '@/entities/user/components';
 
 const Home = () => {
     return (
