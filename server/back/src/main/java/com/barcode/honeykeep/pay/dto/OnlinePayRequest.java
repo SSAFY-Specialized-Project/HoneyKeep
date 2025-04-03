@@ -9,10 +9,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @ToString
-public class PayRequest {
+public class OnlinePayRequest {
     Long accountId;
     BigDecimal amount;
-    String uuid;
     String productName;
     Long pocketId;
 }

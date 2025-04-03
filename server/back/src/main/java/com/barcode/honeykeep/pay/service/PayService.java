@@ -3,6 +3,8 @@ package com.barcode.honeykeep.pay.service;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pay.cache.QrUuid;
+import com.barcode.honeykeep.pay.dto.OnlinePayRequest;
+import com.barcode.honeykeep.pay.dto.PayDto;
 import com.barcode.honeykeep.pay.dto.PayRequest;
 import com.barcode.honeykeep.pay.exception.PayErrorCode;
 import com.barcode.honeykeep.pay.repository.PayRepository;
@@ -48,6 +50,13 @@ public class PayService {
     public boolean pay(UserId userId, PayRequest payRequest) {
         log.info("결제 요청 시작, userId: {}, QR UUID: {}", userId, payRequest.getUuid());
 
+        PayDto payDto = PayDto.builder()
+                .accountId(payRequest.getAccountId())
+                .amount(payRequest.getAmount())
+                .pocketId(payRequest.getPocketId())
+                .productName(payRequest.getProductName())
+                .build();
+
         // Redis에서 QR UUID 조회
         Object value = redisTemplate.opsForValue().get(payRequest.getUuid());
 
@@ -65,14 +74,30 @@ public class PayService {
             }
             else {
                 log.info("유효한 QR 코드 확인: {}", payRequest.getUuid());
-                boolean result = payRepository.payment(userId, payRequest);
+                boolean result = payRepository.payment(userId, payDto);
 
-                log.info("결제 처리 결과: {}", result ? "성공" : "실패");
+                log.info("QR 결제 처리 결과: {}", result ? "성공" : "실패");
                 return result;
             }
         } catch (IllegalArgumentException e) {
             log.error("QR 코드 변환 중 에러 발생: {}", e.getMessage());
             throw new CustomException(PayErrorCode.INVALID_QR);
         }
+    }
+
+    /**
+     * 온라인 페이 처리
+     */
+    public boolean onlinePay(UserId userId, OnlinePayRequest onlinePayRequest) {
+        PayDto payDto = PayDto.builder()
+                .accountId(onlinePayRequest.getAccountId())
+                .amount(onlinePayRequest.getAmount())
+                .pocketId(onlinePayRequest.getPocketId())
+                .productName(onlinePayRequest.getProductName())
+                .build();
+
+        boolean result = payRepository.payment(userId, payDto);
+        log.info("온라인 결제 처리 결과: {}", result ? "성공" : "실패");
+        return result;
     }
 }

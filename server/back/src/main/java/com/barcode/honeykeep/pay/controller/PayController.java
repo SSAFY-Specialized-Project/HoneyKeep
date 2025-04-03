@@ -3,6 +3,7 @@ package com.barcode.honeykeep.pay.controller;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
+import com.barcode.honeykeep.pay.dto.OnlinePayRequest;
 import com.barcode.honeykeep.pay.dto.PayRequest;
 import com.barcode.honeykeep.pay.dto.QrResponse;
 import com.barcode.honeykeep.pay.exception.PayErrorCode;
@@ -49,15 +50,38 @@ public class PayController {
      */
     @PostMapping("/payment")
     public ResponseEntity<ApiResponse<Boolean>> pay(@AuthenticationPrincipal UserId userId,
-                                                   @RequestBody PayRequest payRequest) {
-        log.info("결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
+                                                    @RequestBody PayRequest payRequest,
+                                                    @CookieValue(value = "authToken") String authToken) {
+        log.info("QR 결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
         boolean isSuccess = payService.pay(userId, payRequest);
 
         if (isSuccess) {
-            log.info("결제 성공, userId: {}", userId.value());
+            log.info("QR 결제 성공, userId: {}", userId.value());
             return ResponseEntity.ok(ApiResponse.success(true));
         } else {
-            log.error("결제 실패, userId: {}, payRequest: {}", userId.value(), payRequest);
+            log.error("QR 결제 실패, userId: {}, payRequest: {}", userId.value(), payRequest);
+            throw new CustomException(PayErrorCode.PAYMENT_FAILED);
+        }
+    }
+
+    /**
+     * 온라인 결제 요청을 처리한다.
+     * 결제와 process는 동일하고, QR 검증 부분만 제외한다.
+     */
+
+    @PostMapping("/online")
+    public ResponseEntity<ApiResponse<Boolean>> onlinePay(@AuthenticationPrincipal UserId userId,
+                                                          @RequestBody OnlinePayRequest onlinePayRequest,
+                                                          @CookieValue(value = "authToken") String authToken) {
+        
+        log.info("온라인 결제 요청 시작, userId: {}, payRequest: {}", userId, onlinePayRequest);
+        boolean isSuccess = payService.onlinePay(userId, onlinePayRequest);
+
+        if (isSuccess) {
+            log.info("온라인 결제 성공, userId: {}", userId.value());
+            return ResponseEntity.ok(ApiResponse.success(true));
+        } else {
+            log.error("온라인 결제 실패, userId: {}, payRequest: {}", userId.value(), onlinePayRequest);
             throw new CustomException(PayErrorCode.PAYMENT_FAILED);
         }
     }
