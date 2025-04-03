@@ -5,4 +5,7 @@ export interface Account {
   accountBalance: number;
   accountName: string;
   bankName: Bank;
+  totalPocketAmount: number;
+  pocketCount: number;
+  spareAssets: number;
 }

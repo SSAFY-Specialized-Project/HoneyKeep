@@ -1,9 +1,9 @@
 import { ResponseDTO, ResponseErrorDTO } from "@/shared/model/types";
-import { AccountDTO } from "../model/types";
+import { Account } from "../model/types";
 import { apiURL } from "@/shared/lib";
 
 
-const getAllAccountAPI = async ():Promise<ResponseDTO<AccountDTO[]>> => {
+const getAllAccountAPI = async ():Promise<ResponseDTO<Account[]>> => {
 
   const accessToken = localStorage.getItem("accessToken");
 
@@ -30,7 +30,7 @@ const getAllAccountAPI = async ():Promise<ResponseDTO<AccountDTO[]>> => {
 
     }
 
-    const responseData:ResponseDTO<AccountDTO[]> = await response.json();
+    const responseData:ResponseDTO<Account[]> = await response.json();
 
     return responseData;
 
