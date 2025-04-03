@@ -32,6 +32,7 @@ const finishWebAuthnAuthenticationAPI = (data: WebAuthnAuthenticationFinishReque
   customFetchAPI<WebAuthnAuthenticationFinishResponse, WebAuthnAuthenticationFinishRequest>({
     url: "/webauthn/authenticate/finish",
     method: "POST",
+    credentials: "include",
     data,
   });
 

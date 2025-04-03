@@ -1,6 +1,5 @@
-import { Alarm, Chatbot, Error, Landing, Loading } from '@/pages/general';
+import {Alarm, Chatbot, Error, Home, Landing, Loading} from '@/pages/general';
 import { Login } from '@/pages/user';
-import { Home, Layout } from 'lucide-react';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
@@ -17,6 +16,7 @@ import {
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
+import {Layout} from "@/shared/ui";
 
 const AppRouter = createBrowserRouter([
   {
