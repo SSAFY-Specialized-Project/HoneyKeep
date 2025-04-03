@@ -363,8 +363,23 @@ public class AuthService {
             throw new CustomException(AuthErrorCode.MISSING_REFRESH_TOKEN);
         }
 
-        // 리프레시 토큰 검증 및 사용자 ID 추출
-        Long userId = jwtTokenProvider.getUserId(refreshToken);
+        Long userId;
+        try {
+            // 리프레시 토큰 검증 및 사용자 ID 추출
+            userId = jwtTokenProvider.getUserId(refreshToken);
+        } catch (io.jsonwebtoken.MalformedJwtException e) {
+            // JWT 형식이 올바르지 않은 경우 (예: 구조가 header.payload.signature가 아닌 경우)
+            throw new CustomException(AuthErrorCode.INVALID_TOKEN);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            // 토큰이 만료된 경우
+            throw new CustomException(AuthErrorCode.REFRESH_TOKEN_EXPIRED);
+        } catch (io.jsonwebtoken.security.SecurityException | io.jsonwebtoken.UnsupportedJwtException e) {
+            // 서명이 유효하지 않거나 지원되지 않는 JWT인 경우
+            throw new CustomException(AuthErrorCode.INVALID_TOKEN);
+        } catch (Exception e) {
+            // 기타 예외 처리
+            throw new CustomException(AuthErrorCode.INVALID_TOKEN);
+        }
 
         String refreshTokenKey = "refresh_token:" + userId;
 
