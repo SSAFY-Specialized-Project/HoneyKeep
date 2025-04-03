@@ -8,6 +8,7 @@ import com.barcode.honeykeep.pay.dto.PayRequest;
 import com.barcode.honeykeep.pay.dto.QrResponse;
 import com.barcode.honeykeep.pay.exception.PayErrorCode;
 import com.barcode.honeykeep.pay.service.PayService;
+import com.barcode.honeykeep.webauthn.service.WebAuthnTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class PayController {
 
     private final PayService payService;
+    private final WebAuthnTokenService webAuthnTokenService;
 
     /**
      * 1. 클라이언트에서 QR 생성을 위한 UUID를 요청
@@ -53,6 +55,10 @@ public class PayController {
                                                     @RequestBody PayRequest payRequest,
                                                     @CookieValue(value = "authToken") String authToken) {
         log.info("QR 결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
+
+        // 인증서 검증
+        webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
+
         boolean isSuccess = payService.pay(userId, payRequest);
 
         if (isSuccess) {
@@ -73,7 +79,9 @@ public class PayController {
     public ResponseEntity<ApiResponse<Boolean>> onlinePay(@AuthenticationPrincipal UserId userId,
                                                           @RequestBody OnlinePayRequest onlinePayRequest,
                                                           @CookieValue(value = "authToken") String authToken) {
-        
+        // 인증서 검증
+        webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
+
         log.info("온라인 결제 요청 시작, userId: {}, payRequest: {}", userId, onlinePayRequest);
         boolean isSuccess = payService.onlinePay(userId, onlinePayRequest);
 
