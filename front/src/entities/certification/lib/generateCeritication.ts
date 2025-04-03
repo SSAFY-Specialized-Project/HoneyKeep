@@ -103,7 +103,7 @@ async function storeKeyInIndexedDB(privateKey: CryptoKey, keyUsage: string): Pro
  * IndexedDB에서 개인키를 가져오는 함수
  */
 export async function loadPrivateKey(keyUsage: string = "sign"): Promise<boolean> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const request = indexedDB.open("SecureKeyDB", 1);
 
         request.onupgradeneeded = (event) => {
@@ -259,7 +259,7 @@ export async function clearPrivateKey(keyUsage?: string): Promise<void> {
     currentPrivateKey = null;
 
     // IndexedDB에서 키 삭제
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const request = indexedDB.open("SecureKeyDB", 1);
 
         request.onerror = () => {

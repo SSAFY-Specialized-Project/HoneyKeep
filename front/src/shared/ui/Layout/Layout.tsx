@@ -14,7 +14,7 @@ const Layout = ({ headerSlot, navbarSlot, modalSlot }: Props) => {
         id="topLayout"
       >
         {headerSlot}
-        <div className="flex-grow overflow-auto">
+        <div className="flex-grow overflow-auto pb-5">
           <Outlet />
         </div>
         {navbarSlot}

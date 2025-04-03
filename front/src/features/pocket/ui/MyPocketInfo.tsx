@@ -19,7 +19,7 @@ const MyPocketInfo = () => {
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-title-sm text-gray-900">내 포켓</h3>
-      {pocketData ? (
+      {pocketData.data != null ? (
         <ul className="flex flex-col gap-3">
           {pocketData.data.map((item) => {
             return (

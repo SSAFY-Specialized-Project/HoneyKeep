@@ -95,7 +95,7 @@ const AppRouter = createBrowserRouter([
           },
           {
             // 고정 지출
-            path: '/fixedPay/list',
+            path: '/fixedExpense/list',
             element: <FixedPayList />,
           },
           {
@@ -173,7 +173,7 @@ const AppRouter = createBrowserRouter([
                 element: null,
               },
               {
-                path: 'direct',
+                index: true,
                 element: null,
               },
             ],

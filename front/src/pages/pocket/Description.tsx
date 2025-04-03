@@ -28,7 +28,7 @@ export default function Description() {
   console.log(addCommas(1000000));
 
   // FAQ 항목의 토글 기능
-  const toggleFaq = (faqId) => {
+  const toggleFaq = (faqId: 'faq1' | 'faq2' | 'faq3' | 'faq4' | 'faq5') => {
     setOpenFaqs({
       ...openFaqs,
       [faqId]: !openFaqs[faqId],
