@@ -21,6 +21,7 @@ public class ApiResponse<T> {
     }
 
     // 성공 응답
+
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>(200, "Success", data);
     }

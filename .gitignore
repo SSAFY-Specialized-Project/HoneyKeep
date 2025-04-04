@@ -24,6 +24,8 @@
 /server/.idea/*
 !/back/.env.example
 
+/server/back/src/main/resources/firebase/honeykeep-55e4b-firebase-adminsdk-fbsvc-fccd58a678.json
+
 /.idea
 /.vscode
 /server/.env
