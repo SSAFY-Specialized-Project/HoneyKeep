@@ -2,11 +2,11 @@ import { customFetchAPI } from "@/shared/api";
 import { PocketFilterResponse } from "@/entities/pocket/model/types";
 
 interface Props {
-  categoryId?: number;
-  type?: "GATHERING" | "USING" | "COMPLETED";
-  isFavorite?: boolean;
-  startDate?: string;
-  endDate?: string;
+  categoryId?: number | null;
+  type?: "GATHERING" | "USING" | "COMPLETED" | null;
+  isFavorite?: boolean | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 const getPocketFilterListAPI = ({
@@ -17,7 +17,7 @@ const getPocketFilterListAPI = ({
   endDate,
 }: Props) =>
   customFetchAPI<PocketFilterResponse, void>({
-    url: `/pockets/filter?${categoryId ? `categoryId=${categoryId}` : ""}&type=${type}&isFavorite=${isFavorite}&startDate=${startDate}&endDate=${endDate}`,
+    url: `/pockets/filter?${categoryId ? `categoryId=${categoryId}` : ""}${type ? `&type=${type}` : ""}${isFavorite ? `&isFavorite=${isFavorite}` : ""}${startDate ? `&startDate=${startDate}` : ""}${endDate ? `&endDate=${endDate}` : ""}`,
     method: "GET",
   });
 

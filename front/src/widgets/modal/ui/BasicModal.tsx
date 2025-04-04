@@ -1,16 +1,20 @@
-import { Icon } from "@/shared/ui";
-import React from "react";
+import { Icon } from '@/shared/ui';
+import React from 'react';
 
 interface BasicModalProps {
+  isOpen: boolean;
+  icon?: string;
   title: string;
   itemName: string;
   description: string;
   buttonText: string;
-  onClose: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onConfirm: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onClose?: (e: React.MouseEvent) => void;
+  onConfirm?: (e: React.MouseEvent) => void;
 }
 
 const BasicModal: React.FC<BasicModalProps> = ({
+  isOpen,
+  icon,
   title,
   itemName,
   description,
@@ -19,30 +23,37 @@ const BasicModal: React.FC<BasicModalProps> = ({
   onConfirm,
 }) => {
   return (
-    <div className="absolute bg-gray-900/50 z-50 h-full w-full">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-custom">
-        <div className="flex justify-between items-center mb-6">
+    <div
+      onClick={onClose}
+      className={`absolute z-50 h-full w-full flex-col justify-end bg-gray-900/50 p-5 ${isOpen ? 'flex' : 'hidden'}`}
+    >
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        className={`flex w-full flex-col rounded-xl bg-white p-6 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-y-0' : 'translate-y-full'} `}
+      >
+        <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-brand-primary-300 rounded-lg">
-              <Icon size="small" id="exclamation-triangle" />
-            </div>
+            {icon ? (
+              <div className="bg-brand-primary-300 rounded-lg">
+                <Icon size="small" id={icon} />
+              </div>
+            ) : null}
             <h2 className="text-text-xl font-bold text-gray-900">{title}</h2>
           </div>
-          <button
-            className="text-gray-900 p-1 hover:opacity-70"
-            onClick={onClose}
-          >
+          <button className="p-1 text-gray-900 hover:opacity-70" onClick={onClose}>
             <Icon size="small" id="x-lg" />
           </button>
         </div>
         <div className="mb-6">
-          <p className="text-left text-text-sm">
+          <p className="text-text-sm text-left">
             <span className="font-bold text-gray-900">{itemName}</span>
             <span className="text-gray-600">{description}</span>
           </p>
         </div>
         <button
-          className="w-full bg-brand-primary-500 text-white rounded-xl py-4 font-bold text-text-xl hover:bg-brand-primary-300"
+          className="bg-brand-primary-500 text-text-xl hover:bg-brand-primary-300 w-full rounded-xl py-4 font-bold text-white"
           onClick={onConfirm}
         >
           {buttonText}

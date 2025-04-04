@@ -1,8 +1,8 @@
-import { Pocket } from "@/entities/pocket/model/types";
-import { PocketListItem } from "@/entities/pocket/ui";
-import { Icon, ImageContainer } from "@/shared/ui";
-import { useState } from "react";
-import { Link } from "react-router";
+import { Pocket } from '@/entities/pocket/model/types';
+import { PocketListItem } from '@/entities/pocket/ui';
+import { CategoryIcon, Icon } from '@/shared/ui';
+import { useState } from 'react';
+import { Link } from 'react-router';
 
 interface Props {
   id: number;
@@ -13,52 +13,41 @@ interface Props {
   pocketList: Pocket[];
 }
 
-const CategoryDropdown = ({
-  id,
-  imageId,
-  name,
-  pocketCount,
-  totalAmount,
-  pocketList,
-}: Props) => {
+const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketList }: Props) => {
   const [isOpen, setOpen] = useState<boolean>(false);
 
   return (
-    <div className="flex flex-col gap-2 p-5">
+    <div className="shadow-custom flex flex-col gap-2 rounded-2xl p-5">
       <button
         type="button"
-        className="w-full flex justify-between"
+        className="flex w-full cursor-pointer justify-between"
         onClick={() => {
-          setOpen(isOpen);
+          console.log('드롭다운 클릭!');
+          setOpen(!isOpen);
         }}
       >
-        <div className="flex gap-2.5">
-          <ImageContainer size="small" imgSrc={`category_${imageId}`} />
-          <div className="flex flex-col">
-            <span className="text-text-xl text-gray-900 font-semibold">
-              {name}
-            </span>
+        <div className="flex items-center gap-2.5">
+          <CategoryIcon size="small" category={imageId} />
+          <div className="flex flex-col items-start justify-center">
+            <span className="text-text-xl font-semibold text-gray-900">{name}</span>
             <div className="flex gap-2">
-              <span className="text-gray-500 text-text-sm">{`${pocketCount}개 항목`}</span>
+              <span className="text-text-sm text-gray-500">{`${pocketCount}개 항목`}</span>
               <span className="text-text-sm text-gray-900">{`${totalAmount}원`}</span>
             </div>
           </div>
         </div>
-        <div
-          className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
-        >
-          <Icon id="chevron-down" size="small" />
+        <div className={`flex items-center`}>
+          <Icon id="chevron-down" size="small" isRotate={isOpen} />
         </div>
       </button>
       <ul
-        className={`overflow-hidden transition-all duration-300 ease-in-out 
-        ${isOpen ? "" : "max-h-0 opacity-0 "}
-      `}
+        className={`overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? '' : 'h-0'} mt-3`}
       >
         {pocketList.map((item) => {
           return (
             <PocketListItem
               key={item.id}
+              id={item.id}
               name={item.name}
               imgUrl={item.imgUrl}
               totalAmount={item.totalAmount}
@@ -68,7 +57,7 @@ const CategoryDropdown = ({
         })}
         <Link
           to={`/pocket/list?category=${id}`}
-          className="block w-full py-2 text-gray-600"
+          className="block w-full py-2 text-center text-gray-600"
         >
           더 보기
         </Link>

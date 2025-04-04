@@ -1,6 +1,6 @@
 import TransactionSuccess from '@/pages/pocket/TransactionSuccess';
 import PocketCreateSuccess from '@/pages/pocket/PocketCreateSuccess';
-import PocketDetail from '@/pages/pocket/PocketDetail';
+import PocketDetail from '@/pages/pocket/PocketDetailPage';
 import PocketSaveSuccess from '@/pages/pocket/PocketSaveSuccess';
 import PaymentComplete from '@/pages/payment/PaymentComplete';
 import PocketDashboard from '@/pages/pocket/PocketDashboard';

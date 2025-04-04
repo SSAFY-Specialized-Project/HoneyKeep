@@ -1,39 +1,39 @@
-import { NavLink } from "react-router-dom";
+import { NavLink } from 'react-router-dom';
 
 const PocketChoiceTab = () => {
   return (
     <div className="flex w-full border-b border-gray-200">
       <NavLink
-        to="/pocket/link"
+        to="/pocket/create/link"
         className={({ isActive }) =>
-          `flex-1 text-text-xl font-medium text-center py-2 border-b-2 ${
+          `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
-              ? "text-[var(--color-brand-primary-600)] font-bold border-[var(--color-brand-primary-600)]"
-              : "text-gray-600 border-transparent"
+              ? 'border-[var(--color-brand-primary-600)] font-bold text-[var(--color-brand-primary-600)]'
+              : 'border-transparent text-gray-600'
           }`
         }
       >
         링크로 추가하기
       </NavLink>
       <NavLink
-        to="/pocket/favorite"
+        to="/pocket/create/favorite"
         className={({ isActive }) =>
-          `flex-1 text-text-xl font-medium text-center py-2 border-b-2 ${
+          `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
-              ? "text-[var(--color-brand-primary-600)] font-bold border-[var(--color-brand-primary-600)]"
-              : "text-gray-600 border-transparent"
+              ? 'border-[var(--color-brand-primary-600)] font-bold text-[var(--color-brand-primary-600)]'
+              : 'border-transparent text-gray-600'
           }`
         }
       >
         즐겨찾는 포켓
       </NavLink>
       <NavLink
-        to="/pocket/direct"
+        to="/pocket/create/direct"
         className={({ isActive }) =>
-          `flex-1 text-text-xl font-medium text-center py-2 border-b-2 ${
+          `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
-              ? "text-[var(--color-brand-primary-600)] font-bold border-[var(--color-brand-primary-600)]"
-              : "text-gray-600 border-transparent"
+              ? 'border-[var(--color-brand-primary-600)] font-bold text-[var(--color-brand-primary-600)]'
+              : 'border-transparent text-gray-600'
           }`
         }
       >
