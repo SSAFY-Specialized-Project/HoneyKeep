@@ -60,7 +60,7 @@ public class Pocket extends BaseEntity {
 
     private String imgUrl;
 
-    private Boolean isActivated;
+    private Boolean isActivated = false;
 
     @Column(name = "crawling_uuid", nullable = true)
     private String crawlingUuid;
