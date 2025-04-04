@@ -1,4 +1,5 @@
-import { Bank } from "@/shared/model/types";
+import { Bank } from '@/shared/model/types';
+import { Pocket } from '@/entities/pocket/model/types';
 
 export interface Account {
   accountId: number;
@@ -8,5 +9,28 @@ export interface Account {
   bankName: Bank;
   totalPocketAmount: number;
   pocketCount: number;
-  spareAssets: number;
+  spareBalance: number;
+}
+
+export interface Transaction {
+  transactionId: number;
+  transactionDate: string;
+  transactionAmount: number;
+}
+
+export interface AccountListResponse {
+  accountList: Account[];
+}
+
+export interface AccountDetailResponse {
+  accountId: number;
+  accountNumber: string;
+  accountBalance: number;
+  bankName: Bank;
+  accountName: string;
+  totalPocketAmount: number;
+  pocketCount: number;
+  spareBalance: number;
+  transactionList: Transaction[];
+  pocketList: Pocket[];
 }

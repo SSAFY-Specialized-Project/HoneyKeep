@@ -5,7 +5,8 @@ export interface Pocket {
   accountName: string;
   totalAmount: number;
   savedAmount: number;
-  type: "GATHERING" | "USING" | "COMPLETED";
+  type: 'GATHERING' | 'USING' | 'COMPLETED';
+  isActive: boolean;
   isFavorite: boolean;
   imgUrl: string;
   endDate: string;
@@ -69,9 +70,9 @@ export interface PocketCreateLinkResponse {
 
 export interface PocketCreateWithLinkRequest {
   endDate: string;
-  account: { id: number};
+  account: { id: number };
   categoryId: number;
-  totalAmount: {amount: number};
+  totalAmount: { amount: number };
   isFavorite: boolean;
   crawlingUuid: string;
 }
@@ -79,7 +80,6 @@ export interface PocketCreateWithLinkRequest {
 export interface PocketCreateWithLinkResponse {
   pocketId: number;
 }
-
 
 // 포켓 생성 요청
 export interface PocketCreateRequest {
@@ -110,7 +110,7 @@ export interface PocketCreateResponse {
   startDate: string | null;
   endDate: string;
   isFavorite: boolean;
-  type: "GATHERING" | "USING" | "COMPLETED";
+  type: 'GATHERING' | 'USING' | 'COMPLETED';
   createdAt: string;
 }
 
@@ -141,7 +141,7 @@ export interface PocketUpdateResponse {
   startDate: string;
   endDate: string;
   isFavorite: boolean;
-  type: "GATHERING" | "USING" | "COMPLETED";
+  type: 'GATHERING' | 'USING' | 'COMPLETED';
   updatedAt: string;
 }
 
