@@ -10,12 +10,12 @@
   "theme_color": "#FFAA00",
   "icons": [
     {
-      "src": "public-favicon/pwa-192x192.png",
+      "src": "/favicon/pwa-192x192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "public-favicon/pwa-512x512.png",
+      "src": "/favicon/pwa-512x512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
@@ -28,7 +28,7 @@
       "url": "./",
       "icons": [
         {
-          "src": "public-favicon/pwa-192x192.png",
+          "src": "/favicon/pwa-192x192.png",
           "sizes": "192x192"
         }
       ]

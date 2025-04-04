@@ -63,6 +63,27 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
+// 푸시 이벤트 리스너 (개발자 도구의 Push 버튼용)
+self.addEventListener('push', (event) => {
+  console.log('[Service Worker] Push 이벤트 발생:', event);
+
+  let message = 'Push 메시지가 도착했습니다';
+  try {
+    if (event.data) {
+      message = event.data.text();
+    }
+  } catch (e) {
+    console.error('Push 메시지 파싱 오류:', e);
+  }
+
+  event.waitUntil(
+    self.registration.showNotification('Push 알림', {
+      body: message,
+      icon: '/pwa-192x192.png',
+    }),
+  );
+});
+
 // 서비스 워커 설치 이벤트
 self.addEventListener('install', (event) => {
   console.log('[firebase-messaging-sw.js] 서비스 워커 설치 중...');

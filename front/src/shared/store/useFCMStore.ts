@@ -30,7 +30,7 @@ const useFCMStore = create<FCMState>((set) => ({
         if (notification?.title) {
           new Notification(notification.title, {
             body: notification.body,
-            icon: '/icons/icon-192x192.png'
+            icon: '/public/pwa-192x192.png'
           });
         }
       });
