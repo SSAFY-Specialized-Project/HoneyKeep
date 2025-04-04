@@ -6,6 +6,7 @@ import java.util.List;
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.cert.entity.Cert;
 import com.barcode.honeykeep.common.entity.BaseEntity;
+import com.barcode.honeykeep.notification.entity.FCMToken;
 import com.barcode.honeykeep.notification.entity.Notification;
 
 import com.barcode.honeykeep.notification.entity.PushSetting;
@@ -52,6 +53,9 @@ public class User extends BaseEntity {
     @OneToOne(mappedBy = "user")
     private Cert cert;
 
+    @OneToMany(mappedBy = "user")
+    private List<FCMToken> fcmTokens = new ArrayList<>();
+
     @Builder
     protected User(String userKey, String email, String name, String institutionCode,
                    String identityNumber, String password, String phoneNumber, Cert cert) {
@@ -66,5 +70,6 @@ public class User extends BaseEntity {
         this.accounts = new ArrayList<>();
         this.pushSettings = new ArrayList<>();
         this.cert = cert;
+        this.fcmTokens = new ArrayList<>();
     }
 }

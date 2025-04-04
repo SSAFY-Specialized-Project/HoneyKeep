@@ -5,6 +5,9 @@ import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.common.vo.UserId;
+import com.barcode.honeykeep.notification.dto.PayNotificationDTO;
+import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.type.PushType;
 import com.barcode.honeykeep.pay.dto.PayDto;
 import com.barcode.honeykeep.pay.dto.PayRequest;
 import com.barcode.honeykeep.pay.dto.PocketBalanceResult;
@@ -33,6 +36,7 @@ public class PayRepositoryImpl implements PayRepository {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final PocketRepository pocketRepository;
+    private final NotificationDispatcher notificationDispatcher;
 
     @Override
     public PocketBalanceResult payment(UserId userId, PayDto payDto) {
@@ -100,6 +104,19 @@ public class PayRepositoryImpl implements PayRepository {
 
         transactionRepository.save(transaction);
         log.info("결제 거래 기록 저장 완료, transactionId: {}", transaction.getId());
+
+
+        //알림 요청 로직
+        PayNotificationDTO payNotificationDTO =PayNotificationDTO.builder()
+                .transactionType(TransactionType.WITHDRAWAL)
+                .amount(payAmount)
+                .withdrawAccountName(account.getAccountName())
+                .productName(payDto.getProductName())
+                .transferDate(LocalDateTime.now())
+                .build();
+        //결제 완료 시 알림
+        notificationDispatcher.send(PushType.PAYMENT, userId.value(), payNotificationDTO);
+
 
         isSuccess = true;
         return PocketBalanceResult.builder()
