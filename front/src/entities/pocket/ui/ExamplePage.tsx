@@ -3,10 +3,14 @@ import PocketCreateSuccess from '@/pages/pocket/PocketCreateSuccess';
 import PocketDetail from '@/pages/pocket/PocketDetail';
 import PocketSaveSuccess from '@/pages/pocket/PocketSaveSuccess';
 import PaymentComplete from '@/pages/payment/PaymentComplete';
+import PocketDashboard from '@/pages/pocket/PocketDashboard';
 
 export default function ExampleTransactionSuccessPage() {
   return (
     <div className="h-screen w-screen bg-gray-50">
+      <div className="max-w-full bg-[#f3f4f6] p-4 text-[#1f2937]">
+        <PocketDashboard />
+      </div>
       <PocketCreateSuccess
         productImage="https://nb.scene7.com/is/image/NB/m992gr_nb_02_i?$pdpflexf2$&wid=880&hei=880"
         productName="New Balance 992"
