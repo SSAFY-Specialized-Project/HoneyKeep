@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum PushType {
+    TRANSFER("TRANSFER"),
     PAYMENT("PAYMENT")
     ;
 

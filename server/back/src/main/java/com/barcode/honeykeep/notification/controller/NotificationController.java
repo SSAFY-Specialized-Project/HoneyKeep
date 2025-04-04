@@ -4,7 +4,7 @@ import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.notification.dto.FCMTokenRequest;
 import com.barcode.honeykeep.notification.entity.FCMToken;
-import com.barcode.honeykeep.notification.service.NotificationService;
+import com.barcode.honeykeep.notification.service.FCMTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private final NotificationService notificationService;
+    private final FCMTokenService notificationService;
 
 
     //FCM 토큰 저장 (기기 등록)

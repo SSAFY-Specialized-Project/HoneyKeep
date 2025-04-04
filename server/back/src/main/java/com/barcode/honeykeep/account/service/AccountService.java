@@ -5,10 +5,11 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.type.PushType;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.notification.dto.AccountTransferNotificationDTO;
-import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
 import com.barcode.honeykeep.transaction.service.TransactionService;
@@ -31,7 +32,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final TransactionService transactionService;
-    private final NotificationService notificationService;
+    private final NotificationDispatcher notificationDispatcher;
 
     //이체 하기 전 실행 로직
     //출금 계좌와 입금 계좌를 단순 조회하여 정보를 반환
@@ -127,7 +128,7 @@ public class AccountService {
                 .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
                 .transferDate(now) //현재 시간
                 .build();
-        notificationService.transferNotification(withdrawAccount.getUser().getId(), withdrawalNotification);
+        notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
 
         // 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
@@ -137,7 +138,7 @@ public class AccountService {
                 .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
                 .transferDate(now) //현재 시간
                 .build();
-        notificationService.transferNotification(depositAccount.getUser().getId(), depositNotification);
+        notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
 
 
         return TransferExecutionResponse.builder()
