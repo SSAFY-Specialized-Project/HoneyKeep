@@ -35,4 +35,6 @@
   --text-text-sm: 0.875rem;
 
   --shadow-custom: 0px 4px 20px 0px rgba(0, 0, 0, 0.06);
+  --shadow-header: 0px 0px 10px 4px rgba(173, 173, 173, 0.15);
+  --shadow-nav: 0px 0px 10px 4px rgba(0, 0, 0, 0.05);
 }

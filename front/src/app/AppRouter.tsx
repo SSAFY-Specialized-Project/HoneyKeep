@@ -1,10 +1,17 @@
-import {Alarm, Chatbot, Error, Home, Landing, Loading} from '@/pages/general';
+import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
 import { Login } from '@/pages/user';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
 import { BaseLayout, HistoryLayout } from './layouts';
-import { PocketCalendar, PocketCreate, PocketDetail, PocketList } from '@/pages/pocket';
+import {
+  PocketCalendar,
+  PocketCreate,
+  PocketCreateStep,
+  PocketCreateSuccess,
+  PocketDetailPage,
+  PocketList,
+} from '@/pages/pocket';
 import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
 import {
   AccountConnect,
@@ -15,8 +22,10 @@ import {
   MyAgree,
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
+import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
-import {Layout} from "@/shared/ui";
+import { Layout } from '@/shared/ui';
+import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
 
 const AppRouter = createBrowserRouter([
   {
@@ -162,6 +171,32 @@ const AppRouter = createBrowserRouter([
             // 포켓 생성
             path: '/pocket/create',
             element: <PocketCreate />,
+            children: [
+              {
+                path: 'link',
+                element: <PocketCreateLink />,
+              },
+              {
+                path: 'favorite',
+                element: <PocketFavoriteList />,
+              },
+              {
+                path: 'direct',
+                element: <PocketCreateDirect />,
+              },
+            ],
+          },
+          {
+            path: '/pocket/create/link/step',
+            element: <PocketCreateStep />,
+          },
+          {
+            path: '/pocket/success',
+            element: <PocketCreateSuccess />,
+          },
+          {
+            path: '/pocket/detail/:id',
+            element: <PocketDetailPage />,
           },
           {
             path: '/category/create',
