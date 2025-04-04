@@ -119,21 +119,25 @@ public class AccountService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // 9-1. 출금 알림 DTO 생성 (출금 계좌 사용자에게 보냄)
+        //출금 알림 DTO 생성 (출금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO withdrawalNotification = AccountTransferNotificationDTO.builder()
-                .title("출금 " + transferAmount + "원")
-                .body("내 "+withdrawAccount.getAccountName() + " -> " + depositAccount.getAccountName() + " " + depositAccount.getUser().getName())
-                .transferDate(now)
+                .transactionType(TransactionType.WITHDRAWAL)
+                .amount(transferAmount) //출금 금액
+                .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
+                .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
+                .transferDate(now) //현재 시간
                 .build();
-        notificationService.sendWithdrawalNotification(withdrawAccount.getUser().getId(), withdrawalNotification);
+        notificationService.transferNotification(withdrawAccount.getUser().getId(), withdrawalNotification);
 
-        // 9-2. 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
+        // 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
-                .title("입금 " + transferAmount + "원")
-                .body(depositAccount.getUser().getName() + " -> " + withdrawAccount.getAccountName())
-                .transferDate(now)
+                .transactionType(TransactionType.DEPOSIT)
+                .amount(transferAmount) //입금 금액
+                .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
+                .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
+                .transferDate(now) //현재 시간
                 .build();
-        notificationService.sendDepositNotification(depositAccount.getUser().getId(), depositNotification);
+        notificationService.transferNotification(depositAccount.getUser().getId(), depositNotification);
 
 
         return TransferExecutionResponse.builder()
