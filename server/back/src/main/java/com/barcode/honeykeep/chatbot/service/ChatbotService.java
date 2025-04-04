@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -52,6 +53,7 @@ public class ChatbotService {
 
             // 3. 챗봇 클라이언트 호출 (예외 발생 시 상세 에러 처리)
             GenerationResponse generationResponse;
+
             try {
                 generationResponse = chatbotClient.sendQuery(queryRequest);
             } catch (Exception e) {
@@ -83,22 +85,25 @@ public class ChatbotService {
                 }
             }
 
+            // 1시간 뒤 삭제
+            redisTemplate.expire(userChatKey, 60 * 60, TimeUnit.SECONDS);
+
             log.info("최종 응답 생성 - 답변: {}", generationResponse.getAnswer());
             return QueryResponse.builder()
                     .answer(generationResponse.getAnswer())
                     .classificationResult(generationResponse.getClassificationResult())
                     .build();
+
         } catch (JsonProcessingException e) {
             log.error("JSON 처리 중 오류 발생", e);
             throw new CustomException(ChatbotErrorCode.JSON_PARSE_ERROR);
-        } catch (Exception e) {
-            log.error("예상치 못한 오류 발생", e);
-            throw new CustomException(ChatbotErrorCode.UNEXPECTED_ERROR);
         }
     }
 
-    // 질문과 답변 메시지를 RAG 서버 스키마에 맞게 변환하는 헬퍼 메서드
-    // 여기서는 두 개의 메시지(사용자와 봇)를 리스트에 담아 반환합니다.
+    /**
+     * 질문과 답변 메시지를 RAG 서버 스키마에 맞게 변환하는 헬퍼 메서드
+     * 여기서는 두 개의 메시지(사용자와 봇)를 리스트에 담아 반환합니다.
+     */
     private List<Map<String, Object>> convertMessagesForRAG(String query, String answer) {
         List<Map<String, Object>> messages = new ArrayList<>();
 
@@ -140,7 +145,7 @@ public class ChatbotService {
 
         if (rawList == null || rawList.isEmpty()) {
             log.info("Redis 키 {}에 저장된 메시지가 없습니다.", userChatKey);
-            throw new CustomException(ChatbotErrorCode.NO_HISTORY);
+            return null;
         }
 
         // 각 원소(문자열)를 ChatMessage로 변환

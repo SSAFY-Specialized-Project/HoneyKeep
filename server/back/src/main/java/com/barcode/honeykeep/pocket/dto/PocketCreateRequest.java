@@ -7,14 +7,10 @@ import java.time.LocalDateTime;
 
 public record PocketCreateRequest(
         String name,
-        String productName,
-        String link,
         LocalDateTime startDate,
         LocalDateTime endDate,
         Account account,
         Long categoryId,
         Money totalAmount,
-        Money savedAmount,
-        Boolean isFavorite,
-        String imgUrl
+        Money savedAmount
 ) {}

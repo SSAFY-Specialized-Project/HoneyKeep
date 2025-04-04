@@ -6,7 +6,6 @@ import com.barcode.honeykeep.chatbot.entity.ChatMessage;
 import com.barcode.honeykeep.chatbot.service.ChatbotService;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +27,7 @@ public class ChatbotController {
      * 사용자의 id를 가지고 mongodb에 빈 채팅방 엔티티를 만들어둡니다.
      */
     @PostMapping("/query")
-    public ResponseEntity<ApiResponse<QueryResponse>> query(@AuthenticationPrincipal UserId userId, @RequestBody QueryRequest queryRequest) throws JsonProcessingException {
+    public ResponseEntity<ApiResponse<QueryResponse>> query(@AuthenticationPrincipal UserId userId, @RequestBody QueryRequest queryRequest) {
         QueryResponse queryResponse = chatbotService.query(userId, queryRequest);
 
         return ResponseEntity.ok()
@@ -39,8 +38,13 @@ public class ChatbotController {
      * 이전 대화를 가져옵니다.
      */
     @GetMapping("/history")
-    public ResponseEntity<ApiResponse<List<ChatMessage>>> history(@AuthenticationPrincipal UserId userId) throws JsonProcessingException {
+    public ResponseEntity<ApiResponse<List<ChatMessage>>> history(@AuthenticationPrincipal UserId userId) {
         List<ChatMessage> messages = chatbotService.history(userId.value());
+
+        if(messages == null) {
+            return ResponseEntity.ok()
+                    .body(ApiResponse.noContent("저장된 대화가 없습니다", null));
+        }
 
         return ResponseEntity.ok()
                 .body(ApiResponse.success(messages));

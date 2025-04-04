@@ -15,4 +15,6 @@ public interface CertRepository extends JpaRepository<Cert, Long> {
     boolean existsByUserIdAndStatusNot(Long userId, CertStatus status);
     
     Optional<Cert> findBySerialNumber(String serialNumber);
+
+    Optional<Cert> findByUser_Id(Long userId);
 }

@@ -1,19 +1,18 @@
 package com.barcode.honeykeep.pay.dto;
 
-import lombok.Builder;
-import lombok.ToString;
-import lombok.Value;
+import lombok.*;
+
 import java.math.BigDecimal;
 
-@Value
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @ToString
 public class PayRequest {
-    String account;
+    Long accountId;
     BigDecimal amount;
     String uuid;
     String productName;
     Long pocketId;
-    String publicKey;
-    String payToken;
 }

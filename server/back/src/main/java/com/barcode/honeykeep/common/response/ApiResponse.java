@@ -38,6 +38,10 @@ public class ApiResponse<T> {
         return new ApiResponse<>(201, message, data);
     }
 
+    public static <T> ApiResponse<T> noContent(String message, T data) {
+        return new ApiResponse<>(204, message, data);
+    }
+
     // 에러 응답
     public static <T> ApiResponse<T> error(int status, String message) {
         return new ApiResponse<>(status, message, null);

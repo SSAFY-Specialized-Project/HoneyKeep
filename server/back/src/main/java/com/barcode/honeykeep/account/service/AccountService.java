@@ -5,10 +5,12 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.notification.dto.AccountTransferNotificationDTO;
 import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import lombok.extern.slf4j.Slf4j;
@@ -150,33 +152,64 @@ public class AccountService {
 
         return accounts.stream().map(account -> {
             return AccountResponse.builder()
+                    .accountId(account.getId())
                     .accountNumber(account.getAccountNumber())
                     .accountBalance(account.getAccountBalance().getAmount())
                     .accountName(account.getAccountName())
                     .bankName(account.getBank().getName())
                     .totalPocketAmount(calculateTotalPocketAmount(account))
                     .pocketCount(account.getPockets().size())
+                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
                     .build();
         }).collect(Collectors.toList());
     }
 
 
     public AccountDetailResponse getAccountDetailById(Long id, Long userId) {
-        // 개선: 새로 추가된 메서드 활용
         Account account = getAccountById(id);
-        //소유자인지 검증
         validateAccountOwner(account, userId);
 
+        // Pocket 엔티티를 DTO로 변환 (기존 코드)
+        List<PocketSummaryResponse> pocketDtos = account.getPockets().stream()
+                .map(pocket -> PocketSummaryResponse.builder()
+                        .id(pocket.getId())
+                        .name(pocket.getName())
+                        .accountName(account.getAccountName())
+                        .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                        .savedAmount(pocket.getSavedAmount().getAmountAsLong())
+                        .type(pocket.getType().getType())
+                        .isFavorite(pocket.getIsFavorite())
+                        .imgUrl(pocket.getImgUrl())
+                        .endDate(pocket.getEndDate())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Transaction 엔티티를 TransactionDetailResponse DTO로 변환
+        List<TransactionDetailResponse> transactionDtos = account.getTransactions().stream()
+                .map(transaction -> TransactionDetailResponse.builder()
+                        .id(transaction.getId())
+                        .name(transaction.getName())
+                        .amount(transaction.getAmount().getAmountAsLong())
+                        .balance(transaction.getBalance().getAmountAsLong())
+                        .date(transaction.getDate())
+                        .type(transaction.getType())
+                        .accountId(account.getId())
+                        .accountName(account.getAccountName())
+                        .memo(transaction.getMemo())
+                        .build())
+                .collect(Collectors.toList());
 
         return AccountDetailResponse.builder()
+                .accountId(account.getId())
                 .accountNumber(account.getAccountNumber())
                 .accountBalance(account.getAccountBalance().getAmount())
                 .bankName(account.getBank().getName())
                 .accountName(account.getAccountName())
                 .totalPocketAmount(calculateTotalPocketAmount(account))
                 .pocketCount(account.getPockets().size())
-                .transactionList(account.getTransactions())
-                .pocketList(account.getPockets())
+                .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                .transactionList(transactionDtos) // TransactionDetailResponse DTO 리스트 사용
+                .pocketList(pocketDtos)
                 .build();
     }
 

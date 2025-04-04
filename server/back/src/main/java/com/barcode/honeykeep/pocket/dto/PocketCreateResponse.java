@@ -13,11 +13,11 @@ public record PocketCreateResponse(
         String categoryName,
         Long totalAmount,
         Long savedAmount,
-        String link,
         String imgUrl,
         LocalDateTime startDate,
         LocalDateTime endDate,
         Boolean isFavorite,
         String type,
+        Boolean isActivated,
         LocalDateTime createdAt
 ) {}

@@ -55,9 +55,17 @@ public class Pocket extends BaseEntity {
 
     private Boolean isFavorite = false;
 
+    @Enumerated(EnumType.STRING)
     private PocketType type;
 
     private String imgUrl;
+
+    private Boolean isActivated;
+
+    @Column(name = "crawling_uuid", nullable = true)
+    private String crawlingUuid;
+
+    private Boolean isExceed = false;
 
     @OneToMany(mappedBy = "pocket")
     private List<Transaction> transactions = new ArrayList<>();
@@ -65,7 +73,8 @@ public class Pocket extends BaseEntity {
     @Builder
     protected Pocket(Account account, Category category, String name, String productName,
                      Money totalAmount, Money savedAmount, String link, LocalDateTime startDate,
-                     LocalDateTime endDate, Boolean isFavorite, PocketType type, String imgUrl) {
+                     LocalDateTime endDate, Boolean isFavorite, PocketType type, Boolean isActivated, String imgUrl,
+                     String crawlingUuid) {
         this.account = account;
         this.category = category;
         this.name = name;
@@ -77,9 +86,13 @@ public class Pocket extends BaseEntity {
         this.endDate = endDate;
         this.isFavorite = isFavorite;
         this.type = type;
+        this.isActivated  = isActivated;
         this.imgUrl = imgUrl;
         this.transactions = new ArrayList<>();
+        this.crawlingUuid = crawlingUuid;
     }
+
+
 
     public void setFavorite(Boolean isFavorite) {
         this.isFavorite = isFavorite;
@@ -87,6 +100,10 @@ public class Pocket extends BaseEntity {
 
     public void updateSavedAmount(Money newAmount) {
         this.savedAmount = newAmount;
+    }
+
+    public void updateIsExceed(Boolean isExceed) {
+        this.isExceed = isExceed;
     }
 
     /**
@@ -106,5 +123,9 @@ public class Pocket extends BaseEntity {
         if (endDate != null) this.endDate = endDate;
         if (isFavorite != null) this.isFavorite = isFavorite;
         if (imgUrl != null) this.imgUrl = imgUrl;
+    }
+
+    public void updateType(PocketType type) {
+        this.type = type;
     }
 }

@@ -12,6 +12,7 @@ public record PocketSummaryResponse(
     Long totalAmount,
     Long savedAmount,
     String type,
+    Boolean isActivated,
     Boolean isFavorite,
     String imgUrl,
     LocalDateTime endDate

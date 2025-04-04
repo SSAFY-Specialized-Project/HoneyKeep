@@ -40,6 +40,34 @@ public class PocketController {
     }
 
     /**
+     * 사용자가 링크를 제출하면 UUID를 반환 (크롤링 API 호출)
+     */
+    @PostMapping("/link")
+    public ResponseEntity<ApiResponse<PocketCreateWithLinkResponse>> submitLink(@AuthenticationPrincipal UserId userId,
+                                                          @RequestBody PocketCrawlingRequest pocketCrawlingRequest) {
+        String uuid = pocketService.createPocketWithLink(userId.value(), pocketCrawlingRequest.getLink());
+
+        return ResponseEntity.ok().body(ApiResponse.success(PocketCreateWithLinkResponse.builder()
+                .productUuid(uuid)
+                .build()));
+    }
+
+    /**
+     * 사용자가 링크 입력 후 수기 입력 데이터를 제출하면 Pocket 엔티티를 생성/업데이트하여 반환
+     */
+    @PostMapping("/link-input")
+    public ResponseEntity<ApiResponse<PocketManualInputResponse>> submitManualInput(@RequestBody PocketManualRequest pocketManualRequest) {
+        Long pocketId = pocketService.saveManualInput(pocketManualRequest);
+
+        return ResponseEntity.ok().body(
+                ApiResponse.success(PocketManualInputResponse.builder()
+                        .pocketId(pocketId)
+                        .build()
+                )
+        );
+    }
+
+    /**
      * 포켓 더모으기
      * @param userId
      * @param pocketId
@@ -63,8 +91,13 @@ public class PocketController {
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> getAllPockets(@AuthenticationPrincipal UserId userId) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pocketService.getAllPockets(userId.value())));
+        List<PocketSummaryResponse> pockets = pocketService.getAllPockets(userId.value());
+
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
     }
 
     /**
@@ -77,10 +110,14 @@ public class PocketController {
     public ResponseEntity<ApiResponse<List<PocketSummaryResponse>>> searchPockets(
             @AuthenticationPrincipal UserId userId,
             @RequestParam String name) {
-        return ResponseEntity.ok()
-                .body(ApiResponse.success(pocketService.searchPockets(userId.value(), name)));
-    }
+        List<PocketSummaryResponse> pockets = pocketService.searchPockets(userId.value(), name);
 
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found with the given name", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
+    }
     /**
      * 포켓 상세 조회
      * @param userId
@@ -185,7 +222,46 @@ public class PocketController {
         PocketFilterRequest filterRequest = new PocketFilterRequest(
                 categoryId, pocketType, isFavorite, startDateTime, endDateTime);
 
+        List<PocketSummaryResponse> pockets = pocketService.getFilteredPockets(userId.value(), filterRequest);
+
+        return pockets == null || pockets.isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("No pockets found with the given filters", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success(pockets));
+    }
+
+    /**
+     * 포켓 사용 시작 처리
+     * @param pocketId 사용 시작할 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    @PatchMapping("/{pocketId}/start-using")
+    public ResponseEntity<ApiResponse<PocketUpdateResponse>> startUsingPocket(
+            @AuthenticationPrincipal UserId userId,
+            @PathVariable Long pocketId) {
+
+        PocketUpdateResponse response = pocketService.startUsingPocket(pocketId);
+
         return ResponseEntity.ok()
-                .body(ApiResponse.success(pocketService.getFilteredPockets(userId.value(), filterRequest)));
+                .body(ApiResponse.success("포켓 사용중 처리 완료", response));
+    }
+
+    /**
+     * 포켓 결제 완료 처리
+     * @param pocketId 결제에 사용된 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    @PatchMapping("/{pocketId}/complete")
+    public ResponseEntity<ApiResponse<PocketUpdateResponse>> completePocketPayment(
+            @AuthenticationPrincipal UserId userId,
+            @PathVariable Long pocketId) {
+
+        PocketUpdateResponse response = pocketService.completePocketPayment(pocketId);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("포켓 사용완료 처리 성공", response));
     }
 }

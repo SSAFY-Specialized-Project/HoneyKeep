@@ -35,8 +35,11 @@ public class TransactionController {
 
         TransactionListResponse response = transactionService.getTransactions(userId.value(), accountId);
 
-        return ResponseEntity.ok()
-                .body(ApiResponse.success("거래내역 목록 조회 성공", response));
+        return response == null || response.transactions() == null || response.transactions().isEmpty()
+                ? ResponseEntity.ok()
+                        .body(ApiResponse.noContent("해당 계좌의 거래내역이 없습니다", null))
+                : ResponseEntity.ok()
+                        .body(ApiResponse.success("거래내역 목록 조회 성공", response));
     }
 
     /**

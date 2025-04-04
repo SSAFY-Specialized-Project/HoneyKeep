@@ -3,5 +3,10 @@ package com.barcode.honeykeep.mydataConnect.repository;
 import com.barcode.honeykeep.account.entity.Bank;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface BankForMydataRepository extends JpaRepository<Bank, String> {
+import java.util.Optional;
+
+public interface BankRepository extends JpaRepository<Bank, String> {
+
+    Optional<Bank> findByCode(String code);
+
 }

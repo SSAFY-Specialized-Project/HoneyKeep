@@ -1,6 +1,9 @@
 package com.barcode.honeykeep.transaction.service;
 
 import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.repository.AccountRepository;
+import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.transaction.exception.TransactionErrorCode;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
@@ -26,13 +29,21 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
 
     /**
      * 거래내역 목록 조회
      */
     public TransactionListResponse getTransactions(Long userId, Long accountId) {
+        // 계좌 ID 유효성 검사
+        if (accountId == null || accountId <= 0) {
+            throw new CustomException(TransactionErrorCode.INVALID_ACCOUNT_ID);
+        }
 
-        // 계좌의 거래내역 조회 (최신순)
+        // 계좌 존재 여부 확인
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new CustomException(TransactionErrorCode.ACCOUNT_NOT_FOUND));
+
         List<Transaction> transactions = transactionRepository.findByAccountIdOrderByDateDesc(accountId);
 
         List<TransactionListResponse.Transaction> transactionDtos = transactions.stream()
@@ -49,8 +60,6 @@ public class TransactionService {
      */
     public TransactionDetailResponse getTransaction(Long userId, Long transactionId) {
         Transaction transaction = getTransactionById(transactionId);
-
-
         return mapToTransactionDetailResponse(transaction);
     }
 
@@ -60,10 +69,7 @@ public class TransactionService {
     @Transactional
     public TransactionMemoResponse updateTransactionMemo(Long userId, Long transactionId, TransactionMemoRequest request) {
         Transaction transaction = getTransactionById(transactionId);
-
-
         transaction.updateMemo(request.memo());
-
         Transaction savedTransaction = transactionRepository.save(transaction);
 
         return TransactionMemoResponse.builder()
@@ -77,7 +83,7 @@ public class TransactionService {
      */
     private Transaction getTransactionById(Long transactionId) {
         return transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 거래내역을 찾을 수 없습니다: " + transactionId));
+                .orElseThrow(() -> new CustomException(TransactionErrorCode.TRANSACTION_NOT_FOUND));
     }
 
     /**

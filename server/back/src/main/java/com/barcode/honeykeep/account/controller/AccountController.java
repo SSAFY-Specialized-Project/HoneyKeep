@@ -24,7 +24,9 @@ public class AccountController {
     @GetMapping("/")
     public ResponseEntity<ApiResponse<List<AccountResponse>>> getMyAccounts(@AuthenticationPrincipal UserId userId) {
         List<AccountResponse> accountResponseList = accountService.getAccountsByUserId(userId.value());
-        return ResponseEntity.ok().body(ApiResponse.success(accountResponseList));
+        return  (accountResponseList == null || accountResponseList.isEmpty())
+                ? ResponseEntity.ok().body(ApiResponse.noContent("계좌가 존재하지 않습니다.", null))
+                : ResponseEntity.ok().body(ApiResponse.success(accountResponseList));
     }
 
     //계좌 상세 조회
@@ -32,7 +34,9 @@ public class AccountController {
     public ResponseEntity<ApiResponse<AccountDetailResponse>> getAccountDetails(@PathVariable("id") Long id,
                                                           @AuthenticationPrincipal UserId userId) {
         AccountDetailResponse accountDetailResponse = accountService.getAccountDetailById(id, userId.value());
-        return ResponseEntity.ok().body(ApiResponse.success(accountDetailResponse));
+        return  accountDetailResponse == null
+                ? ResponseEntity.ok().body(ApiResponse.noContent("계좌가 존재하지 않습니다.", null))
+                : ResponseEntity.ok().body(ApiResponse.success(accountDetailResponse));
     }
 
 

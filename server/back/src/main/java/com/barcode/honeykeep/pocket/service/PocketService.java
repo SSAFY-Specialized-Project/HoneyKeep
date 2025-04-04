@@ -4,18 +4,27 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.service.AccountService;
 import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.category.service.CategoryService;
+import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.dto.*;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.pocket.exception.PocketErrorCode;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
+import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,10 +32,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PocketService {
-    
+
     private final PocketRepository pocketRepository;
     private final AccountService accountService;
     private final CategoryService categoryService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final CrawlingService crawlingService;
 
     /**
      * 포켓 생성
@@ -41,24 +52,124 @@ public class PocketService {
             category = categoryService.getCategoryById(request.categoryId());
         }
 
+        boolean isActivated = !request.totalAmount().isGreaterThan(account.getAccountBalance());
+
         Pocket pocket = Pocket.builder()
                 .account(account)
                 .category(category)
                 .name(request.name())
-                .productName(request.productName())
                 .totalAmount(request.totalAmount())
                 .savedAmount(request.savedAmount() != null ? request.savedAmount() : Money.zero())
-                .link(request.link())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .isFavorite(false)
-                .type(PocketType.GATHERING)
-                .imgUrl(request.imgUrl())
+                .type(PocketType.UNUSED)
+                .isActivated(isActivated)
                 .build();
 
         Pocket savedPocket = pocketRepository.save(pocket);
 
         return mapToPocketCreateResponse(savedPocket);
+    }
+
+    /**
+     * 링크로 추가하여 포켓 생성
+     * 링크를 입력하면 크롤링 실행
+     */
+    @Transactional
+    public String createPocketWithLink(Long userId, String link) {
+        // redis와 postgresql을 연결할 수 있는 식별자 저장
+        String uuid = UUID.randomUUID().toString();
+        log.info("링크로 포켓 생성 시작. UUID: {}, 링크: {}", uuid, link);
+
+        // 초기 데이터 저장
+        Map<String, Object> initialData = new HashMap<>();
+        initialData.put("status", CrawlingStatusType.PENDING);
+        redisTemplate.opsForValue().set("crawling:" + uuid, initialData);
+        log.info("Redis에 초기 크롤링 상태(PENDING) 저장, UUID: {}", uuid);
+
+        // 비동기 크롤링 시작
+        log.info("비동기 크롤링 호출 시작, UUID: {}", uuid);
+        crawlingService.asyncCrawling(uuid, link);
+        log.info("비동기 크롤링 호출 완료, UUID: {}", uuid);
+
+        return uuid;
+    }
+
+    /**
+     * 링크 입력 후 사용자가 수기로 입력하는 정보 저장
+     */
+    @Transactional
+    public Long saveManualInput(PocketManualRequest pocketManualRequest) {
+        log.info("수기 입력 정보 저장 시작, 크롤링 UUID: {}", pocketManualRequest.getCrawlingUuid());
+
+        // 계좌 조회
+        Account account = accountService.getAccountById(pocketManualRequest.getAccount().getId());
+        Category category = null;
+
+        // 카테고리 조회
+        if (pocketManualRequest.getCategoryId() != null) {
+            category = categoryService.getCategoryById(pocketManualRequest.getCategoryId());
+        }
+
+        // 포켓 생성
+        Pocket pocket = Pocket.builder()
+                .account(account)
+                .category(category)
+                .name(null)
+                .productName(null)
+                .totalAmount(null)
+                .savedAmount(Money.zero())
+                .link(null)
+                .startDate(pocketManualRequest.getStartDate())
+                .endDate(pocketManualRequest.getEndDate())
+                .isFavorite(false)
+                .type(PocketType.UNUSED)
+                .imgUrl(null)
+                .crawlingUuid(pocketManualRequest.getCrawlingUuid())
+                .build();
+
+        Pocket savedPocket = pocketRepository.save(pocket);
+
+        log.info("수기 입력으로 생성된 포켓 저장 완료. 포켓 ID: {}, 크롤링 UUID: {}",
+                savedPocket.getId(), pocketManualRequest.getCrawlingUuid());
+
+        // Redis에서 UUID로 크롤링 데이터 있는지 조회
+        Object crawlingData = redisTemplate.opsForValue().get("crawling:" + pocketManualRequest.getCrawlingUuid());
+        if (!(crawlingData instanceof HashMap)) {
+            PocketCrawlingResult pocketCrawlingResult = (PocketCrawlingResult) crawlingData;
+
+            if(pocketCrawlingResult == null) {
+                throw new CustomException(PocketErrorCode.REDIS_SAVE_ERROR);
+            }
+
+            // 크롤링 완료된 데이터 업데이트
+            if (pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
+                String productName = pocketCrawlingResult.getProductName();
+                BigDecimal productPrice = pocketCrawlingResult.getProductPrice();
+                String productImgUrl = pocketCrawlingResult.getProductImgUrl();
+                String link = pocketCrawlingResult.getLink();
+
+                savedPocket.update(null, null, productName, productName, new Money(productPrice), null, link, null, null, null, productImgUrl);
+                savedPocket = pocketRepository.save(savedPocket);
+                redisTemplate.delete("crawling:" + pocketManualRequest.getCrawlingUuid());
+                log.info("포켓(ID: {})에 크롤링 결과 업데이트 완료, UUID: {}", savedPocket.getId(), pocketManualRequest.getCrawlingUuid());
+            } else {
+                log.warn("크롤링 결과가 완료 상태가 아님, UUID: {}", pocketManualRequest.getCrawlingUuid());
+            }
+        }
+
+        return savedPocket.getId();
+    }
+
+    /**
+     * 배치 처리로 포켓 정보 업데이트
+     */
+    @Scheduled(cron = "0 0 0 * * *")
+    public void batchUpdate() {
+        log.info("배치 크롤링 시작");
+        crawlingService.batchCrawling();
+        log.info("배치 크롤링 업데이트 성공적으로 완료됨");
     }
 
     /**
@@ -214,7 +325,7 @@ public class PocketService {
                         return !filterRequest.endDate().isBefore(pocketStart) &&
                                 !filterRequest.startDate().isAfter(pocketEnd);
                     })
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         // DTO로 변환
@@ -228,7 +339,7 @@ public class PocketService {
      */
     private Pocket getPocketById(Long pocketId) {
         return pocketRepository.findById(pocketId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 포켓을 찾을 수 없습니다: " + pocketId));
+                .orElseThrow(() -> new CustomException(PocketErrorCode.POCKET_NOT_FOUND));
     }
     
     /**
@@ -251,6 +362,7 @@ public class PocketService {
                 .endDate(pocket.getEndDate())
                 .isFavorite(pocket.getIsFavorite())
                 .type(pocket.getType().getType())
+                .isActivated(pocket.getIsActivated())
                 .createdAt(pocket.getCreatedAt())
                 .updatedAt(pocket.getUpdatedAt())
                 .build();
@@ -267,6 +379,7 @@ public class PocketService {
                 .totalAmount(pocket.getTotalAmount().getAmountAsLong())
                 .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                 .type(pocket.getType().getType())
+                .isActivated(pocket.getIsActivated())
                 .isFavorite(pocket.getIsFavorite())
                 .imgUrl(pocket.getImgUrl())
                 .endDate(pocket.getEndDate())
@@ -286,12 +399,12 @@ public class PocketService {
                 .categoryName(pocket.getCategory().getName())
                 .totalAmount(pocket.getTotalAmount().getAmountAsLong())
                 .savedAmount(pocket.getSavedAmount().getAmountAsLong())
-                .link(pocket.getLink())
                 .imgUrl(pocket.getImgUrl())
                 .startDate(pocket.getStartDate())
                 .endDate(pocket.getEndDate())
                 .isFavorite(pocket.getIsFavorite())
                 .type(pocket.getType().getType())
+                .isActivated(pocket.getIsActivated())
                 .createdAt(pocket.getCreatedAt())
                 .build();
     }
@@ -333,7 +446,7 @@ public class PocketService {
     private PocketGatherResponse mapToPocketGatherResponse(Pocket pocket, Long previousAmount, Long addedAmount) {
         Long currentAmount = pocket.getSavedAmount().getAmountAsLong();
         Long totalAmount = pocket.getTotalAmount().getAmountAsLong();
-        Double progressPercentage = totalAmount > 0 ? (double) currentAmount / totalAmount * 100 : 0;
+        double progressPercentage = totalAmount > 0 ? (double) currentAmount / totalAmount * 100 : 0;
         
         return PocketGatherResponse.builder()
                 .id(pocket.getId())
@@ -345,5 +458,37 @@ public class PocketService {
                 .progressPercentage(Math.min(progressPercentage, 100.0)) // 100%를 넘지 않도록
                 .updatedAt(pocket.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * 포켓 사용 시작 처리
+     * @param pocketId 사용 시작할 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    public PocketUpdateResponse startUsingPocket(Long pocketId) {
+        Pocket pocket = getPocketById(pocketId);
+
+        pocket.updateType(PocketType.USING);
+
+        pocketRepository.save(pocket);
+
+        return mapToPocketUpdateResponse(pocket);
+    }
+
+    /**
+     * 포켓 사용 완료 처리
+     * @param pocketId 결제에 사용된 포켓 ID
+     * @return 업데이트된 포켓 정보
+     */
+    @Transactional
+    public PocketUpdateResponse completePocketPayment(Long pocketId) {
+        Pocket pocket = getPocketById(pocketId);
+
+        pocket.updateType(PocketType.USED);
+
+        pocketRepository.save(pocket);
+
+        return mapToPocketUpdateResponse(pocket);
     }
 }
