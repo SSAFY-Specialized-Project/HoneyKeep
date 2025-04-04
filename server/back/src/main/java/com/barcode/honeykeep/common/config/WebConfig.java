@@ -4,12 +4,14 @@ import com.barcode.honeykeep.common.interceptor.ApiLoggingInterceptor;
 import com.barcode.honeykeep.common.interceptor.RateLimitInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@Profile("!test")
 public class WebConfig implements WebMvcConfigurer {
 
     private final ApiLoggingInterceptor apiLoggingInterceptor;

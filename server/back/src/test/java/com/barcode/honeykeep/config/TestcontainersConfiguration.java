@@ -12,12 +12,15 @@ import org.testcontainers.utility.DockerImageName;
 public class TestcontainersConfiguration {
 
     public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:15-alpine")
+            .withReuse(true)
             .withExposedPorts(5432);
 
     public static GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:latest"))
+            .withReuse(true)
             .withExposedPorts(6379);
 
     public static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:latest"))
+            .withReuse(true)
             .withExposedPorts(27017);
 
     static {
