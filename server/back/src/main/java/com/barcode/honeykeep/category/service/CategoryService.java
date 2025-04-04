@@ -88,6 +88,7 @@ public class CategoryService {
                                     .savedAmount(pocket.getSavedAmount().getAmountAsLong())
                                     .type(pocket.getType().getType())
                                     .isFavorite(pocket.getIsFavorite())
+                                    .imgUrl(pocket.getImgUrl())
                                     .endDate(pocket.getEndDate())
                                     .build())
                             .collect(Collectors.toList());

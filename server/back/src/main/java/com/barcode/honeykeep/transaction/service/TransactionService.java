@@ -3,6 +3,7 @@ package com.barcode.honeykeep.transaction.service;
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.pocket.service.PocketService;
 import com.barcode.honeykeep.transaction.exception.TransactionErrorCode;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
@@ -15,6 +16,7 @@ import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +26,21 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final PocketService pocketService;
+
+    public TransactionService(
+            TransactionRepository transactionRepository,
+            AccountRepository accountRepository,
+            @Lazy PocketService pocketService) {
+        this.transactionRepository = transactionRepository;
+        this.accountRepository = accountRepository;
+        this.pocketService = pocketService;
+    }
 
     /**
      * 거래내역 목록 조회
@@ -155,7 +166,11 @@ public class TransactionService {
                                          Money balance,
                                          TransactionType type) {
 
-        return createTransaction(account, null, name, amount, balance, LocalDateTime.now(), type);
+        Transaction transaction = createTransaction(account, null, name, amount, balance, LocalDateTime.now(), type);
+
+        pocketService.updatePocketsActivationStatus(account.getId());
+
+        return transaction;
     }
 
     /**

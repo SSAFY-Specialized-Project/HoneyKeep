@@ -14,6 +14,7 @@ import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -490,5 +491,31 @@ public class PocketService {
         pocketRepository.save(pocket);
 
         return mapToPocketUpdateResponse(pocket);
+    }
+
+    /**
+     * 계좌 잔액에 따른 포켓 활성화 상태 업데이트
+     */
+    @Transactional
+    public void updatePocketsActivationStatus(Long accountId) {
+        // 계좌 조회
+        Account account = accountService.getAccountById(accountId);
+        Money currentBalance = account.getAccountBalance();
+
+        // 해당 계좌에 속한 모든 포켓 조회
+        List<Pocket> pockets = pocketRepository.findByAccountId(accountId);
+
+        // 각 포켓의 활성화 상태 업데이트
+        for (Pocket pocket : pockets) {
+            boolean shouldBeActivated = !pocket.getTotalAmount().isGreaterThan(currentBalance);
+
+            // 현재 상태와 다른 경우에만 업데이트
+            if (pocket.getIsActivated() != shouldBeActivated) {
+                log.info("포켓 활성화 상태 변경: ID={}, 이름={}, 이전 상태={}, 변경 후 상태={}",
+                        pocket.getId(), pocket.getName(), pocket.getIsActivated(), shouldBeActivated);
+                pocket.updateActivationStatus(shouldBeActivated);
+                pocketRepository.save(pocket);
+            }
+        }
     }
 }
