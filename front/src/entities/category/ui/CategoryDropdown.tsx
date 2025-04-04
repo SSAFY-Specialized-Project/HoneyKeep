@@ -50,6 +50,7 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
               id={item.id}
               name={item.name}
               imgUrl={item.imgUrl}
+              type={item.type}
               totalAmount={item.totalAmount}
               endDate={item.endDate}
             />
