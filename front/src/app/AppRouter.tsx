@@ -12,7 +12,13 @@ import {
   PocketDetailPage,
   PocketList,
 } from '@/pages/pocket';
-import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
+import {
+    FixedExpenseCreate,
+    FixedExpenseList,
+    FixedExpenseDetail,
+    FixedExpenseListContent,
+    FixedExpenseListFound
+} from '@/pages/fixedExpense';
 import {
   AccountConnect,
   AccountDetail,
@@ -103,23 +109,28 @@ const AppRouter = createBrowserRouter([
           },
           {
             // 고정 지출
-            path: '/fixedPay/list',
-            element: <FixedPayList />,
+            path: '/fixedExpense',
+            element: <FixedExpenseList />,
+            children: [
+              {
+                path: "list",
+                element: <FixedExpenseListContent />
+              },
+              {
+                path: "found",
+                element: <FixedExpenseListFound />
+              }
+            ]
           },
           {
             // 고정 지출 생성
-            path: '/fixedPay/create',
-            element: <FixedPayCreate />,
-          },
-          {
-            // 고정 지출 수정
-            path: '/fixedPay/update',
-            element: <FixedPayUpdate />,
+            path: '/fixedExpense/create',
+            element: <FixedExpenseCreate />,
           },
           {
             // 고정 지출 상세
-            path: '/fixedPay/:id',
-            element: <FixedPayDetail />,
+            path: '/fixedExpense/:id',
+            element: <FixedExpenseDetail />,
           },
         ],
       },
