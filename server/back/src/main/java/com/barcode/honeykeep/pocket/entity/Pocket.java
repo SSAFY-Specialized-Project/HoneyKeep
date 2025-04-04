@@ -65,6 +65,8 @@ public class Pocket extends BaseEntity {
     @Column(name = "crawling_uuid", nullable = true)
     private String crawlingUuid;
 
+    private Boolean isExceed = false;
+
     @OneToMany(mappedBy = "pocket")
     private List<Transaction> transactions = new ArrayList<>();
 
@@ -98,6 +100,10 @@ public class Pocket extends BaseEntity {
 
     public void updateSavedAmount(Money newAmount) {
         this.savedAmount = newAmount;
+    }
+
+    public void updateIsExceed(Boolean isExceed) {
+        this.isExceed = isExceed;
     }
 
     /**
