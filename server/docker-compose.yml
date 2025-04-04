@@ -75,8 +75,13 @@ services:
       - "8080:8080"
     networks:
       - my-network
+    volumes:
+      - "/home/ubuntu/secrets/honeykeep-55e4b-firebase-adminsdk-fbsvc-fccd58a678.json:/app/config/firebase/firebase-service-key.json"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      # firebase-service-key.json 파일 경로를 환경 변수로 설정
+      GOOGLE_APPLICATION_CREDENTIALS: /app/config/firebase/firebase-service-key.json
 
       # PostgreSQL
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
