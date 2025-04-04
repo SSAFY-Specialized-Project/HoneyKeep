@@ -21,6 +21,7 @@ public record PocketDetailResponse(
     LocalDateTime endDate,
     Boolean isFavorite,
     String type,
+    Boolean isActivated,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {}
