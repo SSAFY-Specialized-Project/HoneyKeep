@@ -105,6 +105,9 @@ public class PocketService {
         log.info("수기 입력 정보 저장 시작, 크롤링 UUID: {}", pocketManualRequest.getCrawlingUuid());
 
         // 계좌 조회
+        log.info("request 정보: {}", pocketManualRequest);
+        log.info("계좌 정보: {}", pocketManualRequest.getAccount().getId());
+
         Account account = accountService.getAccountById(pocketManualRequest.getAccount().getId());
         Category category = null;
 

@@ -2,10 +2,7 @@ package com.barcode.honeykeep.pocket.dto;
 
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.common.vo.Money;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class PocketManualRequest {
     LocalDateTime startDate;
     LocalDateTime endDate;
