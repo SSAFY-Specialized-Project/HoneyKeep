@@ -1,5 +1,12 @@
 package com.barcode.honeykeep.common.service;
 
+import java.time.Duration;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
@@ -8,13 +15,9 @@ import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import java.time.Duration;
 
 @Service
+@Profile("!test")
 public class RateLimitService {
 
     // API 카테고리 정의

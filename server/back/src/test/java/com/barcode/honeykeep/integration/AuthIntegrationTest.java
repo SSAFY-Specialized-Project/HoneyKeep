@@ -7,16 +7,18 @@ import com.barcode.honeykeep.util.IntegrationTest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mock;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @IntegrationTest
@@ -29,6 +31,9 @@ public class AuthIntegrationTest {
     @MockitoBean
     private RateLimitService rateLimitService;
 
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
+
     private static final String TEST_USERNAME = "integrationtestuser";
     private static final String TEST_PASSWORD = "password123";
     private static final String TEST_EMAIL = "integrationtest@example.com";
@@ -36,6 +41,7 @@ public class AuthIntegrationTest {
     private static final String TEST_IDENTITY_NUMBER = "900101-1"; // 예시 주민번호
     private static final String TEST_PHONE_NUMBER = "010-1234-5678";
     private static String refreshToken;
+
 
     // 테스트 실행 전 RestAssured 기본 설정
     @BeforeEach
@@ -47,7 +53,14 @@ public class AuthIntegrationTest {
         // rateLimitService.tryConsume 메서드가 항상 true를 반환하도록 설정
         when(rateLimitService.tryConsume(any(String.class), any(RateLimitService.ApiCategory.class))).thenReturn(true);
         when(rateLimitService.getCategoryFromUrl(any(String.class))).thenReturn(RateLimitService.ApiCategory.NORMAL_QUERY); // 필요시 카테고리 반환 설정
-    }
+
+        ValueOperations<String, Object> valueOps = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        
+        // valueOps.get() 호출 시 유효한 토큰 반환하도록 설정
+        when(valueOps.get(anyString())).thenReturn("valid_refresh_token");
+        
+}
 
     @Test
     @Order(1)
