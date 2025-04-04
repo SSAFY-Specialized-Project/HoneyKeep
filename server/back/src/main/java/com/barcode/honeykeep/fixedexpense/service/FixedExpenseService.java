@@ -1,5 +1,6 @@
 package com.barcode.honeykeep.fixedexpense.service;
 
+import com.barcode.honeykeep.account.dto.AccountSummaryDto;
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
@@ -113,8 +114,11 @@ public class FixedExpenseService {
     protected FixedExpenseResponse mapFixedExpensesResponse(FixedExpense fixedExpense) {
         return new FixedExpenseResponse(
                 fixedExpense.getId(),
-                fixedExpense.getAccount().getBank().getName(),
-                fixedExpense.getAccount().getAccountName(),
+                new AccountSummaryDto(
+                        fixedExpense.getAccount().getBank().getName(),
+                        fixedExpense.getAccount().getAccountName(),
+                        fixedExpense.getAccount().getAccountNumber()
+                ),
                 fixedExpense.getName(),
                 fixedExpense.getMoney(),
                 fixedExpense.getStartDate(),

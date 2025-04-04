@@ -39,12 +39,12 @@ public class FixedExpense extends BaseEntity {
 
     private LocalDate startDate;
 
-    private LocalDate payDay;
+    private Integer payDay;
 
     private String memo;
 
     @Builder
-    protected FixedExpense(User user, Account account, String name, Money money, LocalDate startDate, LocalDate payDay, String memo) {
+    protected FixedExpense(User user, Account account, String name, Money money, LocalDate startDate, Integer payDay, String memo) {
         this.user = user;
         this.account = account;
         this.name = name;
@@ -54,7 +54,7 @@ public class FixedExpense extends BaseEntity {
         this.memo = memo;
     }
 
-    public void update(Account account, String name, Money money, LocalDate startDate, LocalDate payDay, String memo) {
+    public void update(Account account, String name, Money money, LocalDate startDate, Integer payDay, String memo) {
         if (account != null) this.account = account;
         if (name != null) this.name = name;
         if (money != null) this.money = money;
