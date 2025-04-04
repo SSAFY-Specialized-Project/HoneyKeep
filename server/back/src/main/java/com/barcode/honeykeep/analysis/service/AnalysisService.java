@@ -13,8 +13,8 @@ public class AnalysisService {
     private final AnalysisRepository analysisRepository;
 
     @Transactional
-    public AnalysisResponse getAnalysis(int month) {
+    public AnalysisResponse getAnalysis(Long userId, int month) {
 
-        return analysisRepository.getAnalysis(month);
+        return analysisRepository.getAnalysis(userId, month);
     }
 }

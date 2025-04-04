@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -81,4 +82,17 @@ public interface PocketRepository extends JpaRepository<Pocket, Long> {
      * Crawling UUID가 존재하는 포켓 조회
      */
     Optional<Pocket> findByCrawlingUuid(String crawlingUuid);
+
+    /**
+     * 사용 완료 된 포켓의 총 사용 금액 계산
+     */
+    @Query("SELECT SUM(p.totalAmount.amount - p.savedAmount.amount) " +
+            "FROM Pocket p " +
+            "WHERE p.account.id = :userId " +
+            "AND (MONTH(p.startDate) = :month OR MONTH(p.endDate) = :month)" +
+            "AND p.type = 'USED'")
+    BigDecimal sumAmountByUserIdAndMonth(@Param("userId") Long userId,
+                                         @Param("month") int month);
+
+
 }

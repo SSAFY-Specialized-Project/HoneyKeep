@@ -23,4 +23,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<TransactionSummaryDto> findTransactionSummariesByAccountAndName(Long accountId, String name);
 
     List<Transaction> findByAccount_User_IdAndTypeAndDateAfter(Long userId, TransactionType type, LocalDateTime date);
+
+
 }
