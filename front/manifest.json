@@ -1,0 +1,37 @@
+{
+  "name": "꿀킵",
+  "short_name": "꿀킵",
+  "description": "계획적인 자산관리 꿀팁, 꿀킵에 다 있다.",
+  "scope": ",",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#FFAA00",
+  "icons": [
+    {
+      "src": "public-favicon/pwa-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "public-favicon/pwa-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "새 창 PWA by JS",
+      "short_name": "새 창",
+      "description": "새 창 PWA by JS",
+      "url": "./",
+      "icons": [
+        {
+          "src": "public-favicon/pwa-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
