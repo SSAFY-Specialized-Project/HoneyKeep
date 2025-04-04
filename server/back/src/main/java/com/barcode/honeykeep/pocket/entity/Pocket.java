@@ -122,4 +122,8 @@ public class Pocket extends BaseEntity {
     public void updateType(PocketType type) {
         this.type = type;
     }
+
+    public void updateActivationStatus(Boolean isActivated) {
+        this.isActivated = isActivated;
+    }
 }

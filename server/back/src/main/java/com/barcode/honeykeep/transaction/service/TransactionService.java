@@ -3,6 +3,7 @@ package com.barcode.honeykeep.transaction.service;
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.pocket.service.PocketService;
 import com.barcode.honeykeep.transaction.exception.TransactionErrorCode;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.pocket.entity.Pocket;
@@ -30,6 +31,7 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final PocketService pocketService;
 
     /**
      * 거래내역 목록 조회
@@ -155,7 +157,11 @@ public class TransactionService {
                                          Money balance,
                                          TransactionType type) {
 
-        return createTransaction(account, null, name, amount, balance, LocalDateTime.now(), type);
+        Transaction transaction = createTransaction(account, null, name, amount, balance, LocalDateTime.now(), type);
+
+        pocketService.updatePocketsActivationStatus(account.getId());
+
+        return transaction;
     }
 
     /**
