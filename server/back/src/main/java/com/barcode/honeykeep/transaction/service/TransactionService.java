@@ -16,6 +16,7 @@ import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,13 +26,21 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final PocketService pocketService;
+
+    public TransactionService(
+            TransactionRepository transactionRepository,
+            AccountRepository accountRepository,
+            @Lazy PocketService pocketService) {
+        this.transactionRepository = transactionRepository;
+        this.accountRepository = accountRepository;
+        this.pocketService = pocketService;
+    }
 
     /**
      * 거래내역 목록 조회
