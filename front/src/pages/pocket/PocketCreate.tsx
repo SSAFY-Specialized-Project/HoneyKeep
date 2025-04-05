@@ -1,5 +1,21 @@
+import { PocketChoiceTab } from '@/entities/pocket/ui';
+import { Icon } from '@/shared/ui';
+import { Outlet } from 'react-router';
+
 const PocketCreate = () => {
-  return <div>포켓 생성입니다.</div>;
+  return (
+    <div className="flex h-full flex-col gap-4 p-5">
+      <div>
+        <div className="flex items-center gap-3">
+          <Icon size="big" id="money-bag" />
+          <h2 className="text-title-xl font-bold">포켓 만들기</h2>
+        </div>
+        <span className="text-title-sm text-gray-500">어떤 지출이 예정되어 있나요?</span>
+      </div>
+      <PocketChoiceTab />
+      <Outlet />
+    </div>
+  );
 };
 
 export default PocketCreate;

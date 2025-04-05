@@ -10,3 +10,5 @@ export { default as ImageContainer } from "./ImageContainer/ImageContainer";
 export { default as CategoryIcon } from "./CategoryIcon/CategoryIcon";
 export { default as Icon } from "./Icon/Icon";
 export { default as BorderInput } from "./BorderInput/BorderInput";
+export { default as ToggleButton } from "./ToggleButton/ToggleButton";
+export { default as ModalOptionButton} from "./ModalOptionButton/ModalOptionButton";

@@ -5,7 +5,8 @@ export interface Pocket {
   accountName: string;
   totalAmount: number;
   savedAmount: number;
-  type: "GATHERING" | "USING" | "COMPLETED";
+  type: "UNUSED" | "USING" | "USED";
+  isActivated: boolean;
   isFavorite: boolean;
   imgUrl: string;
   endDate: string;
@@ -57,6 +58,29 @@ export interface PocketDetailResponse {
 export interface PocketFilterResponse {
   pocket: Pocket[];
 }
+
+// 포켓 생성 링크 요청
+export interface PocketCreateLinkRequest {
+  link: string;
+}
+
+export interface PocketCreateLinkResponse {
+  productUuid: string;
+}
+
+export interface PocketCreateWithLinkRequest {
+  endDate: string;
+  account: { id: number};
+  categoryId: number;
+  totalAmount: {amount: number};
+  isFavorite: boolean;
+  crawlingUuid: string;
+}
+
+export interface PocketCreateWithLinkResponse {
+  pocketId: number;
+}
+
 
 // 포켓 생성 요청
 export interface PocketCreateRequest {

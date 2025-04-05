@@ -1,11 +1,12 @@
+import React from "react";
+import { formatWithKRW } from '@/shared/lib';
+
 interface Props {
   title: string;
-  paymentDate: string;
+  paymentDate: number;
   amount: number;
   monthCount: number;
-  selectedAction: "register" | "modify" | "delete" | null;
   onRegister: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onModify: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onDelete: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -14,9 +15,7 @@ const FixedExpenseFound = ({
   paymentDate,
   amount,
   monthCount,
-  selectedAction,
   onRegister,
-  onModify,
   onDelete,
 }: Props) => {
   return (
@@ -27,7 +26,7 @@ const FixedExpenseFound = ({
             {title}
           </strong>
           <span className="text-text-xl font-bold">
-            {amount.toLocaleString()} 원
+            {formatWithKRW(amount)}
           </span>
         </div>
 
@@ -47,36 +46,19 @@ const FixedExpenseFound = ({
           <button
             type="button"
             onClick={onRegister}
-            className={`w-24 px-[14px] py-2 rounded-lg text-text-md ${
-              selectedAction === "register"
-                ? "bg-[var(--color-brand-primary-600)] text-white"
-                : "bg-gray-100 text-gray-900"
-            }`}
+            className="w-24 px-[14px] py-2 rounded-lg text-text-md bg-[var(--color-brand-primary-500)] text-white cursor-pointer"
           >
             등록
           </button>
-          <button
-            type="button"
-            onClick={onModify}
-            className={`w-24 px-[14px] py-2 rounded-lg text-text-md ${
-              selectedAction === "modify"
-                ? "bg-[var(--color-brand-primary-600)] text-white"
-                : "bg-gray-100 text-gray-900"
-            }`}
-          >
-            수정
-          </button>
+
           <button
             type="button"
             onClick={onDelete}
-            className={`w-24 px-[14px] py-2 rounded-lg text-text-md ${
-              selectedAction === "delete"
-                ? "bg-[var(--color-brand-primary-600)] text-white"
-                : "bg-gray-100 text-gray-900"
-            }`}
+            className="w-24 px-[14px] py-2 rounded-lg text-text-md bg-gray-100 text-gray-900 cursor-pointer"
           >
             삭제
           </button>
+
         </div>
       </div>
     </li>

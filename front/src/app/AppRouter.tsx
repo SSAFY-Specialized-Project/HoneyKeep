@@ -1,11 +1,24 @@
-import {Alarm, Chatbot, Error, Home, Landing, Loading} from '@/pages/general';
+import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
 import { Login } from '@/pages/user';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
 import { BaseLayout, HistoryLayout } from './layouts';
-import { PocketCalendar, PocketCreate, PocketDetail, PocketList } from '@/pages/pocket';
-import { FixedPayCreate, FixedPayDetail, FixedPayList, FixedPayUpdate } from '@/pages/fixedPay';
+import {
+  PocketCalendar,
+  PocketCreate,
+  PocketCreateStep,
+  PocketCreateSuccess,
+  PocketDetailPage,
+  PocketList,
+} from '@/pages/pocket';
+import {
+    FixedExpenseCreate,
+    FixedExpenseList,
+    FixedExpenseDetail,
+    FixedExpenseListContent,
+    FixedExpenseListFound
+} from '@/pages/fixedExpense';
 import {
   AccountConnect,
   AccountDetail,
@@ -15,8 +28,10 @@ import {
   MyAgree,
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
+import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
-import {Layout} from "@/shared/ui";
+import { Layout } from '@/shared/ui';
+import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
 
 const AppRouter = createBrowserRouter([
   {
@@ -92,26 +107,6 @@ const AppRouter = createBrowserRouter([
             path: '/pocket/calendar',
             element: <PocketCalendar />,
           },
-          {
-            // 고정 지출
-            path: '/fixedPay/list',
-            element: <FixedPayList />,
-          },
-          {
-            // 고정 지출 생성
-            path: '/fixedPay/create',
-            element: <FixedPayCreate />,
-          },
-          {
-            // 고정 지출 수정
-            path: '/fixedPay/update',
-            element: <FixedPayUpdate />,
-          },
-          {
-            // 고정 지출 상세
-            path: '/fixedPay/:id',
-            element: <FixedPayDetail />,
-          },
         ],
       },
     ],
@@ -162,12 +157,62 @@ const AppRouter = createBrowserRouter([
             // 포켓 생성
             path: '/pocket/create',
             element: <PocketCreate />,
+            children: [
+              {
+                path: 'link',
+                element: <PocketCreateLink />,
+              },
+              {
+                path: 'favorite',
+                element: <PocketFavoriteList />,
+              },
+              {
+                path: 'direct',
+                element: <PocketCreateDirect />,
+              },
+            ],
+          },
+          {
+            path: '/pocket/create/link/step',
+            element: <PocketCreateStep />,
+          },
+          {
+            path: '/pocket/success',
+            element: <PocketCreateSuccess />,
+          },
+          {
+            path: '/pocket/detail/:id',
+            element: <PocketDetailPage />,
           },
           {
             path: '/category/create',
             element: <CategoryCreate />,
           },
-
+          // 고정 지출
+          {
+            path: '/fixedExpense',
+            element: <FixedExpenseList />,
+            children: [
+              {
+                path: "list",
+                element: <FixedExpenseListContent />
+              },
+              {
+                path: "found",
+                element: <FixedExpenseListFound />
+              }
+            ]
+          },
+          {
+            // 고정 지출 생성
+            path: '/fixedExpense/create',
+            element: <FixedExpenseCreate />,
+          },
+          {
+            // 고정 지출 상세
+            path: '/fixedExpense/:id',
+            element: <FixedExpenseDetail />,
+          },
           // 챗봇
           {
             path: '/chatbot',

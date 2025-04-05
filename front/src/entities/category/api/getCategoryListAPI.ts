@@ -1,8 +1,8 @@
 import { customFetchAPI } from '@/shared/api';
-import { CategoryListResponse } from '@/entities/category/model/types';
+import { Category } from '@/entities/category/model/types';
 
 const getCategoryListAPI = () =>
-  customFetchAPI<CategoryListResponse, void>({
+  customFetchAPI<Category[], void>({
     url: '/categories',
     method: 'GET',
   });

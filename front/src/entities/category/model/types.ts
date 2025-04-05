@@ -7,6 +7,10 @@ export interface CategoryWithPocket {
   pockets: Pocket[];
 }
 
+export interface createCategoryRequest {
+  name: string,
+  icon: number
+}
 export interface Category {
   categoryId: number;
   name: string;
@@ -42,6 +46,12 @@ export interface CategoryUpdateRequest {
 }
 
 export interface CategoryUpdateResponse {
+  categoryId: number;
+  name: string;
+  icon: number;
+}
+
+export interface createCategoryResponse {
   categoryId: number;
   name: string;
   icon: number;
