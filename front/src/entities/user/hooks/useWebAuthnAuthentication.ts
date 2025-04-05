@@ -3,10 +3,10 @@ import {
   startWebAuthnAuthenticationAPI,
   finishWebAuthnAuthenticationAPI,
 } from "../api";
-import { WebAuthnAuthenticationFinishRequest } from "../api/finishWebAuthnAuthenticationAPI";
-import { WebAuthnAuthenticationStartResponse } from "../api/startWebAuthnAuthenticationAPI";
+import { WebAuthnAuthenticationFinishRequest } from "../../certification/api/finishWebAuthnAuthenticationAPI.ts";
+import { WebAuthnAuthenticationStartResponse } from "../../certification/api/startWebAuthnAuthenticationAPI.ts";
 
-interface UseWebAuthnAuthenticationReturn {
+type UseWebAuthnAuthenticationReturn = {
   isLoading: boolean;
   error: Error | null;
   startAuthentication: () => Promise<void>;

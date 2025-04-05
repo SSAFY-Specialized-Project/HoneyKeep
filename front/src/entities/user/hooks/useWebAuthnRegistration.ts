@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { startWebAuthnRegistrationAPI, completeWebAuthnRegistrationAPI } from "../api";
-import { WebAuthnRegistrationCompleteRequest } from "../api/finishWebAuthnRegistrationAPI.ts";
-import { WebAuthnRegistrationStartResponse } from "../api/startWebAuthnRegistrationAPI";
+import { WebAuthnRegistrationCompleteRequest } from "../../certification/api/finishWebAuthnRegistrationAPI.ts";
+import { WebAuthnRegistrationStartResponse } from "../../certification/api/startWebAuthnRegistrationAPI.ts";
 
-interface UseWebAuthnRegistrationReturn {
+type UseWebAuthnRegistrationReturn = {
   isLoading: boolean;
   error: Error | null;
   startRegistration: (displayName: string, deviceName?: string) => Promise<void>;

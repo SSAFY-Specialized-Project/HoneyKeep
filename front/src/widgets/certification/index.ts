@@ -1,0 +1,1 @@
+export { KkulkipRegisterWidget } from './ui/KkulkipRegisterWidget'; 

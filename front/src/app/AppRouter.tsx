@@ -24,14 +24,13 @@ import {
   AccountDetail,
   AccountList,
   AccountTransfer,
-  Certification,
-  MyAgree,
 } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
 import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 import { Layout } from '@/shared/ui';
 import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
+import {Agreement, Certificates, KkulkipRegister, PinVerification} from "@/pages/mydata";
 
 const AppRouter = createBrowserRouter([
   {
@@ -121,14 +120,33 @@ const AppRouter = createBrowserRouter([
           // 계좌 연결
           {
             // 마이데이터 약관 동의
-            path: '/myAgree',
-            element: <MyAgree />,
+            path: '/mydata',
+            children: [
+              {
+                index: true,
+                element: <Agreement />
+              },
+              {
+                path: 'agreement',
+                element: <Agreement />
+              },
+              {
+                path: 'certificates',
+                element: <Certificates />,
+              },
+            ]
+          },
+
+          // 인증서 등록
+          {
+            path: '/:id/register',
+            element: <KkulkipRegister />
           },
           {
-            // 자체 인증서
-            path: '/certification',
-            element: <Certification />,
+            path: '/verifyPin',
+            element: <PinVerification />
           },
+
           {
             // 연결 은행 선택
             path: '/accountConnect',
