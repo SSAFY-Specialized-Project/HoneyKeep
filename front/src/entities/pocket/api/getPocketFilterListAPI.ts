@@ -1,5 +1,5 @@
 import { customFetchAPI } from "@/shared/api";
-import { Pocket, PocketFilterResponse } from "@/entities/pocket/model/types";
+import { Pocket } from "@/entities/pocket/model/types";
 
 interface Props {
   categoryId?: number | null;
