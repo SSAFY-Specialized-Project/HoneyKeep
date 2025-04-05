@@ -1,5 +1,5 @@
 interface Props {
-  size: 'big' | 'small';
+  size: 'big' | 'small' | 'xSmall';
   id: string;
   isRotate?: boolean;
 }
@@ -8,11 +8,13 @@ const Icon = ({ size, id, isRotate }: Props) => {
   const SIZE = {
     big: 'w-8 h-8',
     small: 'w-6 h-6',
+    xSmall: 'w-4 h-4',
   };
 
   const SIZE_PROPS = {
     big: 32,
     small: 24,
+    xSmall: 16,
   };
 
   return (

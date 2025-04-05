@@ -8,7 +8,7 @@ const HistoryHeader = () => {
   const content = useHeaderStore((state) => state.content);
 
   return (
-    <header className="flex w-full justify-between p-5">
+    <header className={`flex w-full justify-between p-5`}>
       <button
         type="button"
         className="cursor-pointer"
@@ -18,8 +18,8 @@ const HistoryHeader = () => {
       >
         <Icon id="chevron-left" size="big" />
       </button>
-      {title != null ? <h1>{title}</h1> : null}
-      {content}
+      {title != null ? <h1 className="text-title-sm font-bold text-gray-900">{title}</h1> : null}
+      {content != null ? content : <div></div>}
     </header>
   );
 };

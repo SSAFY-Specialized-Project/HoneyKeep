@@ -1,9 +1,9 @@
 import { customFetchAPI } from "@/shared/api";
-import { PocketFilterResponse } from "@/entities/pocket/model/types";
+import { Pocket, PocketFilterResponse } from "@/entities/pocket/model/types";
 
 interface Props {
   categoryId?: number | null;
-  type?: "GATHERING" | "USING" | "COMPLETED" | null;
+  type?: "USING" | "USED" | "UNUSED" | null;
   isFavorite?: boolean | null;
   startDate?: string | null;
   endDate?: string | null;
@@ -16,7 +16,7 @@ const getPocketFilterListAPI = ({
   startDate,
   endDate,
 }: Props) =>
-  customFetchAPI<PocketFilterResponse, void>({
+  customFetchAPI<Pocket[], void>({
     url: `/pockets/filter?${categoryId ? `categoryId=${categoryId}` : ""}${type ? `&type=${type}` : ""}${isFavorite ? `&isFavorite=${isFavorite}` : ""}${startDate ? `&startDate=${startDate}` : ""}${endDate ? `&endDate=${endDate}` : ""}`,
     method: "GET",
   });

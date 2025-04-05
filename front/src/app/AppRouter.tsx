@@ -3,7 +3,7 @@ import { Login } from '@/pages/user';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
-import { BaseLayout, HistoryLayout } from './layouts';
+import { BaseLayout, HistoryLayout, HistoryNavLayout } from './layouts';
 import {
   PocketCalendar,
   PocketCreate,
@@ -26,16 +26,10 @@ import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 import { Layout } from '@/shared/ui';
 import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
+import { Suspense } from 'react';
+import { MainSkeleton } from '@/pages/skeleton';
 
 const AppRouter = createBrowserRouter([
-  {
-    path: '/landing',
-    element: <Landing />,
-  },
-  {
-    path: '/loading',
-    element: <Loading />,
-  },
   {
     // 상단 바랑 네비게이션 없는 레이아웃
     element: <Layout />,
@@ -44,6 +38,14 @@ const AppRouter = createBrowserRouter([
         // 로그인
         path: '/login',
         element: <Login />,
+      },
+      {
+        path: '/',
+        element: <Landing />,
+      },
+      {
+        path: '/loading',
+        element: <Loading />,
       },
       {
         element: <AuthWrapper />,
@@ -76,14 +78,12 @@ const AppRouter = createBrowserRouter([
         children: [
           {
             // 홈
-            path: '/',
-            element: <Home />,
-            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
-          },
-          {
-            // 홈
             path: '/home',
-            element: <Home />,
+            element: (
+              <Suspense fallback={<MainSkeleton />}>
+                <Home />
+              </Suspense>
+            ),
             errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
@@ -91,11 +91,7 @@ const AppRouter = createBrowserRouter([
             path: '/alarm',
             element: <Alarm />,
           },
-          {
-            // 포켓 목록
-            path: '/pocket/list',
-            element: <PocketList />,
-          },
+
           {
             // 포켓 캘린더
             path: '/pocket/calendar',
@@ -120,6 +116,21 @@ const AppRouter = createBrowserRouter([
             // 고정 지출 상세
             path: '/fixedPay/:id',
             element: <FixedPayDetail />,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    element: <HistoryNavLayout />,
+    children: [
+      {
+        element: <AuthWrapper />,
+        children: [
+          {
+            // 포켓 목록
+            path: '/pocket/list',
+            element: <PocketList />,
           },
         ],
       },
