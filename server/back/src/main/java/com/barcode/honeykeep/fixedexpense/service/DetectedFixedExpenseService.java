@@ -140,6 +140,7 @@ public class DetectedFixedExpenseService {
                 detectedFixedExpense.getAverageAmount(),
                 startDate,                                  // 추정된 시작일
                 detectedFixedExpense.getAverageDay(),     // 평균 지불일
+                detectedFixedExpense.getTransactionCount(),
                 "자동 감지된 고정지출에서 승인됨"
         );
 

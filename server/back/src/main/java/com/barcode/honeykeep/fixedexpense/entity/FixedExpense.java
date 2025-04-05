@@ -41,25 +41,29 @@ public class FixedExpense extends BaseEntity {
 
     private Integer payDay;
 
+    private Integer transactionCount;
+
     private String memo;
 
     @Builder
-    protected FixedExpense(User user, Account account, String name, Money money, LocalDate startDate, Integer payDay, String memo) {
+    protected FixedExpense(User user, Account account, String name, Money money, LocalDate startDate, Integer payDay, Integer transactionCount, String memo) {
         this.user = user;
         this.account = account;
         this.name = name;
         this.money = money;
         this.startDate = startDate;
         this.payDay = payDay;
+        this.transactionCount = transactionCount;
         this.memo = memo;
     }
 
-    public void update(Account account, String name, Money money, LocalDate startDate, Integer payDay, String memo) {
+    public void update(Account account, String name, Money money, LocalDate startDate, Integer payDay, Integer transactionCount, String memo) {
         if (account != null) this.account = account;
         if (name != null) this.name = name;
         if (money != null) this.money = money;
         if (startDate != null) this.startDate = startDate;
         if (payDay != null) this.payDay = payDay;
+        if (transactionCount != null) this.transactionCount = transactionCount;
         if (memo != null) this.memo = memo;
     }
 

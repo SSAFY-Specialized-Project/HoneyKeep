@@ -10,5 +10,6 @@ public record FixedExpenseRequest(
         Money money,
         LocalDate startDate,
         Integer payDay,
+        Integer transactionCount,
         String memo
 ) {}

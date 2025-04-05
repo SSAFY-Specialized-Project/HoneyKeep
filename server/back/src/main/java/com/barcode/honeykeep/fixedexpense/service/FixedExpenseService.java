@@ -63,6 +63,7 @@ public class FixedExpenseService {
                 .money(fixedExpenseRequest.money())
                 .startDate(fixedExpenseRequest.startDate())
                 .payDay(fixedExpenseRequest.payDay())
+                .transactionCount(fixedExpenseRequest.transactionCount())
                 .memo(fixedExpenseRequest.memo())
                 .build();
 
@@ -89,6 +90,7 @@ public class FixedExpenseService {
                 fixedExpenseRequest.money(),
                 fixedExpenseRequest.startDate(),
                 fixedExpenseRequest.payDay(),
+                fixedExpense.getTransactionCount(),
                 fixedExpenseRequest.memo()
         );
 
@@ -123,6 +125,7 @@ public class FixedExpenseService {
                 fixedExpense.getMoney(),
                 fixedExpense.getStartDate(),
                 fixedExpense.getPayDay(),
+                fixedExpense.getTransactionCount(),
                 fixedExpense.getMemo()
         );
     }

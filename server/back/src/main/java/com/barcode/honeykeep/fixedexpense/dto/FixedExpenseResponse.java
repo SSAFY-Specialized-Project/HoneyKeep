@@ -15,5 +15,6 @@ public record FixedExpenseResponse(
         Money money,
         LocalDate startDate,
         Integer payDay,
+        Integer transactionCount,
         String memo
 ) { }
