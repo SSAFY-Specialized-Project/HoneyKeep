@@ -1,6 +1,9 @@
+import React from "react";
+import { formatWithKRW } from '@/shared/lib';
+
 interface Props {
   title: string;
-  paymentDate: string;
+  paymentDate: number;
   amount: number;
   monthCount: number;
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -35,7 +38,7 @@ const FixedExpenseInfo = ({
             매월 {paymentDate}일에 지출
           </span>
           <span className="text-text-xl font-bold">
-            {amount.toLocaleString()} 원
+            {formatWithKRW(amount)}
           </span>
         </div>
 

@@ -21,55 +21,31 @@ const FixedExpenseListContent = () => {
         navigate 
     } = useOutletContext<ContextType>();
 
-    // FixedExpenseResponse를 UI에 맞는 형태로 변환하는 함수
-    const mapToUIFormat = (item: FixedExpenseResponse) => {
-        // payDay에서 일(day)만 추출 (YYYY-MM-DD 형식에서)
-        const paymentDay = item.payDay.split('-')[2];
-        
-        // 얼마나 오래 지속되었는지 계산 (임시로 고정값 사용, 실제로는 계산 필요)
-        const monthsSince = 4; // TODO: startDate와 현재 날짜로 계산하는 로직 추가
-        
-        return {
-            id: item.id,
-            title: item.name,
-            paymentDate: paymentDay,
-            amount: item.money.amount,
-            monthCount: monthsSince,
-            bankName: item.bankName,
-            accountName: item.accountName,
-            memo: item.memo
-        };
-    };
-
     const handleFixedExpenseDetail = () => {
-        console.log("고정지출 상세 보기");
         // TODO: FixedExpenseDetail 페이지로 네비게이트.
     };
 
-    const handleFixedExpenseModify = (event: React.MouseEvent<HTMLButtonElement>, item: any) => {
-        console.log("고정지출 수정");
-        event.stopPropagation();
-
+    const handleFixedExpenseModify = (item: FixedExpenseResponse) => {
         navigate('/fixedExpense/create', {
             state: {
                 mode: 'MODIFY',
                 initialData: {
-                    title: item.title,
-                    amount: item.amount,
-                    paymentDate: parseInt(item.paymentDate),
-                    memo: item.memo || ""
+                    id: item.id,
+                    name: item.name,
+                    amount: item.money.amount,
+                    payDay: item.payDay,
+                    memo: item.memo || "",
+                    accountNumber: item.account.accountNumber,
+                    transactionCount: item.transactionCount
                 }
             }
         });
     };
 
-    const handleFixedExpenseDelete = (event: React.MouseEvent<HTMLButtonElement>, item: any) => {
-        console.log("고정지출 삭제");
-        event.stopPropagation();
-
+    const handleFixedExpenseDelete = (item: FixedExpenseResponse) => {
         setDeleteItemInfo({
             id: item.id,
-            title: item.title
+            title: item.name
         });
         setModalType('fixed');
         setIsModalOpen(true);
@@ -84,17 +60,18 @@ const FixedExpenseListContent = () => {
                 </div>
             ) : (
                 fixedExpenses.map(item => {
-                    const uiItem = mapToUIFormat(item);
+                    const monthCount = item.transactionCount || 1;
+                    
                     return (
                         <FixedExpenseInfo
-                            key={uiItem.id}
-                            title={uiItem.title}
-                            paymentDate={uiItem.paymentDate}
-                            amount={uiItem.amount}
-                            monthCount={uiItem.monthCount}
+                            key={item.id}
+                            title={item.name}
+                            paymentDate={item.payDay}
+                            amount={item.money.amount}
+                            monthCount={monthCount}
                             onClick={handleFixedExpenseDetail}
-                            onModify={(event) => handleFixedExpenseModify(event, uiItem)}
-                            onDelete={(event) => handleFixedExpenseDelete(event, uiItem)}
+                            onModify={() => handleFixedExpenseModify(item)}
+                            onDelete={() => handleFixedExpenseDelete(item)}
                         />
                     );
                 })

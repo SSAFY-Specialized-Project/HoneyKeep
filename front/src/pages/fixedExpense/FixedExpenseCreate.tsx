@@ -1,13 +1,17 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {BorderInput} from "@/shared/ui";
 import {useNavigate, useLocation} from "react-router-dom";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {useMutation, useQueryClient, useSuspenseQuery} from "@tanstack/react-query";
 import {
     createFixedExpenseAPI,
     updateFixedExpenseAPI,
     approveDetectedFixedExpenseAPI
 } from "@/entities/fixedExpense/api";
 import {FixedExpenseRequest} from "@/entities/fixedExpense/model/types";
+import {formatCurrency} from "@/shared/lib";
+import {getAllAccountAPI} from "@/entities/account/api";
+import {Account} from "@/entities/account/model/types";
+import {ResponseDTO} from "@/shared/model/types";
 
 type Mode = "REGISTER" | "MODIFY" | "ADD";
 
@@ -20,6 +24,7 @@ interface FixedExpenseCreateProps {
         payDay: number;
         memo: string;
         accountNumber: string;
+        transactionCount?: number;
     };
 }
 
@@ -36,16 +41,39 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
     const mode = stateMode || propMode || "REGISTER";
     const initialData = stateInitialData || propInitialData;
 
+    // 계좌 목록 가져오기
+    const {data: accounts = [], isLoading: isLoadingAccounts} = useSuspenseQuery<ResponseDTO<Account[]>, Error, Account[]>({
+        queryKey: ['accounts'],
+        queryFn: getAllAccountAPI,
+        select: (response) => response.data,
+        staleTime: 5 * 60 * 1000, // 5분
+    });
+
     const [formData, setFormData] = useState({
         id: initialData?.id,
         name: initialData?.name || "",
         amount: initialData?.amount || 0,
-        payDay: initialData?.payDay,
+        payDay: initialData?.payDay || 1,
+        transactionCount: initialData?.transactionCount || 1,
         memo: initialData?.memo || "",
-        accountNumber: initialData.accountNumber,
+        accountNumber: initialData?.accountNumber || "",
     });
 
-    console.log(formData);
+    // 초기 계좌 설정
+    useEffect(() => {
+        if (accounts.length > 0 && !formData.accountNumber) {
+            const initialAccount = initialData?.accountNumber 
+                ? accounts.find(acc => acc.accountNumber === initialData.accountNumber) 
+                : accounts[0];
+                
+            if (initialAccount) {
+                setFormData(prev => ({
+                    ...prev, 
+                    accountNumber: initialAccount.accountNumber
+                }));
+            }
+        }
+    }, [accounts, initialData, formData.accountNumber]);
 
     // 1. 고정지출 생성 mutation
     const createFixedExpenseMutation = useMutation({
@@ -69,20 +97,9 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
     const approveDetectedFixedExpenseMutation = useMutation({
         mutationFn: (id: number) => approveDetectedFixedExpenseAPI(id),
         onSuccess: () => {
-            // 승인 후 바로 고정지출 생성 API 호출
-            const today = new Date();
-            const fixedExpenseData: FixedExpenseRequest = {
-                accountNumber: formData.accountNumber,
-                name: formData.name,
-                money: {
-                    amount: formData.amount
-                },
-                startDate: today.toISOString().split('T')[0], // 오늘 날짜, YYYY-MM-DD 형식
-                payDay: formData.payDay,
-                memo: formData.memo || undefined
-            };
-
-            createFixedExpenseMutation.mutate(fixedExpenseData);
+            queryClient.invalidateQueries({queryKey: ['fixed-expense-info']});
+            queryClient.invalidateQueries({queryKey: ['detected-fixed-expense-info']});
+            navigate('/fixedExpense/list');
         }
     });
 
@@ -92,14 +109,26 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
         if (name === "amount") {
             // 숫자만 허용
             const numberValue = value.replace(/[^0-9]/g, "");
-            setFormData({...formData, [name]: parseInt(numberValue) || 0});
+            const amount = parseInt(numberValue) || 0;
+            setFormData({...formData, amount});
         } else {
             setFormData({...formData, [name]: value});
         }
     };
 
+    // 계좌 선택 핸들러
+    const handleAccountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedAccountNumber = e.target.value;
+        setFormData({...formData, accountNumber: selectedAccountNumber});
+    };
+
+    // 고정지출 등록 API 호출.
     const handleSubmit = () => {
-        // 폼 데이터를 API 요청 형식으로 변환
+        if (!formData.accountNumber) {
+            alert("계좌를 선택해주세요.");
+            return;
+        }
+
         const today = new Date();
         const fixedExpenseData: FixedExpenseRequest = {
             accountNumber: formData.accountNumber,
@@ -109,6 +138,7 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
             },
             startDate: today.toISOString().split('T')[0], // 오늘 날짜, YYYY-MM-DD 형식
             payDay: formData.payDay,
+            transactionCount: formData.transactionCount,
             memo: formData.memo || undefined
         };
         console.log(fixedExpenseData);
@@ -116,12 +146,11 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
         // 모드에 따라 다른 API 호출
         switch (mode) {
             case "REGISTER":
-                // 발견된 고정지출 등록 - 두 API 순차 호출
+                // 발견된 고정지출 등록 - 승인 API 호출
                 if (formData.id) {
                     approveDetectedFixedExpenseMutation.mutate(formData.id);
                 } else {
-                    // ID가 없으면 바로 생성 API 호출
-                    createFixedExpenseMutation.mutate(fixedExpenseData);
+                    createFixedExpenseMutation.mutate(fixedExpenseData); // 또는 ADD 모드로 처리
                 }
                 break;
 
@@ -158,7 +187,7 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
         }
     };
 
-    const isFormValid = formData.name.trim() !== "" && formData.amount > 0;
+    const isFormValid = formData.name.trim() !== "" && formData.amount > 0 && formData.accountNumber;
     const isLoading =
         createFixedExpenseMutation.isPending ||
         updateFixedExpenseMutation.isPending ||
@@ -186,10 +215,31 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
                         type="text"
                         label="amount"
                         placeholder="금액 입력"
-                        value={formData.amount.toLocaleString()}
+                        value={formatCurrency(formData.amount)}
                         onChange={handleChange}
                         content={<span className="self-center font-medium text-gray-600">원</span>}
                     />
+                </div>
+
+                <div className="mb-6">
+                    <p className="text-sm text-gray-600 mb-1">지출 계좌</p>
+                    <div className="relative">
+                        <select
+                            name="accountNumber"
+                            value={formData.accountNumber}
+                            onChange={handleAccountChange}
+                            className="w-full border-b border-gray-400 py-2.5 pl-2.5 font-medium text-gray-900 focus:outline-none"
+                            disabled={isLoadingAccounts}
+                        >
+                            <option value="" disabled>계좌를 선택해주세요</option>
+                            {accounts.map((account) => (
+                                <option key={account.accountNumber} value={account.accountNumber}>
+                                    {account.bankName} {account.accountName} ({account.accountNumber})
+                                </option>
+                            ))}
+                        </select>
+                        {isLoadingAccounts && <p className="text-gray-400 text-sm">계좌 정보 로딩중...</p>}
+                    </div>
                 </div>
 
                 <div className="mb-6">
@@ -237,14 +287,5 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Fixe
         </div>
     );
 };
-
-// // payDay를 Date 객체로 변환하는 함수 수정
-// const getPayDayDate = (day: number) => {
-//     const date = new Date();
-//     // 일자가 현재 월의 마지막 날짜보다 크면 마지막 날짜로 조정
-//     const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-//     date.setDate(Math.min(day, lastDayOfMonth));
-//     return date;
-// };
 
 export default FixedExpenseCreate;

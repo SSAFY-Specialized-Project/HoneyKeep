@@ -27,10 +27,7 @@ const FixedExpenseListFound = () => {
         navigate 
     } = useOutletContext<ContextType>();
 
-    const handleDetectedFixedExpenseRegister = (event: React.MouseEvent<HTMLButtonElement>, item: DetectedFixedExpenseResponse) => {
-        console.log("발견된 고정지출 등록");
-        event.stopPropagation();
-        
+    const handleDetectedFixedExpenseRegister = (item: DetectedFixedExpenseResponse) => {
         // 문자열에서 숫자만 추출
         const amount = extractNumberFromString(item.averageAmount);
         
@@ -44,15 +41,13 @@ const FixedExpenseListFound = () => {
                     payDay: item.averageDay,
                     memo: "",
                     accountNumber: item.account.accountNumber,
+                    transactionCount: item.transactionCount || 1
                 }
             }
         });
     };
 
-    const handleDetectedFixedExpenseDelete = (event: React.MouseEvent<HTMLButtonElement>, item: DetectedFixedExpenseResponse) => {
-        console.log("발견된 고정지출 삭제");
-        event.stopPropagation();
-
+    const handleDetectedFixedExpenseDelete = (item: DetectedFixedExpenseResponse) => {
         setDeleteItemInfo({
             id: item.id,
             title: item.name
@@ -72,15 +67,18 @@ const FixedExpenseListFound = () => {
                     // 각 항목마다 문자열에서 숫자 추출
                     const amount = extractNumberFromString(item.averageAmount);
                     
+                    // transactionCount가 없거나 0인 경우 기본값 1 설정
+                    const monthCount = item.transactionCount || 1;
+                    
                     return (
                         <FixedExpenseFound
                             key={item.id}
                             title={item.name}
                             paymentDate={item.averageDay}
                             amount={amount}
-                            monthCount={item.transactionCount}
-                            onRegister={(event) => handleDetectedFixedExpenseRegister(event, item)}
-                            onDelete={(event) => handleDetectedFixedExpenseDelete(event, item)}
+                            monthCount={monthCount}
+                            onRegister={() => handleDetectedFixedExpenseRegister(item)}
+                            onDelete={() => handleDetectedFixedExpenseDelete(item)}
                         />
                     );
                 })

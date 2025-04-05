@@ -67,10 +67,8 @@ const FixedExpenseList = () => {
         if (!deleteItemInfo) return;
 
         if (modalType === 'fixed') {
-            console.log(`고정지출 삭제 API 호출: ID ${deleteItemInfo.id}, 제목 ${deleteItemInfo.title}`);
             deleteFixedExpenseMutation.mutate(deleteItemInfo.id);
         } else {
-            console.log(`발견된 고정지출 삭제 API 호출: ID ${deleteItemInfo.id}, 제목 ${deleteItemInfo.title}`);
             deleteDetectedFixedExpenseMutation.mutate(deleteItemInfo.id);
         }
 

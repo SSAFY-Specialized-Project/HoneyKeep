@@ -9,8 +9,9 @@ export interface FixedExpenseResponse {
     money: {
         amount: number;
     };
-    startDate: string; // LocalDate는 JSON으로 'YYYY-MM-DD' 형식으로 변환됨
+    startDate: string;
     payDay: number;
+    transactionCount: number;
     memo: string;
 }
 
@@ -35,5 +36,6 @@ export interface FixedExpenseRequest {
     };
     startDate: string; // ISO 형식의 날짜 문자열 (YYYY-MM-DD)
     payDay: number;
+    transactionCount: number;
     memo?: string;
 }

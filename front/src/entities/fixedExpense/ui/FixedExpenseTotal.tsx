@@ -1,3 +1,5 @@
+import { formatWithKRW } from '@/shared/lib';
+
 interface Props {
   count: number;
   totalAmount: number;
@@ -21,7 +23,7 @@ const FixedExpenseTotal = ({ count, totalAmount }: Props) => {
             총 금액
           </span>
           <span className="text-text-xl text-gray-900 font-medium">
-            {totalAmount.toLocaleString()} 원
+            {formatWithKRW(totalAmount)}
           </span>
         </div>
       </div>

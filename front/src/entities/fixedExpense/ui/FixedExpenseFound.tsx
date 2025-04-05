@@ -1,4 +1,5 @@
 import React from "react";
+import { formatWithKRW } from '@/shared/lib';
 
 interface Props {
   title: string;
@@ -25,7 +26,7 @@ const FixedExpenseFound = ({
             {title}
           </strong>
           <span className="text-text-xl font-bold">
-            {amount.toLocaleString()}
+            {formatWithKRW(amount)}
           </span>
         </div>
 
