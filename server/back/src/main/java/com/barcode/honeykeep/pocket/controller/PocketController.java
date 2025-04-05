@@ -3,6 +3,7 @@ package com.barcode.honeykeep.pocket.controller;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pocket.dto.*;
+import com.barcode.honeykeep.pocket.service.AnalysisService;
 import com.barcode.honeykeep.pocket.service.PocketService;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import java.util.List;
 public class PocketController {
     
     private final PocketService pocketService;
+    private final AnalysisService analysisService; // 분석용 서비스 추가
 
     /**
      * 포켓 만들기
@@ -249,7 +251,7 @@ public class PocketController {
     }
 
     /**
-     * 포켓 결제 완료 처리
+     * 포켓 사용 완료 처리
      * @param pocketId 결제에 사용된 포켓 ID
      * @return 업데이트된 포켓 정보
      */
@@ -264,4 +266,19 @@ public class PocketController {
         return ResponseEntity.ok()
                 .body(ApiResponse.success("포켓 사용완료 처리 성공", response));
     }
+
+    /**
+     * 포켓 분석 정보 조회
+     * @param userId 인증된 사용자 ID
+     * @return
+     */
+    @GetMapping("/analysis")
+    public ResponseEntity<ApiResponse<com.barcode.honeykeep.pocket.dto.SpendingAnalysisResponse>> getSpendingAnalysis(
+            @AuthenticationPrincipal UserId userId) {
+
+        com.barcode.honeykeep.pocket.dto.SpendingAnalysisResponse response = analysisService.getSpendingAnalysis(userId.value());
+
+        return ResponseEntity.ok(ApiResponse.success("소비 분석 조회 성공", response));
+    }
+
 }
