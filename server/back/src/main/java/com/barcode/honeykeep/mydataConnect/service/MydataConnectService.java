@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.mydataConnect.dto.*;
 import com.barcode.honeykeep.user.exception.UserErrorCode;
 import org.springframework.stereotype.Service;
@@ -95,44 +96,30 @@ public class MydataConnectService {
     public BankAuthForMydataResponse requestAccountAuth(Long userId, String accountNo) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
-
-        return bankApiClient.requestAccountAuth(user.getUserKey(), accountNo);
+        try{
+            return bankApiClient.requestAccountAuth(user.getUserKey(), accountNo);
+        }catch(Exception e){
+            throw new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND);
+        }
     }
 
     @Transactional
     public void verifyAccountAuth(Long userId, AccountVerifyForMydataRequest request) {
-        // 인증번호 검증
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
-        Map<String, Object> result = bankApiClient.verifyAccountAuthCode(
-                user.getUserKey(), request.accountNo(), request.authCode());
+        try {
+            Map<String, Object> result = bankApiClient.verifyAccountAuthCode(
+                    user.getUserKey(), request.accountNo(), request.authCode());
 
-        String status = (String) result.get("status");
-        if (!"SUCCESS".equals(status)) {
+            String status = (String) result.get("status");
+            if (!"SUCCESS".equals(status)) {
+                throw new CustomException(MydataErrorCode.ACCOUNT_AUTH_FAILED);
+            }
+        } catch (Exception e) {
             throw new CustomException(MydataErrorCode.ACCOUNT_AUTH_FAILED);
         }
 
-        // 계좌 단건 조회
-        AccountForMydataDto dto = bankApiClient.getAccount(user.getUserKey(), request.accountNo());
-        Bank bankForMydata = bankRepository.findById(dto.bankCode())
-                .orElseThrow(() -> new CustomException(MydataErrorCode.BANK_NOT_FOUND));
-
-        // 연동한 계좌 저장
-        Account accountForMydata = Account.builder()
-                .user(user)
-                .bank(bankForMydata)
-                .accountName(dto.accountName())
-                .accountNumber(dto.accountNo())
-                .accountExpiryDate(LocalDate.parse(dto.accountExpiryDate(),
-                        DateTimeFormatter.ofPattern("yyyyMMdd")))
-                .accountBalance(new Money(new BigDecimal(dto.accountBalance())))
-                .dailyTransferLimit(new Money(new BigDecimal(dto.dailyTransferLimit())))
-                .oneTimeTransferLimit(new Money(new BigDecimal(dto.oneTimeTransferLimit())))
-                .lastTransactionDate(parseNullableDate(dto.lastTransactionDate()))
-                .build();
-
-        accountRepository.save(accountForMydata);
     }
 
 
