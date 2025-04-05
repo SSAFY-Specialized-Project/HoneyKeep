@@ -5,6 +5,7 @@ import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -23,4 +24,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<TransactionSummaryDto> findTransactionSummariesByAccountAndName(Long accountId, String name);
 
     List<Transaction> findByAccount_User_IdAndTypeAndDateAfter(Long userId, TransactionType type, LocalDateTime date);
+
+    // pocketID에 해당하는 포켓과 매핑된 거래내역 금액의 총합 조회
+    @Query("SELECT COALESCE(SUM(t.amount.amount), 0) FROM Transaction t WHERE t.pocket.id = :pocketId")
+    Long sumAmountByPocketId(@Param("pocketId") Long pocketId);
+
 }

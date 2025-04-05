@@ -268,6 +268,20 @@ public class PocketController {
     }
 
     /**
+     * 초과 사용 원인 제출
+     * @param pocketId 포켓 ID (PathVariable)
+     * @param request 사용자 설문 (Reason 텍스트)
+     */
+    @PostMapping("/{pocketId}/overspending-reason")
+    public ResponseEntity<ApiResponse<Void>> submitOverspendingReason(
+            @PathVariable Long pocketId,
+            @RequestBody OverspendingReasonRequest request
+    ) {
+        analysisService.saveOverspendingReason(pocketId, request);
+        return ResponseEntity.ok(ApiResponse.success("초과 지출 원인이 저장되었습니다.", null));
+    }
+
+    /**
      * 포켓 분석 정보 조회
      * @param userId 인증된 사용자 ID
      * @return
