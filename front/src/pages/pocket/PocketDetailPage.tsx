@@ -3,6 +3,7 @@
 // import { Star } from 'lucide-react';
 
 import { getPocketDetailAPI } from '@/entities/pocket/api';
+import { useHeaderStore } from '@/shared/store';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useParams } from 'react-router';
@@ -73,6 +74,21 @@ import { useParams } from 'react-router';
 
 const PocketDetailPage = () => {
   const param = useParams();
+  const setContent = useHeaderStore((state) => state.setContent);
+
+  useEffect(() => {
+    setContent(
+      <button
+        type="button"
+        className="text-text-xl cursor-pointer font-semibold text-gray-600"
+        onClick={() => {
+          console.log('버튼 클릭!');
+        }}
+      >
+        삭제하기
+      </button>,
+    );
+  }, []);
 
   const pocketId = param.id;
 
