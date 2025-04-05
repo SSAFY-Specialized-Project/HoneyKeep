@@ -10,6 +10,7 @@ type ContextType = {
     setModalType: React.Dispatch<React.SetStateAction<'fixed' | 'detected'>>;
     setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     navigate: ReturnType<typeof useNavigate>;
+    isEditMode: boolean;
 };
 
 const FixedExpenseListContent = () => {
@@ -18,7 +19,8 @@ const FixedExpenseListContent = () => {
         setDeleteItemInfo, 
         setModalType, 
         setIsModalOpen,
-        navigate 
+        navigate,
+        isEditMode
     } = useOutletContext<ContextType>();
 
     const handleFixedExpenseDetail = () => {
@@ -72,6 +74,7 @@ const FixedExpenseListContent = () => {
                             onClick={handleFixedExpenseDetail}
                             onModify={() => handleFixedExpenseModify(item)}
                             onDelete={() => handleFixedExpenseDelete(item)}
+                            showButtons={isEditMode}
                         />
                     );
                 })

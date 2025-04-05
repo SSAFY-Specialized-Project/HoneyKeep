@@ -107,31 +107,6 @@ const AppRouter = createBrowserRouter([
             path: '/pocket/calendar',
             element: <PocketCalendar />,
           },
-          {
-            // 고정 지출
-            path: '/fixedExpense',
-            element: <FixedExpenseList />,
-            children: [
-              {
-                path: "list",
-                element: <FixedExpenseListContent />
-              },
-              {
-                path: "found",
-                element: <FixedExpenseListFound />
-              }
-            ]
-          },
-          {
-            // 고정 지출 생성
-            path: '/fixedExpense/create',
-            element: <FixedExpenseCreate />,
-          },
-          {
-            // 고정 지출 상세
-            path: '/fixedExpense/:id',
-            element: <FixedExpenseDetail />,
-          },
         ],
       },
     ],
@@ -213,7 +188,31 @@ const AppRouter = createBrowserRouter([
             path: '/category/create',
             element: <CategoryCreate />,
           },
-
+          // 고정 지출
+          {
+            path: '/fixedExpense',
+            element: <FixedExpenseList />,
+            children: [
+              {
+                path: "list",
+                element: <FixedExpenseListContent />
+              },
+              {
+                path: "found",
+                element: <FixedExpenseListFound />
+              }
+            ]
+          },
+          {
+            // 고정 지출 생성
+            path: '/fixedExpense/create',
+            element: <FixedExpenseCreate />,
+          },
+          {
+            // 고정 지출 상세
+            path: '/fixedExpense/:id',
+            element: <FixedExpenseDetail />,
+          },
           // 챗봇
           {
             path: '/chatbot',
