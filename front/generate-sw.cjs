@@ -9,24 +9,24 @@ const template = fs.readFileSync(templatePath, 'utf-8');
 
 // 환경 변수로 템플릿 채우기
 let swContent = template;
-swContent = swContent.replace('__FIREBASE_API_KEY__', import.meta.env.VITE_FIREBASE_API_KEY || '');
+swContent = swContent.replace('__FIREBASE_API_KEY__', process.env.VITE_FIREBASE_API_KEY || '');
 swContent = swContent.replace(
   '__FIREBASE_AUTH_DOMAIN__',
-  import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  process.env.VITE_FIREBASE_AUTH_DOMAIN || '',
 );
 swContent = swContent.replace(
   '__FIREBASE_PROJECT_ID__',
-  import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  process.env.VITE_FIREBASE_PROJECT_ID || '',
 );
 swContent = swContent.replace(
   '__FIREBASE_STORAGE_BUCKET__',
-  import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  process.env.VITE_FIREBASE_STORAGE_BUCKET || '',
 );
 swContent = swContent.replace(
   '__FIREBASE_MESSAGING_SENDER_ID__',
-  import.meta.env.VITE_FIREBASE_SENDER_ID || '',
+  process.env.VITE_FIREBASE_SENDER_ID || '',
 );
-swContent = swContent.replace('__FIREBASE_APP_ID__', import.meta.env.VITE_FIREBASE_APP_ID || '');
+swContent = swContent.replace('__FIREBASE_APP_ID__', process.env.VITE_FIREBASE_APP_ID || '');
 
 // public 폴더 확인 및 생성
 const publicDir = path.resolve(__dirname, 'public');

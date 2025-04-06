@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite && node generate-sw.js",
-    "build": "vite build && node generate-sw.js",
+    "dev": "vite && node generate-sw.cjs",
+    "build": "vite build && node generate-sw.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-sw": "node generate-sw.js"
+    "generate-sw": "node generate-sw.cjs"
   },
   "dependencies": {
     "@lottiefiles/react-lottie-player": "^3.6.0",
@@ -36,6 +36,7 @@
     "@types/react-dom": "^19.0.4",
     "@types/styled-components": "^5.1.34",
     "@vitejs/plugin-react": "^4.3.4",
+    "dotenv": "^16.4.7",
     "eslint": "^9.21.0",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-react-hooks": "^5.1.0",
