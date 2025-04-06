@@ -148,7 +148,7 @@ export interface PocketUpdateResponse {
 
 // 포켓 더 모으기 요청
 export interface PocketGatherRequest {
-  savedAmount: Amount;
+  savedAmount: {amount : number};
 }
 
 // 포켓 더 모으기 응답

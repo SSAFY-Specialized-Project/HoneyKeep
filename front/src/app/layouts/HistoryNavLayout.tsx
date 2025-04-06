@@ -3,8 +3,9 @@ import { Layout } from '@/shared/ui';
 import { HistoryHeader } from '@/widgets/header/ui';
 import { PocketGatheringModal, PocketUseModal } from '@/widgets/modal/ui';
 import BasicModal from '@/widgets/modal/ui/BasicModal';
+import { GlobalNavigation } from '@/widgets/navigation/ui';
 
-const HistoryLayout = () => {
+const HistoryNavLayout = () => {
   const { isOpen, modalProps } = useBasicModalStore();
   const { isOpen: pocketModalOpen, modalProps: pocketModalProps } = usePocketUseModalStore();
   const { isOpen: gatheringModalOpen, modalProps: gatheringModalProps } = useGatheringModalStore();
@@ -12,6 +13,7 @@ const HistoryLayout = () => {
   return (
     <Layout
       headerSlot={<HistoryHeader />}
+      navbarSlot={<GlobalNavigation />}
       modalSlot={
         <>
           <BasicModal
@@ -37,4 +39,4 @@ const HistoryLayout = () => {
   );
 };
 
-export default HistoryLayout;
+export default HistoryNavLayout;

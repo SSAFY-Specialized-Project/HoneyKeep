@@ -1,5 +1,5 @@
-import {ResponseDTO, ResponseErrorDTO} from '@/shared/api/types';
-import {ValidatePasswordRequest} from './types';
+import {ResponseDTO, ResponseErrorDTO} from '@/shared/model/types';
+import {ValidatePasswordRequest} from '../model/types';
 import {apiURL} from '@/shared/lib';
 
 const validatePasswordAPI = async (

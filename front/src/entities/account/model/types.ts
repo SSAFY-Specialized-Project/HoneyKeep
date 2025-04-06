@@ -8,5 +8,5 @@ export interface Account {
   bankName: Bank;
   totalPocketAmount: number;
   pocketCount: number;
-  spareAssets: number;
+  spareBalance: number;
 }
