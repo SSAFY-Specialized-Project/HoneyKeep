@@ -13,11 +13,11 @@ import {
   PocketList,
 } from '@/pages/pocket';
 import {
-    FixedExpenseCreate,
-    FixedExpenseList,
-    FixedExpenseDetail,
-    FixedExpenseListContent,
-    FixedExpenseListFound
+  FixedExpenseCreate,
+  FixedExpenseList,
+  FixedExpenseDetail,
+  FixedExpenseListContent,
+  FixedExpenseListFound,
 } from '@/pages/fixedExpense';
 import {
   AccountConnect,
@@ -32,6 +32,7 @@ import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 import { Layout } from '@/shared/ui';
 import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
+import { AccountTransactions, AccountPockets } from '@/features/account/ui';
 
 const AppRouter = createBrowserRouter([
   {
@@ -143,8 +144,22 @@ const AppRouter = createBrowserRouter([
           },
           {
             // 내 계좌 상세
-            path: '/accountDetail/:account',
+            path: '/accountDetail/:accountId',
             element: <AccountDetail />,
+            children: [
+              {
+                path: 'detail',
+                element: <AccountTransactions />,
+              },
+              {
+                path: 'transactions',
+                element: <AccountTransactions />,
+              },
+              {
+                path: 'pockets',
+                element: <AccountPockets />,
+              },
+            ],
           },
           {
             // 계좌 이체
@@ -194,14 +209,14 @@ const AppRouter = createBrowserRouter([
             element: <FixedExpenseList />,
             children: [
               {
-                path: "list",
-                element: <FixedExpenseListContent />
+                path: 'list',
+                element: <FixedExpenseListContent />,
               },
               {
-                path: "found",
-                element: <FixedExpenseListFound />
-              }
-            ]
+                path: 'found',
+                element: <FixedExpenseListFound />,
+              },
+            ],
           },
           {
             // 고정 지출 생성
