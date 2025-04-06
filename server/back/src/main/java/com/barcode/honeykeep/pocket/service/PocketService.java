@@ -512,8 +512,11 @@ public class PocketService {
         for (Pocket pocket : pockets) {
             boolean shouldBeActivated = !pocket.getTotalAmount().isGreaterThan(currentBalance);
 
+            // 기존 활성화 상태를 null-safe하게 처리
+            boolean isCurrentlyActivated = Boolean.TRUE.equals(pocket.getIsActivated());
+
             // 현재 상태와 다른 경우에만 업데이트
-            if (pocket.getIsActivated() != shouldBeActivated) {
+            if (isCurrentlyActivated != shouldBeActivated) {
                 log.info("포켓 활성화 상태 변경: ID={}, 이름={}, 이전 상태={}, 변경 후 상태={}",
                         pocket.getId(), pocket.getName(), pocket.getIsActivated(), shouldBeActivated);
                 pocket.updateActivationStatus(shouldBeActivated);
