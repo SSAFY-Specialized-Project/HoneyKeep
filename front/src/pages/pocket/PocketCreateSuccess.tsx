@@ -2,30 +2,21 @@ import { Player } from '@lottiefiles/react-lottie-player';
 import successLottie from '@/assets/success.json';
 import ProductCard from '@/features/pocket/ui/ProductCard';
 import ProgressBar from '@/features/pocket/ui/ProgressBar';
+import { useQueryClient } from '@tanstack/react-query';
+import { PocketCreateResponse } from '@/entities/pocket/model/types';
+import { useNavigate } from 'react-router';
+import { addCommas } from '@/shared/lib';
 
-type Props = {
-  productImage: string;
-  productName: string;
-  categoryName: string;
-  productLink: string;
-  percentage: number;
-  amountSaved: string;
-  goalAmount: string;
-  targetDate: string;
-  linkedAccount: string;
-};
+const PocketCreateSuccess = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const data = queryClient.getQueryData<PocketCreateResponse>(['pocket-create-direct']);
 
-export default function PocketCreateSuccess({
-  productImage,
-  productName,
-  categoryName,
-  productLink,
-  percentage,
-  amountSaved,
-  goalAmount,
-  targetDate,
-  linkedAccount,
-}: Props) {
+  if (!data) {
+    navigate('/pocket/list');
+    return;
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center px-4 py-6">
       {/* 오렌지색 라운드 애니메이션 */}
@@ -36,22 +27,23 @@ export default function PocketCreateSuccess({
 
       {/* 상품 카드 */}
       <ProductCard
-        productImage={productImage}
-        productName={productName}
-        categoryName={categoryName}
-        productLink={productLink}
+        productImage={data.imgUrl}
+        productName={data.name}
+        categoryName={data.categoryName}
       />
 
       {/* 현황 ProgressBar */}
       <div className="mt-6 w-full">
         <ProgressBar
-          percentage={percentage}
-          amountSaved={amountSaved}
-          goalAmount={goalAmount}
-          targetDate={targetDate}
-          linkedAccount={linkedAccount}
+          percentage={Math.round((data.savedAmount / data.totalAmount) * 100)}
+          amountSaved={addCommas(data.savedAmount)}
+          goalAmount={addCommas(data.totalAmount)}
+          targetDate={data.endDate}
+          linkedAccount={data.accountName}
         />
       </div>
     </div>
   );
-}
+};
+
+export default PocketCreateSuccess;

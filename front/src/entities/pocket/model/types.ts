@@ -5,7 +5,8 @@ export interface Pocket {
   accountName: string;
   totalAmount: number;
   savedAmount: number;
-  type: "GATHERING" | "USING" | "COMPLETED";
+  type: "UNUSED" | "USING" | "USED";
+  isActivated: boolean;
   isFavorite: boolean;
   imgUrl: string;
   endDate: string;
@@ -66,6 +67,20 @@ export interface PocketCreateLinkRequest {
 export interface PocketCreateLinkResponse {
   productUuid: string;
 }
+
+export interface PocketCreateWithLinkRequest {
+  endDate: string;
+  account: { id: number};
+  categoryId: number;
+  totalAmount: {amount: number};
+  isFavorite: boolean;
+  crawlingUuid: string;
+}
+
+export interface PocketCreateWithLinkResponse {
+  pocketId: number;
+}
+
 
 // 포켓 생성 요청
 export interface PocketCreateRequest {
@@ -133,7 +148,7 @@ export interface PocketUpdateResponse {
 
 // 포켓 더 모으기 요청
 export interface PocketGatherRequest {
-  savedAmount: Amount;
+  savedAmount: {amount : number};
 }
 
 // 포켓 더 모으기 응답

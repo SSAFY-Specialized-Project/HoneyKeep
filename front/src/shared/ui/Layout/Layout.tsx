@@ -10,7 +10,7 @@ const Layout = ({ headerSlot, navbarSlot, modalSlot }: Props) => {
   return (
     <div className="h-lvh w-lvw">
       <div
-        className="relative mx-auto flex h-full max-w-[600px] min-w-[375px] flex-col"
+        className="relative mx-auto flex h-full max-w-[600px] min-w-[375px] flex-col overflow-hidden"
         id="topLayout"
       >
         {headerSlot}

@@ -48,7 +48,7 @@ const MyAccountInfo = () => {
                 bank={item.bankName}
                 account={item.accountName}
                 currentAmount={item.accountBalance}
-                remainingAmount={1000}
+                remainingAmount={item.spareBalance}
                 onClick={() => {}}
                 onClickSend={() => {}}
               />

@@ -1,35 +1,10 @@
 import TransactionSuccess from '@/pages/pocket/TransactionSuccess';
-import PocketCreateSuccess from '@/pages/pocket/PocketCreateSuccess';
-import PocketDetail from '@/pages/pocket/PocketDetail';
 import PocketSaveSuccess from '@/pages/pocket/PocketSaveSuccess';
 import PaymentComplete from '@/pages/payment/PaymentComplete';
 
 export default function ExampleTransactionSuccessPage() {
   return (
     <div className="h-screen w-screen bg-gray-50">
-      <PocketCreateSuccess
-        productImage="https://nb.scene7.com/is/image/NB/m992gr_nb_02_i?$pdpflexf2$&wid=880&hei=880"
-        productName="New Balance 992"
-        categoryName="쇼핑"
-        productLink="https://store.musinsa.com/app/goods/3774364"
-        percentage={30}
-        amountSaved="110,000원"
-        goalAmount="330,000원"
-        targetDate="2025년 4월 15일"
-        linkedAccount="우리은행 저축예금"
-      />
-      <PocketDetail
-        productImage="https://nb.scene7.com/is/image/NB/m992gr_nb_02_i?$pdpflexf2$&wid=880&hei=880"
-        productName="필리핀 바나나"
-        categoryName="과일"
-        productLink="https://bananas.com"
-        percentage={10}
-        amountSaved="11,600원"
-        goalAmount="116,000원"
-        targetDate="2025년 3월 15일"
-        linkedAccount="우리은행 저축예금"
-      />
-
       <PocketSaveSuccess
         productImage="https://nb.scene7.com/is/image/NB/m992gr_nb_02_i?$pdpflexf2$&wid=880&hei=880"
         productName="필리핀 바나나"
