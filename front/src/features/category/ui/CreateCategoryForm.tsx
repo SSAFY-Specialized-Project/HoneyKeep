@@ -19,6 +19,7 @@ const CreateCategoryForm = () => {
       if (!data) return;
 
       setCategoryId(data.categoryId);
+      console.log(categoryId);
       console.log('카테고리 생성 완료');
       // 생성 완료 후 행동
     },

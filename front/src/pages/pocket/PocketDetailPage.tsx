@@ -1,79 +1,12 @@
-// import ProductCard from '@/features/pocket/ui/ProductCard';
-// import ProgressBar from '@/features/pocket/ui/ProgressBar';
-// import { Star } from 'lucide-react';
-
 import { getPocketDetailAPI } from '@/entities/pocket/api';
-import { useHeaderStore } from '@/shared/store';
+import { ProductCard, ProgressBar } from '@/features/pocket/ui';
+import { addCommas } from '@/shared/lib';
+import { useGatheringModalStore, useHeaderStore } from '@/shared/store';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useParams } from 'react-router';
 
-// type Props = {
-//   productImage: string;
-//   productName: string;
-//   categoryName: string;
-//   productLink: string;
-//   percentage: number;
-//   amountSaved: string;
-//   goalAmount: string;
-//   targetDate: string;
-//   linkedAccount: string;
-// };
-
-// export default function PocketDetail({
-//   productImage,
-//   productName,
-//   categoryName,
-//   productLink,
-//   percentage,
-//   amountSaved,
-//   goalAmount,
-//   targetDate,
-//   linkedAccount,
-// }: Props) {
-//   return (
-//     <div className="mx-auto w-full max-w-sm px-4 py-6">
-//       {/* 상단 제목 + 삭제 */}
-//       <div className="relative mb-4 text-center">
-//         <h2 className="text-lg font-semibold">{productName}</h2>
-//         <button className="absolute top-1/2 right-0 -translate-y-1/2 text-sm text-gray-400">
-//           삭제하기
-//         </button>
-//       </div>
-
-//       {/* 상품 카드 with 별 아이콘 */}
-//       <div className="relative flex justify-center">
-//         {/* 이미지와 아이콘을 기준 잡는 컨테이너 */}
-//         <div className="relative">
-//           <ProductCard
-//             productImage={productImage}
-//             productName={productName}
-//             categoryName={categoryName}
-//             productLink={productLink}
-//           />
-//           {/* 우측 상단 별 아이콘 */}
-//           <div className="absolute top-2 right-2 rounded-full bg-white p-1 shadow">
-//             <Star className="h-4 w-4 fill-yellow-400 stroke-yellow-400" />
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* 현황 ProgressBar */}
-//       <div className="mt-6">
-//         <ProgressBar
-//           percentage={percentage}
-//           amountSaved={amountSaved}
-//           goalAmount={goalAmount}
-//           targetDate={targetDate}
-//           linkedAccount={linkedAccount}
-//         />
-//       </div>
-//     </div>
-//   );
-// }
-
 const PocketDetailPage = () => {
-  const param = useParams();
   const setContent = useHeaderStore((state) => state.setContent);
 
   useEffect(() => {
@@ -90,7 +23,9 @@ const PocketDetailPage = () => {
     );
   }, []);
 
+  const param = useParams();
   const pocketId = param.id;
+  const { openModal } = useGatheringModalStore();
 
   const { data: pocketQuery } = useSuspenseQuery({
     queryKey: ['pocket-detail', pocketId],
@@ -111,7 +46,53 @@ const PocketDetailPage = () => {
     return;
   }
 
-  return <div></div>;
+  const handleGatheringButton = () => {
+    openModal({
+      pocketId: Number(pocketId),
+      totalAmount: pocketQuery.data.totalAmount,
+      gatheredAmount: pocketQuery.data.savedAmount,
+    });
+  };
+
+  return (
+    <div className="flex h-full flex-col gap-10 p-5">
+      <div>
+        <ProductCard
+          productImage={pocketQuery.data.imgUrl}
+          productName={pocketQuery.data.name}
+          categoryName={pocketQuery.data.categoryName}
+          productLink={pocketQuery.data.link}
+        />
+      </div>
+      <div>
+        <ProgressBar
+          percentage={Math.round(
+            (pocketQuery.data.savedAmount / pocketQuery.data.totalAmount) * 100,
+          )}
+          amountSaved={addCommas(pocketQuery.data.savedAmount)}
+          goalAmount={addCommas(pocketQuery.data.totalAmount)}
+          targetDate={pocketQuery.data.endDate}
+          linkedAccount={pocketQuery.data.accountName}
+          canEdit={true}
+        />
+      </div>
+      <div className="mt-auto flex gap-5">
+        <button
+          type="button"
+          onClick={handleGatheringButton}
+          className="text-title-md w-full cursor-pointer rounded-2xl bg-gray-100 py-3 text-center font-bold text-gray-500"
+        >
+          더모으기
+        </button>
+        <button
+          type="button"
+          className="bg-brand-primary-500 text-title-md w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+        >
+          사용하기
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default PocketDetailPage;

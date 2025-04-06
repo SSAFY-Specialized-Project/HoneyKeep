@@ -8,7 +8,7 @@ const PocketChoiceTab = () => {
         className={({ isActive }) =>
           `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
-              ? 'border-[var(--color-brand-primary-600)] font-bold text-[var(--color-brand-primary-600)]'
+              ? 'border-[var(--color-brand-primary-500)] font-bold text-[var(--color-brand-primary-500)]'
               : 'border-transparent text-gray-600'
           }`
         }
@@ -20,7 +20,7 @@ const PocketChoiceTab = () => {
         className={({ isActive }) =>
           `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
-              ? 'border-[var(--color-brand-primary-600)] font-bold text-[var(--color-brand-primary-600)]'
+              ? 'border-[var(--color-brand-primary-500)] font-bold text-[var(--color-brand-primary-500)]'
               : 'border-transparent text-gray-600'
           }`
         }
@@ -28,14 +28,15 @@ const PocketChoiceTab = () => {
         즐겨찾는 포켓
       </NavLink>
       <NavLink
-        to="/pocket/create/direct"
+        to="/pocket/create/"
         className={({ isActive }) =>
           `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
-              ? 'border-[var(--color-brand-primary-600)] font-bold text-[var(--color-brand-primary-600)]'
+              ? 'border-[var(--color-brand-primary-500)] font-bold text-[var(--color-brand-primary-500)]'
               : 'border-transparent text-gray-600'
           }`
         }
+        end
       >
         직접 추가하기
       </NavLink>

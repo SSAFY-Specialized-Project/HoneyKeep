@@ -80,3 +80,5 @@ export const KkulkipRegisterWidget = () => {
         </div>
     );
 };
+
+export default KkulkipRegisterWidget;

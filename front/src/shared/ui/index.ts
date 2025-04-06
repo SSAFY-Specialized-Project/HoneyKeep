@@ -12,3 +12,4 @@ export { default as Icon } from "./Icon/Icon";
 export { default as BorderInput } from "./BorderInput/BorderInput";
 export { default as ToggleButton } from "./ToggleButton/ToggleButton";
 export { default as ModalOptionButton} from "./ModalOptionButton/ModalOptionButton";
+export { default as FilterDropdown } from  "./FilterDropdown/FilterDropdown";
