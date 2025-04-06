@@ -71,6 +71,7 @@ public class CertController {
      * @param request 공개키가 포함된 요청
      * @return 생성된 인증서 정보
      */
+    @Deprecated
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterCertificateResponse>> registerCertificate(
             @AuthenticationPrincipal UserId userId,
