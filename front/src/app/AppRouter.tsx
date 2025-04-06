@@ -13,11 +13,11 @@ import {
   PocketList,
 } from '@/pages/pocket';
 import {
-    FixedExpenseCreate,
-    FixedExpenseList,
-    FixedExpenseDetail,
-    FixedExpenseListContent,
-    FixedExpenseListFound
+  FixedExpenseCreate,
+  FixedExpenseList,
+  FixedExpenseDetail,
+  FixedExpenseListContent,
+  FixedExpenseListFound,
 } from '@/pages/fixedExpense';
 import {
   AccountConnect,
@@ -180,6 +180,7 @@ const AppRouter = createBrowserRouter([
               {
                 path: 'direct',
                 element: <PocketCreateDirect />,
+                index: true,
               },
             ],
           },
@@ -205,14 +206,14 @@ const AppRouter = createBrowserRouter([
             element: <FixedExpenseList />,
             children: [
               {
-                path: "list",
-                element: <FixedExpenseListContent />
+                path: 'list',
+                element: <FixedExpenseListContent />,
               },
               {
-                path: "found",
-                element: <FixedExpenseListFound />
-              }
-            ]
+                path: 'found',
+                element: <FixedExpenseListFound />,
+              },
+            ],
           },
           {
             // 고정 지출 생성

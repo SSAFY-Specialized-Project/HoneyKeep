@@ -201,3 +201,56 @@ export async function hasStoredPrivateKey(keyUsage: string = "sign"): Promise<bo
 
     return await loadPrivateKey(keyUsage);
 }
+
+/**
+ * 개인키 삭제 함수
+ */
+export async function clearPrivateKey(keyUsage?: string): Promise<void> {
+    // 메모리에서 개인키 참조 제거
+    currentPrivateKey = null;
+
+    // IndexedDB에서 키 삭제
+    return new Promise((resolve) => {
+        const request = indexedDB.open("SecureKeyDB", 1);
+
+        request.onerror = () => {
+            resolve(); // 실패해도 일단 진행
+        };
+
+        request.onsuccess = (event) => {
+            try {
+                const db = (event.target as IDBOpenDBRequest).result;
+
+                if (!db.objectStoreNames.contains("keys")) {
+                    resolve();
+                    return;
+                }
+
+                const transaction = db.transaction(["keys"], "readwrite");
+                const store = transaction.objectStore("keys");
+
+                if (keyUsage) {
+                    // 특정 용도의 키만 삭제
+                    store.delete(`userPrivateKey_${keyUsage}`);
+                } else {
+                    // 모든 키 삭제를 위해 키 조회
+                    const getAllRequest = store.getAll();
+                    getAllRequest.onsuccess = () => {
+                        const keys = getAllRequest.result;
+                        keys.forEach(key => {
+                            store.delete(key.id);
+                        });
+                    };
+                }
+
+                transaction.oncomplete = () => {
+                    db.close();
+                    resolve();
+                };
+            } catch (error) {
+                console.error("키 삭제 오류:", error);
+                resolve();
+            }
+        };
+    });
+}
