@@ -1,26 +1,51 @@
-import { usePocketUseModalStore } from '@/shared/store';
+import { deletePocketAPI } from '@/entities/pocket/api';
+import { useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
 import { Icon, ModalOptionButton } from '@/shared/ui';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Props {
   isOpen: boolean;
   pocketId: number;
+  totalAmount: number;
+  gatheredAmount: number;
 }
 
-const PocketUseModal = ({ isOpen, pocketId }: Props) => {
-  const { closeModal } = usePocketUseModalStore();
+const PocketUseModal = ({ isOpen, pocketId, totalAmount, gatheredAmount }: Props) => {
+  const { closeModal: closeUseModal } = usePocketUseModalStore();
+  const { openModal: openGatheringModal } = useGatheringModalStore();
+  const queryClient = useQueryClient();
 
   const handleClose = () => {
-    closeModal();
+    closeUseModal();
   };
 
   // 사용 완료
   const handleUseComplete = () => {};
 
   // 더 모으기
-  const handleChargeMore = () => {};
+  const handleChargeMore = () => {
+    openGatheringModal({
+      pocketId,
+      totalAmount,
+      gatheredAmount,
+    });
+    closeUseModal();
+  };
 
   // 삭제하기
-  const handleDelete = () => {};
+  const deletePocketMutation = useMutation({
+    mutationFn: (pocketId: number) => deletePocketAPI(pocketId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
+      closeUseModal();
+      console.log('포켓 삭제 성공');
+    },
+    onError: () => {},
+  });
+
+  const handleDelete = () => {
+    deletePocketMutation.mutate(pocketId);
+  };
 
   // 최근 거래 내역에서 사용하기
   const handleUseAtHistory = () => {};

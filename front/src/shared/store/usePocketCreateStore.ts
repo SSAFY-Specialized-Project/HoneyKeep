@@ -1,36 +1,48 @@
-import { create } from "zustand";
+import { create } from 'zustand'
 
-interface Props {
-  name: string | null;
-  totalAmount: number | null;
-  isWrote: boolean;
-  setName: (pocketName: string) => void;
-  setTotalAmount: (amount: number) => void;
-  cleanPocketStore: () => void;
+interface BudgetState {
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  accountId: number | null;
+  categoryId: number | null;
+  totalAmount: number;
+  savedAmount: number;
 }
 
-const usePocketCreateStore = create<Props>(((set,get) => ({
-  name: null,
-  totalAmount: null,
-  isWrote: false,
-  setName: (pocketName) => {
-    if(get().name != null && get().totalAmount != null ){
-      set({isWrote:true});
-    }else{
-      set({isWrote:false});
-    }
-    set({name: pocketName});
-  },
-  setTotalAmount: (amount) => {
-    set({totalAmount: amount})
-  },
-  cleanPocketStore: () => {
-    set({
-      name: null,
-      totalAmount: null,
-      isWrote: false,
-    })
-  }
-})));
+interface BudgetActions {
+  setBudgetData: (data: BudgetState) => void;
+  setName: (name: string) => void;
+  setStartDate: (startDate: string) => void;
+  setEndDate: (endDate: string) => void;
+  setAccountId: (accountId: number) => void;
+  setCategoryId: (categoryId: number) => void;
+  setTotalAmount: (amount: number) => void;
+  setSavedAmount: (amount: number) => void;
+  resetBudget: () => void;
+}
 
-export default usePocketCreateStore;
+const initialState: BudgetState = {
+  name: "",
+  startDate: null,
+  endDate: null,
+  accountId: null,
+  categoryId: null,
+  totalAmount: 0,
+  savedAmount: 0
+}
+
+const usePocketCreateStore = create<BudgetState & BudgetActions>((set) => ({
+  ...initialState,
+  setBudgetData: (data) => set(data),
+  setName: (name) => set({ name }),
+  setStartDate: (startDate) => set({ startDate }),
+  setEndDate: (endDate) => set({ endDate }),
+  setAccountId: (accountId) => set({ accountId }),
+  setCategoryId: (categoryId) => set({ categoryId }),
+  setTotalAmount: (totalAmount) => set({ totalAmount }),
+  setSavedAmount: (savedAmount) => set({ savedAmount }),
+  resetBudget: () => set(initialState)
+}))
+
+export default usePocketCreateStore

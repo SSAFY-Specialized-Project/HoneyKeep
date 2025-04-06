@@ -1,7 +1,9 @@
 import { AccountInputDropdown } from '@/entities/account/ui';
 import CategoryInputDropDown from '@/entities/category/ui/CategoryInputDropDown';
+import { CreatePocketAPI } from '@/entities/pocket/api';
 import createPocketWithLinkAPI from '@/entities/pocket/api/createPocketWithLinkAPI';
 import { convertCurrentTime } from '@/shared/lib';
+import usePocketCreateStore from '@/shared/store/usePocketCreateStore';
 import { BorderInput, Icon, ToggleButton } from '@/shared/ui';
 import { SearchLoadingModal } from '@/widgets/modal/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,16 +13,24 @@ import { useNavigate } from 'react-router';
 type YYYYMMDD = `${number}-${number}-${number}`;
 
 const PocketCreateStep = () => {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const crawlingUuid = queryClient.getQueryData<string>(['product-uuid']);
-
-  if (!crawlingUuid) {
-    console.log('크롤링 uuid 없습니다~');
-    navigate('/home');
-  }
+  const {
+    name,
+    startDate: start,
+    endDate: end,
+    accountId: account,
+    categoryId: category,
+    totalAmount,
+    savedAmount,
+    setStartDate: setStart,
+    setEndDate: setEnd,
+    setAccountId: setAccount,
+    setCategoryId: setCategory,
+    setSavedAmount,
+  } = usePocketCreateStore();
 
   const [isActive, setActive] = useState<boolean>(false);
+  const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [chargeAmount, setChargeAmount] = useState<string>('');
 
@@ -33,8 +43,35 @@ const PocketCreateStep = () => {
   const [isLoading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    setStart(startDate);
+  }, [startDate]);
+
+  useEffect(() => {
+    setEnd(endDate);
+  }, [endDate]);
+
+  useEffect(() => {
+    setSavedAmount(Number(chargeAmount));
+  }, [chargeAmount]);
+
+  useEffect(() => {
+    if (accountId == null) return;
+
+    setAccount(accountId);
+  }, [accountId]);
+
+  useEffect(() => {
+    if (categoryId == null) return;
+    setCategory(Number(categoryId));
+  }, [categoryId]);
+
+  useEffect(() => {
     setDisabled(accountId == null || categoryId == null || Number(chargeAmount) <= 0);
   }, [accountId, categoryId, chargeAmount]);
+
+  const handleStartDate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.currentTarget.value);
+  };
 
   const handleEndDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEndDate(e.currentTarget.value);
@@ -51,34 +88,39 @@ const PocketCreateStep = () => {
     }
   };
 
-  const createPocketMutate = useMutation({
-    mutationFn: createPocketWithLinkAPI,
+  const createPocketDirectMutate = useMutation({
+    mutationFn: CreatePocketAPI,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
-      setLoading(true);
+      console.log('생성 성공!');
     },
-    onError: () => {},
+    onError: () => {
+      console.log('생성 실패..');
+    },
   });
 
   const handleCreatePocket = () => {
-    const newEndDate = endDate != '' ? convertCurrentTime(endDate as YYYYMMDD) : null;
+    if (category == null || account == null) return;
 
-    if (accountId == null || categoryId == null || !crawlingUuid) return;
+    const newStartDate = start != '' ? convertCurrentTime(start as YYYYMMDD) : null;
+    const newEndDate = end != '' ? convertCurrentTime(end as YYYYMMDD) : null;
 
     const data = {
+      name,
+      startDate: newStartDate,
       endDate: newEndDate,
       account: {
-        id: accountId,
+        id: account,
       },
-      categoryId,
+      categoryId: category,
       totalAmount: {
-        amount: Number(chargeAmount),
+        amount: totalAmount,
       },
-      isFavorite: false,
-      crawlingUuid,
+      savedAmount: {
+        amount: savedAmount,
+      },
     };
 
-    createPocketMutate.mutate(data);
+    createPocketDirectMutate.mutate(data);
   };
 
   return (
@@ -95,6 +137,7 @@ const PocketCreateStep = () => {
         <ToggleButton isActive={isActive} setActive={setActive} />
       </div>
       <div className={`w-full justify-between gap-15 ${isActive ? 'flex' : 'hidden'}`}>
+        <BorderInput type="date" label="startDate" value={startDate} onChange={handleStartDate} />
         <BorderInput type="date" label="endDate" value={endDate} onChange={handleEndDate} />
       </div>
       <AccountInputDropdown
@@ -122,14 +165,14 @@ const PocketCreateStep = () => {
             <button
               type="button"
               onClick={() => {}}
-              className="text-extra text-text-sm h-9 w-25 rounded-sm bg-gray-100 text-center font-semibold"
+              className="text-extra text-text-sm h-9 w-25 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
             >
               나중에 채우기
             </button>
             <button
               type="button"
               onClick={() => {}}
-              className="text-extra text-text-sm h-9 w-25 rounded-sm bg-gray-100 text-center font-semibold"
+              className="text-extra text-text-sm h-9 w-25 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
             >
               전액 채우기
             </button>

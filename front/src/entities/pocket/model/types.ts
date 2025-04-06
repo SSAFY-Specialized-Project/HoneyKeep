@@ -69,7 +69,7 @@ export interface PocketCreateLinkResponse {
 }
 
 export interface PocketCreateWithLinkRequest {
-  endDate: string;
+  endDate: string | null;
   account: { id: number};
   categoryId: number;
   totalAmount: {amount: number};
@@ -85,15 +85,18 @@ export interface PocketCreateWithLinkResponse {
 // 포켓 생성 요청
 export interface PocketCreateRequest {
   name: string;
-  productName: string;
-  link: string | null;
-  endDate: string;
-  account: Account;
+  startDate: string | null;
+  endDate: string | null;
+  account: {
+    id: number;
+  };
   categoryId: number;
-  totalAmount: Amount;
-  savedAmount: Amount;
-  isFavorite: boolean;
-  imgUrl: string | null;
+  totalAmount: {
+    amount: number;
+  },
+  savedAmount: {
+    amount: number;
+  }
 }
 
 // 포켓 생성 응답
