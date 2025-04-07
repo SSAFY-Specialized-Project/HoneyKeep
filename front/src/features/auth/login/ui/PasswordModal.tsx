@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from 'react';
 
 interface Props {
   isOpen: boolean;
@@ -16,121 +16,139 @@ const PasswordModal = ({ isOpen, value, passwordCheck, setValue }: Props) => {
 
   return (
     <div
-      className={`absolute bg-white top-0 left-0 w-full h-full z-50 flex flex-col ${isOpen ? "block" : "hidden"} px-5 pt-15 pb-8 gap-8`}
+      className={`absolute top-0 left-0 z-50 flex h-full w-full flex-col bg-white ${isOpen ? 'block' : 'hidden'} gap-8 px-5 pt-15 pb-8`}
     >
-      <div className="w-full p-2.5 flex flex-col items-center gap-2.5">
+      <div className="flex w-full flex-col items-center gap-2.5 p-2.5">
         <h2 className="text-title-xl font-bold text-gray-900">비밀번호 인증</h2>
         <span
-          className={`text-title-sm font-semibold ${passwordCheck ? "text-gray-600" : "text-warning"}`}
+          className={`text-title-sm font-semibold ${passwordCheck ? 'text-gray-600' : 'text-warning'}`}
         >
-          {passwordCheck
-            ? "비밀번호 6자리를 입력해주세요."
-            : "비밀번호가 틀렸습니다."}
+          {passwordCheck ? '비밀번호 6자리를 입력해주세요.' : '비밀번호가 틀렸습니다.'}
         </span>
       </div>
-      <div className="w-full p-10 flex gap-2 justify-center">
-        <span className="w-1/6 aspect-square flex items-center justify-center rounded-2xl bg-gray-200">
-          {value.slice(0, 1) ? "#" : "●"}
+      <div className="flex w-full justify-center gap-2 p-10">
+        <span className="flex aspect-square w-1/6 items-center justify-center rounded-2xl bg-gray-200">
+          {value.slice(0, 1) ? (
+            <img src="/icon/assets/Vector.svg" width={20} height={20} alt="비밀번호 입력됨" />
+          ) : (
+            '●'
+          )}
         </span>
-        <span className="w-1/6 flex items-center justify-center rounded-2xl bg-gray-200">
-          {value.slice(1, 2) ? "#" : "●"}
+        <span className="flex w-1/6 items-center justify-center rounded-2xl bg-gray-200">
+          {value.slice(1, 2) ? (
+            <img src="/icon/assets/Vector.svg" width={20} height={20} alt="비밀번호 입력됨" />
+          ) : (
+            '●'
+          )}
         </span>
-        <span className="w-1/6 flex items-center justify-center rounded-2xl bg-gray-200">
-          {value.slice(2, 3) ? "#" : "●"}
+        <span className="flex w-1/6 items-center justify-center rounded-2xl bg-gray-200">
+          {value.slice(2, 3) ? (
+            <img src="/icon/assets/Vector.svg" width={20} height={20} alt="비밀번호 입력됨" />
+          ) : (
+            '●'
+          )}
         </span>
-        <span className="w-1/6 flex items-center justify-center rounded-2xl bg-gray-200">
-          {value.slice(3, 4) ? "#" : "●"}
+        <span className="flex w-1/6 items-center justify-center rounded-2xl bg-gray-200">
+          {value.slice(3, 4) ? (
+            <img src="/icon/assets/Vector.svg" width={20} height={20} alt="비밀번호 입력됨" />
+          ) : (
+            '●'
+          )}
         </span>
-        <span className="w-1/6 flex items-center justify-center rounded-2xl bg-gray-200">
-          {value.slice(4, 5) ? "#" : "●"}
+        <span className="flex w-1/6 items-center justify-center rounded-2xl bg-gray-200">
+          {value.slice(4, 5) ? (
+            <img src="/icon/assets/Vector.svg" width={20} height={20} alt="비밀번호 입력됨" />
+          ) : (
+            '●'
+          )}
         </span>
-        <span className="w-1/6 flex items-center justify-center rounded-2xl bg-gray-200">
-          {value.slice(5, 6) ? "#" : "●"}
+        <span className="flex w-1/6 items-center justify-center rounded-2xl bg-gray-200">
+          {value.slice(5, 6) ? (
+            <img src="/icon/assets/Vector.svg" width={20} height={20} alt="비밀번호 입력됨" />
+          ) : (
+            '●'
+          )}
         </span>
       </div>
-      <div className="w-full h-full flex flex-col text-title-xl font-bold text-gray-900">
-        <div className="w-full h-1/3 flex">
+      <div className="text-title-xl flex h-full w-full flex-col font-bold text-gray-900">
+        <div className="flex h-1/3 w-full">
           <button
             onClick={handleAddPassword}
             data-value="1"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             1
           </button>
           <button
             onClick={handleAddPassword}
             data-value="2"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             2
           </button>
           <button
             onClick={handleAddPassword}
             data-value="3"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             3
           </button>
         </div>
-        <div className="w-full h-1/3 flex">
+        <div className="flex h-1/3 w-full">
           <button
             onClick={handleAddPassword}
             data-value="4"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             4
           </button>
           <button
             onClick={handleAddPassword}
             data-value="5"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             5
           </button>
           <button
             onClick={handleAddPassword}
             data-value="6"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             6
           </button>
         </div>
-        <div className="w-full h-1/3 flex">
+        <div className="flex h-1/3 w-full">
           <button
             onClick={handleAddPassword}
             data-value="7"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             7
           </button>
           <button
             onClick={handleAddPassword}
             data-value="8"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             8
           </button>
           <button
             onClick={handleAddPassword}
             data-value="9"
-            className="w-1/3 h-full cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             9
           </button>
         </div>
-        <div className="w-full h-1/3 flex">
-          <button
-            onClick={handleAddPassword}
-            data-value="0"
-            className="w-1/3 h-full ml-auto"
-          >
+        <div className="flex h-1/3 w-full">
+          <button onClick={handleAddPassword} data-value="0" className="ml-auto h-full w-1/3">
             0
           </button>
           <button
             onClick={() => {
               setValue(value.slice(0, -1));
             }}
-            className="w-1/3 h-full  cursor-pointer"
+            className="h-full w-1/3 cursor-pointer"
           >
             x
           </button>
