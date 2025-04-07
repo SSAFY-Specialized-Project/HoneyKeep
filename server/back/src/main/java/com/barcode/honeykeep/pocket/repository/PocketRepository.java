@@ -81,4 +81,10 @@ public interface PocketRepository extends JpaRepository<Pocket, Long> {
      * Crawling UUID가 존재하는 포켓 조회
      */
     Optional<Pocket> findByCrawlingUuid(String crawlingUuid);
+
+    @Query("select p from Pocket p " +
+            "join fetch p.account a " +
+            "join fetch a.user " +
+            "where p.endDate between :start and :end")
+    List<Pocket> findByEndDateBetweenFetch(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PayNotificationDTO {
 
+    private String notificationType;
+
     private TransactionType transactionType;
 
     private BigDecimal amount;

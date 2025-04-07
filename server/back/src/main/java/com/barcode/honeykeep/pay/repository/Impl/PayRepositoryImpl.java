@@ -108,6 +108,7 @@ public class PayRepositoryImpl implements PayRepository {
 
         //알림 요청 로직
         PayNotificationDTO payNotificationDTO =PayNotificationDTO.builder()
+                .notificationType(PushType.PAYMENT.getType())
                 .transactionType(TransactionType.WITHDRAWAL)
                 .amount(payAmount)
                 .withdrawAccountName(account.getAccountName())

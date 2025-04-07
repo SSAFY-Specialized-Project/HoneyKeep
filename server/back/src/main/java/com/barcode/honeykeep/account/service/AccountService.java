@@ -122,6 +122,7 @@ public class AccountService {
 
         //출금 알림 DTO 생성 (출금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO withdrawalNotification = AccountTransferNotificationDTO.builder()
+                .notificationType(PushType.TRANSFER.getType())
                 .transactionType(TransactionType.WITHDRAWAL)
                 .amount(transferAmount) //출금 금액
                 .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
@@ -132,6 +133,7 @@ public class AccountService {
 
         // 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
+                .notificationType(PushType.TRANSFER.getType())
                 .transactionType(TransactionType.DEPOSIT)
                 .amount(transferAmount) //입금 금액
                 .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
