@@ -15,7 +15,7 @@ import {ResponseDTO} from "@/shared/model/types";
 
 type Mode = "REGISTER" | "MODIFY" | "ADD";
 
-interface FixedExpenseCreateProps {
+type Props = {
     mode?: Mode;
     initialData?: {
         id?: number;
@@ -28,7 +28,7 @@ interface FixedExpenseCreateProps {
     };
 }
 
-const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: FixedExpenseCreateProps) => {
+const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Props) => {
     const navigate = useNavigate();
     const location = useLocation();
     const queryClient = useQueryClient();

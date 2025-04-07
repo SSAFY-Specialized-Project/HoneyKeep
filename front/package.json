@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite && node generate-sw.cjs",
+    "predev": "node generate-sw.cjs",
+    "dev": "vite",
     "build": "vite build && node generate-sw.cjs",
     "lint": "eslint .",
     "preview": "vite preview",

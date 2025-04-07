@@ -1,14 +1,7 @@
-import {RegisterCertificateRequest} from "@/entities/certification/api/types.ts";
+import {RegisterCertificateRequest, RegisterCertificateResponse} from "@/entities/certification/model/types.ts";
 import {customFetchAPI} from "@/shared/api";
 
-interface RegisterCertificateResponse{
-    id: number,
-    serialNumber: string,
-    expiryDate: Date,
-    status: string,
-}
-
-export const registerCertificateAPI = (
+const registerCertificateAPI = (
     data: RegisterCertificateRequest
 )=> customFetchAPI<RegisterCertificateResponse, RegisterCertificateRequest>({
     url: "/cert/register",
@@ -16,3 +9,5 @@ export const registerCertificateAPI = (
     credentials: "include",
     data,
 })
+
+export default registerCertificateAPI;

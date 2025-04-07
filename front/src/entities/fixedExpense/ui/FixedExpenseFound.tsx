@@ -1,7 +1,7 @@
 import React from "react";
 import { formatWithKRW } from '@/shared/lib';
 
-interface Props {
+type Props = {
   title: string;
   paymentDate: number;
   amount: number;
