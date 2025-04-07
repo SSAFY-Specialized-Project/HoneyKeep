@@ -1,10 +1,11 @@
 import { customFetchAPI } from '@/shared/api';
-import { AccountListResponse } from '@/entities/account/model/types';
+import { Account } from '../model/types';
 
 const getAllAccountAPI = () =>
-  customFetchAPI<AccountListResponse, void>({
+  customFetchAPI<Account[], void>({
     url: '/accounts/',
     method: 'GET',
+    credentials: 'include',
   });
 
 export default getAllAccountAPI;

@@ -36,7 +36,7 @@ const BasicModal: React.FC<BasicModalProps> = ({
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {icon ? (
-              <div className="bg-brand-primary-300 rounded-lg">
+              <div className=" rounded-lg">
                 <Icon size="small" id={icon} />
               </div>
             ) : null}

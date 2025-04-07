@@ -19,22 +19,20 @@ const MyPocketInfo = () => {
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-title-sm text-gray-900">내 포켓</h3>
-      {pocketData ? (
-        <ul className="flex flex-col gap-3">
-          {pocketData.data.map((item) => {
-            return (
-              <CategoryDropdown
-                key={item.categoryId}
-                id={item.categoryId}
-                imageId={item.icon}
-                name={item.name}
-                pocketCount={item.pockets.length}
-                totalAmount={item.pockets.reduce((acc, pocket) => acc + pocket.totalAmount, 0)}
-                pocketList={item.pockets}
-              />
-            );
-          })}
-        </ul>
+      {pocketData && pocketData.data ? (
+        pocketData.data.map((item) => {
+          return (
+            <CategoryDropdown
+              key={item.categoryId}
+              id={item.categoryId}
+              imageId={item.icon}
+              name={item.name}
+              pocketCount={item.pockets.length}
+              totalAmount={item.pockets.reduce((acc, pocket) => acc + pocket.totalAmount, 0)}
+              pocketList={item.pockets}
+            />
+          );
+        })
       ) : (
         <ContentAddBox
           text="포켓 추가하기"

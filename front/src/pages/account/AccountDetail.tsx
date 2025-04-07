@@ -1,5 +1,83 @@
+import { useEffect } from 'react';
+import { useHeaderStore } from '@/shared/store';
+import { AccountPocketInfo } from '@/entities/account/ui';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { ResponseDTO } from '@/shared/model/types';
+import type { AccountDetail } from '@/entities/account/model/types';
+import getAccountTransactionPocket from '@/entities/account/api/getAccountTransactionPocket';
+import { Outlet, useNavigate, useLocation, useParams, NavLink } from 'react-router-dom';
+import AccountChoiceTab from '@/entities/account/ui/AccountChoiceTab';
+
 const AccountDetail = () => {
-  return <div>계좌 상세입니다.</div>;
+  const { setTitle } = useHeaderStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { accountId } = useParams();
+
+  const { data: accountData } = useSuspenseQuery<ResponseDTO<AccountDetail>>({
+    queryKey: ['account-detail', accountId],
+    queryFn: () => {
+      if (!accountId) throw new Error('계좌 ID가 필요합니다');
+      return getAccountTransactionPocket(Number(accountId));
+    },
+    staleTime: 30 * 1000,
+    gcTime: 60 * 1000,
+  });
+
+  useEffect(() => {
+    console.log('Account Detail Data:', accountData);
+  }, [accountData]);
+
+  useEffect(() => {
+    setTitle('저축예금계좌');
+    return () => {
+      setTitle('');
+    };
+  }, [setTitle]);
+
+  // 현재 경로가 루트일 경우 transactions로 리다이렉트
+  useEffect(() => {
+    if (location.pathname.endsWith('detail')) {
+      navigate('transactions', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  return (
+    <div className="bg-brand-background flex flex-1 flex-col">
+      {/* 계좌 정보 섹션 */}
+      <div className="mb-5">
+        {accountData && (
+          <AccountPocketInfo
+            id={accountData.data.accountNumber}
+            bank={accountData.data.bankName}
+            account={accountData.data.accountName}
+            accountNumber={accountData.data.accountNumber}
+            currentAmount={accountData.data.accountBalance}
+            remainingAmount={accountData.data.accountBalance - accountData.data.totalPocketAmount}
+            pocketCount={accountData.data.pocketCount}
+          />
+        )}
+      </div>
+
+      {/* 탭 */}
+      <AccountChoiceTab />
+
+      {/* 탭 내용 */}
+      <div className="flex flex-1 flex-col px-4 py-4">
+        <Outlet context={{ accountData: accountData?.data }} />
+      </div>
+
+      {/* 송금하기 버튼 */}
+      <NavLink to="/myAgree" className="px-4 pb-4">
+        <button
+          type="button"
+          className="text-text-md bg-brand-primary-500 hover:bg-brand-primary-600 w-full cursor-pointer rounded-lg p-4 font-medium text-white"
+        >
+          송금하기
+        </button>
+      </NavLink>
+    </div>
+  );
 };
 
 export default AccountDetail;

@@ -1,5 +1,5 @@
 import { customFetchAPI } from '@/shared/api';
-import { TransactionListResponse } from '@/entities/transaction/model/type';
+import { TransactionListResponse } from '@/entities/transaction/model/types';
 
 const getTransactionListAPI = (accountId: number) =>
   customFetchAPI<TransactionListResponse, void>({

@@ -41,7 +41,7 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
         </div>
       </button>
       <ul
-        className={`overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? '' : 'h-0'} mt-3`}
+        className={`overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? '' : 'hidden'} mt-3`}
       >
         {pocketList.map((item) => {
           return (
@@ -50,6 +50,7 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
               id={item.id}
               name={item.name}
               imgUrl={item.imgUrl}
+              type={item.type}
               totalAmount={item.totalAmount}
               endDate={item.endDate}
             />

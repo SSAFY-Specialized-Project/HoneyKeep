@@ -5,8 +5,8 @@ export interface Pocket {
   accountName: string;
   totalAmount: number;
   savedAmount: number;
-  type: 'GATHERING' | 'USING' | 'COMPLETED';
-  isActive: boolean;
+  type: 'UNUSED' | 'USING' | 'USED';
+  isActivated: boolean;
   isFavorite: boolean;
   imgUrl: string;
   endDate: string;

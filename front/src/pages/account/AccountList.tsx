@@ -1,55 +1,48 @@
-import { useEffect, useState } from 'react';
 import { AccountPocketInfo } from '@/entities/account/ui';
 import { getAllAccountAPI } from '@/entities/account/api';
-import { Link } from 'react-router';
 import { Account } from '@/entities/account/model/types';
+import { ResponseDTO } from '@/shared/model/types';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { NavLink } from 'react-router-dom';
 
 const AccountList = () => {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const { data } = await getAllAccountAPI();
-        setAccounts(data.accountList || []);
-      } catch (error) {
-        console.error('계좌 목록을 불러오는데 실패했습니다.', error);
-      }
-    };
-
-    fetchAccounts();
-  }, []);
+  const { data: accountData } = useSuspenseQuery<ResponseDTO<Account[]>>({
+    queryKey: ['accounts-info'],
+    queryFn: getAllAccountAPI,
+    staleTime: 30 * 1000,
+    gcTime: 60 * 1000,
+  });
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
-      <main className="flex-1 p-5">
-        <section className="mb-6">
-          <h2 className="text-text-lg mb-4 font-medium text-gray-800">입출금계좌</h2>
-          <ul className="flex flex-col gap-4">
-            {accounts.map((account) => (
-              <AccountPocketInfo
-                key={account.accountId}
-                id={account.accountId.toString()}
-                bank={account.bankName}
-                account={account.accountName}
-                accountNumber={account.accountNumber}
-                currentAmount={account.accountBalance}
-                remainingAmount={account.spareBalance}
-                pocketCount={account.pocketCount}
-              />
+    <div className="bg-brand-background flex flex-1 flex-col gap-5">
+      <div className="flex flex-col gap-5">
+        <h3 className="text-title-sm text-gray-900">입출금계좌</h3>
+        {accountData && (
+          <ul className="flex flex-col gap-3">
+            {accountData.data.map((item) => (
+              <NavLink key={item.accountNumber} to={`/accountDetail/${item.accountId}/detail`}>
+                <AccountPocketInfo
+                  id={String(item.accountId)}
+                  bank={item.bankName}
+                  account={item.accountName}
+                  accountNumber={item.accountNumber}
+                  currentAmount={item.accountBalance}
+                  remainingAmount={item.accountBalance - item.totalPocketAmount}
+                  pocketCount={item.pocketCount}
+                />
+              </NavLink>
             ))}
           </ul>
-        </section>
-      </main>
-
-      <footer className="p-5">
-        <Link
-          to="/account/add"
-          className="bg-brand-primary-500 text-text-lg flex h-14 w-full items-center justify-center rounded-2xl font-semibold text-white"
+        )}
+      </div>
+      <NavLink to="/myAgree" className="px-4 pb-4">
+        <button
+          type="button"
+          className="text-text-md bg-brand-primary-500 hover:bg-brand-primary-600 w-full cursor-pointer rounded-lg p-4 font-medium text-white"
         >
           내 자산 추가하기
-        </Link>
-      </footer>
+        </button>
+      </NavLink>
     </div>
   );
 };
