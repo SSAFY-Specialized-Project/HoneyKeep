@@ -15,7 +15,6 @@ import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.auth.entity.User;
-import com.barcode.honeykeep.user.repository.UserRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseCandidate;
@@ -26,6 +25,7 @@ import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import com.barcode.honeykeep.transaction.type.TransactionType;
 import com.barcode.honeykeep.user.exception.UserErrorCode;
+import com.barcode.honeykeep.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,8 +67,10 @@ public class FixedExpenseDetectionService {
             return List.of();
         }
 
-        // 최근 6개월 기간 설정
-        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
+        // 고정 날짜 기준으로 6개월 기간 설정
+        // TODO: 테스트용 하드코딩 날짜, 실제 배포 시 현재 날짜 기준으로 변경 필요
+        LocalDateTime fixedDate = LocalDateTime.of(2025, 3, 31, 0, 0); // 2025-03-31 기준
+        LocalDateTime sixMonthsAgo = fixedDate.minusMonths(6); // 2024-09-30까지의 6개월 데이터
 
         // ML 적용 가능한 사용자 ID 목록
         List<Long> mlEnabledUserIds = getMlEnabledUserIds();
