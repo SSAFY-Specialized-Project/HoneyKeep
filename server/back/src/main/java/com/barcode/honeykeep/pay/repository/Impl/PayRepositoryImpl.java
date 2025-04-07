@@ -7,6 +7,7 @@ import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.notification.dto.PayNotificationDTO;
 import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.notification.type.PushType;
 import com.barcode.honeykeep.pay.dto.PayDto;
 import com.barcode.honeykeep.pay.dto.PayRequest;
@@ -24,7 +25,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Optional;
 
 @Transactional
@@ -37,6 +40,7 @@ public class PayRepositoryImpl implements PayRepository {
     private final TransactionRepository transactionRepository;
     private final PocketRepository pocketRepository;
     private final NotificationDispatcher notificationDispatcher;
+    private final NotificationService notificationService;
 
     @Override
     public PocketBalanceResult payment(UserId userId, PayDto payDto) {
@@ -115,8 +119,24 @@ public class PayRepositoryImpl implements PayRepository {
                 .productName(payDto.getProductName())
                 .transferDate(LocalDateTime.now())
                 .build();
-        //결제 완료 시 알림
-        notificationDispatcher.send(PushType.PAYMENT, userId.value(), payNotificationDTO);
+        try {
+            // 결제 완료 시 FCM 알림 전송
+            // 이 호출에서 예외가 발생하면 FCM 전송에 실패한 것으로 간주됩니다.
+            notificationDispatcher.send(PushType.PAYMENT, userId.value(), payNotificationDTO);
+            log.info("FCM 알림 전송 성공");
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
+            String formattedAmount = nf.format(payAmount);
+
+            // FCM 전송이 성공했으므로, 알림 내역을 DB에 저장합니다.
+            String title = "Pay 결제";
+            String body = String.format("%s 원 결제가 성공적으로 완료되었습니다.", formattedAmount);
+            notificationService.saveNotification(userId.value(), PushType.PAYMENT, title, body);
+        } catch (Exception e) {
+            log.error("알림 전송 실패. 알림 내역을 저장하지 않습니다. 사용자 ID: {}, 에러: {}", userId.value(), e.getMessage(), e);
+        }
+
+
 
 
         isSuccess = true;

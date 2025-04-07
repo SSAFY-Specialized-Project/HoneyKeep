@@ -25,6 +25,5 @@ public class AccountTransferNotificationDTO {
 
     private String depositAccountName;
 
-    // 이체 일시 (알림에 포함할 시간 정보)
     private LocalDateTime transferDate;
 }
