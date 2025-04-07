@@ -39,7 +39,7 @@ const MyAccountInfo = () => {
           편집
         </button>
       </div>
-      {accountData ? (
+      {accountData != null ? (
         <ul className="flex flex-col gap-3">
           {accountData.data.map((item) => {
             return (

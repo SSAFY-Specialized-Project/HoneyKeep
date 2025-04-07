@@ -24,23 +24,24 @@ const CategoryFilterDropdown = ({ setCategoryId }: Props) => {
     setOpen(false);
   };
 
-  const categoryList = (
-    <ul className="">
-      {categoryData?.data.map((item) => (
-        <li key={item.categoryId}>
-          <button
-            type="button"
-            className="text-text-lg cursor-pointer px-4 py-1.5 font-bold text-gray-600"
-            data-value={item.name}
-            data-id={item.categoryId}
-            onClick={handleCategoryFilter}
-          >
-            {item.name}
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
+  const categoryList =
+    categoryData?.data != null ? (
+      <ul className="">
+        {categoryData?.data.map((item) => (
+          <li key={item.categoryId}>
+            <button
+              type="button"
+              className="text-text-lg cursor-pointer px-4 py-1.5 font-bold text-gray-600"
+              data-value={item.name}
+              data-id={item.categoryId}
+              onClick={handleCategoryFilter}
+            >
+              {item.name}
+            </button>
+          </li>
+        ))}
+      </ul>
+    ) : null;
 
   return (
     <FilterDropdown

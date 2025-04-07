@@ -1,5 +1,6 @@
 import getPocketFilterListAPI from '@/entities/pocket/api/getPocketFilterListAPI';
 import { Pocket } from '@/entities/pocket/model/types';
+import { FavoritePocketItem } from '@/entities/pocket/ui';
 import { ResponseDTO } from '@/shared/model/types';
 import { useQuery } from '@tanstack/react-query';
 
@@ -21,9 +22,19 @@ const PocketFavoriteList = () => {
   return (
     <div className="flex h-full flex-col">
       <ul className="flex flex-col gap-4 overflow-auto">
-        {pocketFavoriteData.data.map((item) => (
-          <li key={item.id}></li>
-        ))}
+        {pocketFavoriteData.data != null ? (
+          pocketFavoriteData.data.map((item) => (
+            <li key={item.id}>
+              <FavoritePocketItem
+                name={item.name}
+                imgUrl={item.imgUrl}
+                totalAmount={item.totalAmount}
+              />
+            </li>
+          ))
+        ) : (
+          <li>즐겨찾기 목록이 없습니다.</li>
+        )}
       </ul>
       <button
         type="button"

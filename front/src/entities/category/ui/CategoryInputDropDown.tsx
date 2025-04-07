@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCategoryListAPI } from '../api';
 import CategoryCheck from './CategoryCheck';
+import { useNavigate } from 'react-router';
 
 interface Props {
   categoryId: number | null;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
+  const navigate = useNavigate();
   const [isOpen, setOpen] = useState<boolean>(false);
   const [categoryName, setCategoryName] = useState<string>('');
   const [categoryIcon, setCategoryIcon] = useState<number | null>(null);
@@ -65,7 +67,9 @@ const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
       </ul>
       <button
         type="button"
-        onClick={() => {}}
+        onClick={() => {
+          navigate('/category/create');
+        }}
         className="flex w-full items-center justify-center rounded-2xl border border-gray-200 py-4"
       >
         <span className="text-text-xl text-gray-900">새 카테고리 추가</span>
