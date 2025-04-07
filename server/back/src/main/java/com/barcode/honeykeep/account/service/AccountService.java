@@ -6,6 +6,7 @@ import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.notification.type.PushType;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.common.vo.Money;
@@ -20,8 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +36,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionService transactionService;
     private final NotificationDispatcher notificationDispatcher;
+    private final NotificationService notificationService;
 
     //이체 하기 전 실행 로직
     //출금 계좌와 입금 계좌를 단순 조회하여 정보를 반환
@@ -129,7 +133,30 @@ public class AccountService {
                 .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
                 .transferDate(now) //현재 시간
                 .build();
-        notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
+
+        try {
+            notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
+            log.info("계좌이체(출금) 알림 전송 성공 - 사용자 ID: {}", withdrawAccount.getUser().getId());
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
+            String formattedAmount = nf.format(transferAmount);
+
+            // 전송 성공 시 알림 DB 저장
+            String title = "계좌이체";
+            // payAmount가 BigDecimal인 경우 적절한 포맷 적용 (여기서는 단순 문자열로 처리)
+            String body = String.format("%s 님, 출금 %s 원이 출금 되었습니다.",
+                    withdrawAccount.getUser().getName(), formattedAmount);
+            notificationService.saveNotification(
+                    withdrawAccount.getUser().getId(),
+                    PushType.TRANSFER,
+                    title,
+                    body
+            );
+        } catch (Exception e) {
+            log.error("계좌이체(출금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
+                    withdrawAccount.getUser().getId(), e.getMessage(), e);
+        }
+
 
         // 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
@@ -140,7 +167,28 @@ public class AccountService {
                 .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
                 .transferDate(now) //현재 시간
                 .build();
-        notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
+        try {
+            // FCM 전송: 입금 알림 전송 시도
+            notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
+            log.info("계좌이체(입금) 알림 전송 성공 - 사용자 ID: {}", depositAccount.getUser().getId());
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
+            String formattedAmount = nf.format(transferAmount);
+
+            // 전송 성공 시 알림 DB 저장
+            String title = "계좌이체";
+            String body = String.format("%s 님, %s 원이 입금 되었습니다.",
+                    depositAccount.getUser().getName(), formattedAmount);
+            notificationService.saveNotification(
+                    depositAccount.getUser().getId(),
+                    PushType.TRANSFER,
+                    title,
+                    body
+            );
+        } catch (Exception e) {
+            log.error("계좌이체(입금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
+                    depositAccount.getUser().getId(), e.getMessage(), e);
+        }
 
 
         return TransferExecutionResponse.builder()

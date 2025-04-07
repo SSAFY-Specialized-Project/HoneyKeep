@@ -3,6 +3,7 @@ package com.barcode.honeykeep.notification.service.scheduler;
 
 import com.barcode.honeykeep.notification.dto.PocketReminderNotificationDTO;
 import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.notification.type.PushType;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
@@ -24,6 +25,7 @@ public class PocketReminderScheduler {
     private final PocketRepository pocketRepository;
     // NotificationDispatcher: 알림 전송을 담당하는 중앙 컴포넌트
     private final NotificationDispatcher notificationDispatcher;
+    private final NotificationService notificationService;
 
 
     @Scheduled(cron = "10 11 11 * * *")
@@ -56,6 +58,11 @@ public class PocketReminderScheduler {
             try {
                 notificationDispatcher.send(PushType.REMINDER, userId, dto);
                 log.info("알림 전송 성공 - 사용자 ID: {}, 포켓 이름: {}", userId, pocketName);
+
+                // 알림 전송 성공 시 알림 내역 DB에 저장
+                String title = "포켓 리마인드";
+                String body = String.format("%s 님, %s 지출까지 하루 남았어요.", userName, pocketName);
+                notificationService.saveNotification(userId, PushType.REMINDER, title, body);
             } catch (Exception e) {
                 log.error("알림 전송 실패 - 사용자 ID: {}, 포켓 이름: {}, 에러: {}",
                         userId, pocketName, e.getMessage(), e);

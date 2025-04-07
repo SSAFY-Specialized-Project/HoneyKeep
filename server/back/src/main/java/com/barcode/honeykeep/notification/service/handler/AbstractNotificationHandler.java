@@ -2,6 +2,7 @@ package com.barcode.honeykeep.notification.service.handler;
 
 import com.barcode.honeykeep.notification.entity.FCMToken;
 import com.barcode.honeykeep.notification.repository.FCMTokenRepository;
+import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.notification.type.PushType;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -43,6 +44,8 @@ public abstract class AbstractNotificationHandler implements NotificationHandler
             try {
                 String response = FirebaseMessaging.getInstance().send(fcmMessage);
                 log.info("FCM 메시지 전송 성공 - 토큰: {} / 메시지 ID: {}", token.getToken(), response);
+
+
             } catch (FirebaseMessagingException e) {
                 log.error("FCM 메시지 전송 실패 - 토큰: {} / 에러: {}", token.getToken(), e.getMessage(), e);
             }
