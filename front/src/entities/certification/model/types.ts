@@ -28,7 +28,7 @@ export interface WebAuthnAuthenticationFinishRequest {
             signature: string;
             userHandle: string | null; // userHandle은 null일 수 있음
         };
-        clientExtensionResults: Record<string, any>;
+        clientExtensionResults: Record<string, AuthenticationExtensionsClientOutputs>;
     };
 }
 
@@ -42,7 +42,7 @@ export interface WebAuthnRegistrationCompleteRequest {
             clientDataJSON: string;
             attestationObject: string;
         };
-        clientExtensionResults: Record<string, any>;
+        clientExtensionResults: Record<string, AuthenticationExtensionsClientOutputs>;
     };
     deviceName?: string;
 }
@@ -55,10 +55,17 @@ export interface WebAuthnRegistrationCompleteResponse {
     };
 }
 
+interface WebAuthnAuthFinishDetails {
+    userId?: number;
+    credentialId?: string;
+    deviceName?: string;
+}
+
 export interface WebAuthnAuthenticationFinishResponse {
     success: boolean;
     message: string | null;
-    data?: any; // 성공 시 응답 데이터 (필요에 따라 구체화)
+    sessionId?: string | null;
+    data?: WebAuthnAuthFinishDetails;
 }
 
 export interface WebAuthnCredential {
