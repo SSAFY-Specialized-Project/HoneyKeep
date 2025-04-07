@@ -3,6 +3,7 @@ package com.barcode.honeykeep.mydataConnect.controller;
 import java.util.List;
 
 import com.barcode.honeykeep.auth.exception.AuthErrorCode;
+import com.barcode.honeykeep.mydataConnect.dto.ConnectedAccountResponse;
 import com.barcode.honeykeep.webauthn.service.WebAuthnTokenService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
@@ -90,17 +91,17 @@ public class MydataConnectController {
      * 마이데이터 연동 요청 API
      */
     @PostMapping("/connect")
-    public ResponseEntity<ApiResponse<String>> connect(
+    public ResponseEntity<ApiResponse<List<ConnectedAccountResponse>>> connect(
             @AuthenticationPrincipal UserId userId,
             @CookieValue(value = "authToken") String authToken,
             @RequestBody BankConnectForMydataRequest request) {
 
         tokenService.validateAuthToken(authToken, userId.value().toString());
 
-        mydataConnectService.connect(userId.value(), request.bankCodes());
+        List<ConnectedAccountResponse> response = mydataConnectService.connect(userId.value(), request.bankCodes());
 
         return ResponseEntity.ok()
-                .body(ApiResponse.success("연동 성공"));
+                .body(ApiResponse.success(response));
     }
 
 }
