@@ -1,4 +1,4 @@
-import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
+import {Alarm, Chatbot, Error, Home, Landing, Loading, SuccessPage} from '@/pages/general';
 import { Login } from '@/pages/user';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
@@ -51,6 +51,13 @@ const AppRouter = createBrowserRouter([
         path: '/loading',
         element: <Loading />,
       },
+
+      // 성공 페이지
+      {
+        path: '/success',
+        element: <SuccessPage />
+      },
+
       {
         element: <AuthWrapper />,
         children: [

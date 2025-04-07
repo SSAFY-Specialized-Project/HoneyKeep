@@ -1,4 +1,5 @@
 import { Certificate } from './types';
+import type { Bank } from './types';
 
 export const CERTIFICATES: Certificate[] = [
   {
@@ -15,15 +16,8 @@ export const CERTIFICATES: Certificate[] = [
   },
 ];
 
-// Bank type 정의 (icon 속성 추가)
-export interface Bank {
-  code: string;
-  name: string;
-  icon?: string; // Optional icon path
-}
-
 export const BANK_LIST: Bank[] = [
-    { code: '001', name: '한국은행', icon: '' }, // 아이콘 없음
+    { code: '001', name: '한국은행', icon: '/icon/bank/korea.svg' },
     { code: '002', name: '산업은행', icon: '/icon/bank/sanup.svg' },
     { code: '003', name: '기업은행', icon: '/icon/bank/ibk.svg' },
     { code: '004', name: '국민은행', icon: '/icon/bank/kb.svg' },
@@ -33,12 +27,12 @@ export const BANK_LIST: Bank[] = [
     { code: '027', name: '시티은행', icon: '/icon/bank/citi.svg' },
     { code: '032', name: '대구은행', icon: '/icon/bank/daegu.svg' },
     { code: '034', name: '광주은행', icon: '/icon/bank/gwanjoo.svg' }, // gwanjoo -> gwangju 가정
-    { code: '035', name: '제주은행', icon: '' }, // 아이콘 없음
-    { code: '037', name: '전북은행', icon: '' }, // 아이콘 없음
+    { code: '035', name: '제주은행', icon: '/icon/bank/jeju.svg' }, // 아이콘 없음
+    { code: '037', name: '전북은행', icon: '/icon/bank/jeonbuk.svg' }, // 아이콘 없음
     { code: '039', name: '경남은행', icon: '/icon/bank/gyeongnam.svg' },
     { code: '045', name: '새마을금고', icon: '/icon/bank/saemaeul.svg' },
     { code: '081', name: 'KEB하나은행', icon: '/icon/bank/hana.svg' }, // 하나은행 아이콘 사용
-    { code: '088', name: '신한은행', icon: '' }, // 아이콘 없음
+    { code: '088', name: '신한은행', icon: '/icon/bank/shinhan.svg' }, // 신한은행 아이콘 사용
     { code: '090', name: '카카오뱅크', icon: '/icon/bank/kakao.svg' },
-    { code: '999', name: '싸피은행', icon: '' }, // 아이콘 없음
+    { code: '999', name: '싸피은행', icon: '/icon/bank/ssafy.svg' }, // 아이콘 없음
 ];

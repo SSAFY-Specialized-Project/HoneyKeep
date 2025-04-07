@@ -151,3 +151,9 @@ export interface PinVerification {
     pin: string;
 }
 
+export interface Bank {
+    code: string;
+    name: string;
+    icon?: string;
+}
+

@@ -1,102 +1,108 @@
-import { useState, useMemo } from 'react';
-import { BANK_LIST } from '@/entities/certification/model/constants';
-import { BankItem } from '@/entities/certification/ui/BankItem';
+import {useState} from 'react';
+import {AssetTabs} from '@/features/certification/ui/AssetTabs';
+import {SelectBanks} from '@/features/certification/ui/SelectBanks';
+import {ConnectAssetsButton} from '@/features/certification/ui/ConnectAssetsButton';
+import {
+    BankConnectForMydataRequest,
+    ConnectedAccountResponse,
+    Tab
+} from '@/features/certification/model/types';
+import {useMutation} from "@tanstack/react-query";
+import {ResponseDTO, ResponseErrorDTO} from "@/shared/model/types.ts";
+import {mydataConnectAPI} from "@/features/certification/api";
+import {useNavigate} from "react-router";
+
+// Define tabs data within the widget or import from a shared location
+const tabsData: Tab[] = [
+    {id: 'bank', name: '은행'},
+    {id: 'card', name: '카드'},
+    {id: 'stock', name: '증권'},
+    {id: 'point', name: '포인트'},
+    {id: 'insurance', name: '보험'},
+    {id: 'savings', name: '저축'},
+];
 
 export const AccountConnectWidget = () => {
     const [selectedBanks, setSelectedBanks] = useState<string[]>([]);
+    const [activeTabId, setActiveTabId] = useState<string>(tabsData[0].id); // Initialize with the first tab
+    const navigate = useNavigate();
 
-    const handleSelectBank = (code: string) => {
-        setSelectedBanks(prevSelected =>
-            prevSelected.includes(code)
-                ? prevSelected.filter(c => c !== code)
-                : [...prevSelected, code]
-        );
-    };
+    const mydataConnectMutation = useMutation<
+        ResponseDTO<ConnectedAccountResponse[]>,
+        ResponseErrorDTO | Error,
+        BankConnectForMydataRequest
+    >({
+        mutationFn: mydataConnectAPI,
+        onSuccess: (response) => {
+            if (response?.status === 200) {
+                console.log("마이데이터 연동 성공", response);
+                navigate('/success', {
+                    state: {
+                        title: "마이데이터 연동 성공",
+                        description: "마이데이터 연동이 성공적으로 완료되었습니다.",
+                        buttonText: "홈으로",
 
-    const allBankCodes = useMemo(() => BANK_LIST.map(bank => bank.code), []);
-    const isAllSelected = useMemo(() => allBankCodes.length > 0 && selectedBanks.length === allBankCodes.length, [selectedBanks, allBankCodes]);
+                    }
+                });
+            }
+        },
+        onError: (error) => {
+            if (error instanceof Error && 'status' in error && typeof error.status === 'number' && 'message' in error) {
+                if (error.status === 400) {
+                    console.error(`API 요청 실패 (상태 코드 400): ${error.message}`, error);
+                } else if (error.status === 401) {
+                    console.error(`인증 실패 (상태 코드 401): ${error.message}`, error);
+                    alert("로그인이 필요합니다. 다시 로그인 해주세요.");
+                } else {
+                    console.error(`API 오류 (상태 코드 ${error.status}): ${error.message}`, error);
+                    alert("요청 처리 중 오류가 발생했습니다.");
+                }
+            } else {
+                console.error('마이데이터 연동 중 알 수 없는 에러 발생:', error);
+                alert("알 수 없는 오류가 발생했습니다. 네트워크 상태를 확인하거나 잠시 후 다시 시도해주세요.");
+            }
+        },
+    });
 
-    const handleSelectAllToggle = () => {
-        if (isAllSelected) {
-            setSelectedBanks([]);
-        } else {
-            setSelectedBanks(allBankCodes);
-        }
+    const handleConnect = () => {
+        // TODO: 은행 연결 API 호출하기 .
+        mydataConnectMutation.mutate({bankCodes: selectedBanks});
     };
 
     const selectedCount = selectedBanks.length;
-
-    const tabs = [
-        { id: 'bank', name: '은행' },
-        { id: 'card', name: '카드' },
-        { id: 'stock', name: '증권' },
-        { id: 'point', name: '포인트' },
-        { id: 'insurance', name: '보험' },
-        { id: 'savings', name: '저축' },
-    ];
-    const [activeTab, setActiveTab] = useState('bank');
 
     return (
         <div className="flex flex-col h-full flex-1 p-6">
             <h1 className="text-2xl font-bold mb-6">어떤 자산을 연결할까요?</h1>
 
-            <div className="flex border-b border-gray-200">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        className={`flex-1 py-3 text-center text-sm font-medium cursor-pointer ${ 
-                            activeTab === tab.id 
-                                ? 'border-b-2 border-yellow-600 text-yellow-600' 
-                                : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        {tab.name}{tab.id === 'bank' && selectedCount > 0 ? ` ${selectedCount}` : ''}
-                    </button>
-                ))}
-            </div>
+            {/*탭 선택*/}
+            <AssetTabs
+                tabs={tabsData}
+                initialTabId={activeTabId}
+                selectedBankCount={activeTabId === 'bank' ? selectedCount : undefined}
+                onTabChange={setActiveTabId}
+            />
 
+            {/* 탭 선택시 내용 */}
             <div className="flex-grow overflow-y-auto p-4">
-                {activeTab === 'bank' && (
-                    <div className="flex flex-col gap-4 overflow-hidden">
-                        <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-base font-semibold">은행</h2>
-                            <button
-                                className="text-xs text-yellow-600 hover:text-yellow-800 font-medium cursor-pointer"
-                                onClick={handleSelectAllToggle}
-                            >
-                                {isAllSelected ? '전체 해제' : '전체 선택'}
-                            </button>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            {BANK_LIST.map(bank => (
-                                <BankItem
-                                    key={bank.code}
-                                    bank={bank}
-                                    isSelected={selectedBanks.includes(bank.code)}
-                                    onSelect={handleSelectBank}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                {activeTabId === 'bank' && (
+                    <SelectBanks
+                        selectedBanks={selectedBanks}
+                        onSelectionChange={setSelectedBanks}
+                    />
                 )}
-                {activeTab !== 'bank' && (
-                    <div className="text-center text-gray-500 mt-10"> 
-                        {tabs.find(t => t.id === activeTab)?.name} 기능은 준비중입니다.
+                {activeTabId !== 'bank' && (
+                    <div className="text-center text-gray-500 mt-10">
+                        {tabsData.find(t => t.id === activeTabId)?.name} 기능은 준비중입니다.
                     </div>
                 )}
             </div>
 
-            <button
-                className={`w-full rounded-xl py-4 font-bold text-lg text-white ${ 
-                    selectedCount > 0
-                        ? "bg-brand-primary-500 text-white hover:bg-brand-primary-400"
-                        : "bg-gray-200 text-gray-500"
-                }`}
-                disabled={selectedCount === 0}
-            >
-                {selectedCount > 0 ? `${selectedCount}개 연결하기` : '연결할 자산을 선택해주세요'}
-            </button>
+            {/* 연결하기 버튼 */}
+            <ConnectAssetsButton
+                selectedCount={selectedCount}
+                onClick={handleConnect}
+            />
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bank } from '../model/constants'; // Import the Bank type
+import { Bank } from '../model/types';
 
 interface BankItemProps {
   bank: Bank;
@@ -7,7 +7,7 @@ interface BankItemProps {
   onSelect: (code: string) => void;
 }
 
-export const BankItem: React.FC<BankItemProps> = ({ bank, isSelected, onSelect }) => {
+export const BankItem = ({ bank, isSelected, onSelect }: BankItemProps) => {
   const handleCheckboxChange = () => {
     onSelect(bank.code);
   };
@@ -15,33 +15,25 @@ export const BankItem: React.FC<BankItemProps> = ({ bank, isSelected, onSelect }
   // 체크박스 클릭 시 이벤트 버블링 중단
   const handleCheckboxClick = (e: React.MouseEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    // onChange가 이미 handleCheckboxChange를 호출하므로 여기서는 호출 X
   };
 
   return (
     <div
-      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors duration-150 ${ // transition 추가
-        isSelected ? 'bg-yellow-100 hover:bg-yellow-200' : 'hover:bg-gray-100' // 선택 시 노란색 배경
-      }`}
-      onClick={handleCheckboxChange} // Allow clicking the whole row
+      className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer ${isSelected ? 'border-yellow-600 bg-yellow-50' : 'border-gray-200 hover:bg-gray-50'}`}
+      onClick={() => onSelect(bank.code)}
     >
       <div className="flex items-center gap-3">
-        {bank.icon ? (
-          <img src={bank.icon} alt={`${bank.name} logo`} className="w-6 h-6" />
-        ) : (
-          <div className="w-6 h-6 bg-gray-200 rounded-full"></div> // Placeholder for missing icons
-        )}
-        <span className="text-sm">{bank.name}</span>
+        {bank.icon && <img src={bank.icon} alt={`${bank.name} logo`} className="w-6 h-6" />}
+        <span className="text-sm font-medium">{bank.name}</span>
       </div>
-      {/* 동그라미 체크박스 스타일 */}
+
       <div className="relative flex items-center justify-center w-5 h-5">
         <input
           type="checkbox"
           checked={isSelected}
-          onChange={handleCheckboxChange} // 상태 변경 시 호출
-          onClick={handleCheckboxClick} // 클릭 시 버블링 방지
-          // 체크박스 색상을 더 연한 파스텔톤으로 변경
-          className="appearance-none w-5 h-5 border border-gray-400 rounded-full checked:bg-yellow-300 checked:border-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-yellow-200 cursor-pointer transition-colors duration-150"
+          onChange={handleCheckboxChange}
+          onClick={handleCheckboxClick}
+          className="appearance-none w-5 h-5 border border-gray-400 rounded-full checked:bg-brand-primary-300 checked:border-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-yellow-200 cursor-pointer transition-colors duration-150"
           aria-label={`${bank.name} 선택`}
         />
         {/* 체크 표시 (선택됐을 때만 보임) */}
@@ -51,6 +43,7 @@ export const BankItem: React.FC<BankItemProps> = ({ bank, isSelected, onSelect }
           </svg>
         )}
       </div>
+
     </div>
   );
 }; 
