@@ -24,6 +24,7 @@ public class PaymentNotificationHandler extends AbstractNotificationHandler {
     protected Map<String, String> buildData(Object messageData) {
         PayNotificationDTO dto = (PayNotificationDTO) messageData;
         Map<String, String> data = new HashMap<>();
+        data.put("notificationType", dto.getNotificationType());
         data.put("transactionType", dto.getTransactionType().name());
         data.put("amount", dto.getAmount().toString());
         data.put("withdrawAccountName", dto.getWithdrawAccountName());
