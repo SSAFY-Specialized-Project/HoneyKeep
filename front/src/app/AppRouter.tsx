@@ -7,6 +7,7 @@ import { BaseLayout, HistoryLayout, HistoryNavLayout } from './layouts';
 import {
   PocketCalendar,
   PocketCreate,
+  PocketCreateDirectStep,
   PocketCreateStep,
   PocketCreateSuccess,
   PocketDetailPage,
@@ -39,13 +40,13 @@ const AppRouter = createBrowserRouter([
     element: <Layout />,
     children: [
       {
+        path: '/',
+        element: <Landing />,
+      },
+      {
         // 로그인
         path: '/login',
         element: <Login />,
-      },
-      {
-        path: '/',
-        element: <Landing />,
       },
       {
         path: '/loading',
@@ -202,7 +203,6 @@ const AppRouter = createBrowserRouter([
                 element: <PocketFavoriteList />,
               },
               {
-                path: 'direct',
                 element: <PocketCreateDirect />,
                 index: true,
               },
@@ -211,6 +211,10 @@ const AppRouter = createBrowserRouter([
           {
             path: '/pocket/create/link/step',
             element: <PocketCreateStep />,
+          },
+          {
+            path: '/pocket/create/direct/step',
+            element: <PocketCreateDirectStep />,
           },
           {
             path: '/pocket/success',

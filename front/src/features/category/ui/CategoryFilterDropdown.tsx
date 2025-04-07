@@ -25,7 +25,7 @@ const CategoryFilterDropdown = ({ setCategoryId }: Props) => {
   };
 
   const categoryList = (
-    <ul>
+    <ul className="">
       {categoryData?.data.map((item) => (
         <li key={item.categoryId}>
           <button

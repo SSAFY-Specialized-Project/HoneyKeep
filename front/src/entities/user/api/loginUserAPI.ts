@@ -8,6 +8,7 @@ const loginUserAPI = (data: LoginUserRequset) =>
   customFetchAPI<LoginUserResponse, LoginUserRequset>({
     url: "/auth/login",
     method: "POST",
+    credentials: "include",
     data,
   });
 

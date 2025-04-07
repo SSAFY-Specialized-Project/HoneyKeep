@@ -1,4 +1,6 @@
-const calculateDDay = (targetDate: Date | string) => {
+const calculateDDay = (targetDate: Date | string | null) => {
+
+  if(targetDate == null) return null;
 
   const target: Date = typeof targetDate === 'string' ? new Date(targetDate) : new Date(targetDate.getTime());
 

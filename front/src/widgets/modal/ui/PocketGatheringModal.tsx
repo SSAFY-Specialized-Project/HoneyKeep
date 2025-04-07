@@ -1,5 +1,4 @@
 import { patchPocketGather } from '@/entities/pocket/api';
-import { PocketGatherResponse } from '@/entities/pocket/model/types';
 import { addCommas } from '@/shared/lib';
 import { useGatheringModalStore } from '@/shared/store';
 import { Icon } from '@/shared/ui';
