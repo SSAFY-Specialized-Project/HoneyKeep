@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    # Auth 설정
+    JWT_SECRET = os.getenv("JWT_SECRET", "")
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "")
+
     # FastAPI 실행 관련 설정
     HOST = os.getenv("DATA_HOST", "127.0.0.1")
     PORT = 8081
