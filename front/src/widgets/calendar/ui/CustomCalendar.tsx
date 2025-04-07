@@ -1,4 +1,5 @@
 import { Pocket } from '@/entities/pocket/model/types';
+import { PocketListItem } from '@/entities/pocket/ui';
 import { Icon } from '@/shared/ui';
 import { useEffect, useState } from 'react';
 
@@ -290,7 +291,7 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
   const calendarDays: CalendarDate[] = generateCalendarDays();
 
   return (
-    <div className="w-full">
+    <div className="flex h-full w-full flex-col">
       {/* 헤더: 연도, 월 & 네비게이션 */}
       <div className="mb-4 flex items-center justify-center gap-4 px-4">
         <button onClick={goToPrevMonth} className="flex cursor-pointer items-center justify-center">
@@ -336,37 +337,30 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
       </div>
 
       {/* 선택된 날짜의 제품 목록 */}
-      {selectedProducts.length > 0 && (
-        <div className="mt-6 border-t pt-4">
-          <h3 className="mb-2 text-lg font-medium">
-            {selectedDate.getFullYear()}년 {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}
-            일 제품 목록
+      {
+        <div className="mt-6 flex flex-1 flex-col px-5 pt-4">
+          <h3 className="mb-6 text-lg font-medium">
+            {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일 포켓 목록
           </h3>
-          <div className="space-y-2">
-            {selectedProducts.map((product) => (
-              <div key={product.id} className="rounded border bg-gray-50 p-3">
-                <div className="font-medium">{product.name}</div>
-                <div className="text-sm text-gray-600">{product.accountName}</div>
-                <div className="mt-2 flex justify-between text-sm">
-                  <span>금액: {product.totalAmount.toLocaleString()}원</span>
-                  <span>저축: {product.savedAmount.toLocaleString()}원</span>
-                  <span
-                    className={`font-medium ${
-                      product.type === 'USED'
-                        ? 'text-green-600'
-                        : product.type === 'USING'
-                          ? 'text-yellow-600'
-                          : 'text-gray-600'
-                    }`}
-                  >
-                    {product.type}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ul className="flex flex-1 flex-col gap-3 overflow-auto">
+            {selectedProducts.length > 0 ? (
+              selectedProducts.map((product) => (
+                <PocketListItem
+                  id={product.id}
+                  name={product.name}
+                  imgUrl={product.imgUrl}
+                  totalAmount={product.totalAmount}
+                  savedAmount={product.savedAmount}
+                  endDate={product.endDate}
+                  type={product.type}
+                />
+              ))
+            ) : (
+              <li>해당하는 포켓이 없습니다.</li>
+            )}
+          </ul>
         </div>
-      )}
+      }
     </div>
   );
 };
