@@ -58,7 +58,7 @@ public class MydataConnectService {
     }
 
     @Transactional
-    public void connect(Long userId, List<String> bankCodes) {
+    public List<ConnectedAccountResponse> connect(Long userId, List<String> bankCodes) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
@@ -90,15 +90,23 @@ public class MydataConnectService {
         accountRepository.saveAll(newAccounts);
 
         // TODO: 연동 결과 뭐주지??
+        return newAccounts.stream()
+                .map(a -> new ConnectedAccountResponse(
+                        a.getId(),
+                        a.getBank().getName(),
+                        a.getAccountName(),
+                        a.getAccountNumber()
+                ))
+                .toList();
     }
 
     @Transactional
     public BankAuthForMydataResponse requestAccountAuth(Long userId, String accountNo) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
-        try{
+        try {
             return bankApiClient.requestAccountAuth(user.getUserKey(), accountNo);
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND);
         }
     }
