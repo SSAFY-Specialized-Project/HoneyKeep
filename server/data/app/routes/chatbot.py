@@ -35,7 +35,7 @@ async def history(user_id: str = Depends(get_user_id)):
             "status": 204,
             "message": "저장된 대화가 없습니다",
             "data": None,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.now().isoformat() + "Z"
         }
         return JSONResponse(status_code=200, content=response_payload)
     
