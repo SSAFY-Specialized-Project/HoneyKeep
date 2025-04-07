@@ -42,13 +42,13 @@ const AppRouter = createBrowserRouter([
     element: <Layout />,
     children: [
       {
+        path: '/',
+        element: <Landing />,
+      },
+      {
         // 로그인
         path: '/login',
         element: <Login />,
-      },
-      {
-        path: '/',
-        element: <Landing />,
       },
       {
         path: '/loading',

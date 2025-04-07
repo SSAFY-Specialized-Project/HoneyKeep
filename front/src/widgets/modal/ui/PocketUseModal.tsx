@@ -1,5 +1,5 @@
 import { deletePocketAPI } from '@/entities/pocket/api';
-import { useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
+import { useBasicModalStore, useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
 import { Icon, ModalOptionButton } from '@/shared/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -13,6 +13,7 @@ interface Props {
 const PocketUseModal = ({ isOpen, pocketId, totalAmount, gatheredAmount }: Props) => {
   const { closeModal: closeUseModal } = usePocketUseModalStore();
   const { openModal: openGatheringModal } = useGatheringModalStore();
+  const { openModal: openBasicModal, closeModal: closeBasicModal } = useBasicModalStore();
   const queryClient = useQueryClient();
 
   const handleClose = () => {
@@ -37,14 +38,23 @@ const PocketUseModal = ({ isOpen, pocketId, totalAmount, gatheredAmount }: Props
     mutationFn: (pocketId: number) => deletePocketAPI(pocketId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
-      closeUseModal();
-      console.log('포켓 삭제 성공');
+      closeBasicModal();
     },
     onError: () => {},
   });
 
   const handleDelete = () => {
-    deletePocketMutation.mutate(pocketId);
+    closeUseModal();
+    openBasicModal({
+      icon: 'exclamation-triangle',
+      title: '포켓 삭제',
+      itemName: '필리핀 바나나',
+      description: '포켓에 모은 116,000원이 초기화해요.',
+      buttonText: '포켓 삭제',
+      onConfirm: () => {
+        deletePocketMutation.mutate(pocketId);
+      },
+    });
   };
 
   // 최근 거래 내역에서 사용하기

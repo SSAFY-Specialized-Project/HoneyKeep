@@ -1,7 +1,6 @@
 import { AccountInputDropdown } from '@/entities/account/ui';
 import CategoryInputDropDown from '@/entities/category/ui/CategoryInputDropDown';
 import { CreatePocketAPI } from '@/entities/pocket/api';
-import createPocketWithLinkAPI from '@/entities/pocket/api/createPocketWithLinkAPI';
 import { convertCurrentTime } from '@/shared/lib';
 import usePocketCreateStore from '@/shared/store/usePocketCreateStore';
 import { BorderInput, Icon, ToggleButton } from '@/shared/ui';
@@ -13,7 +12,6 @@ import { useNavigate } from 'react-router';
 type YYYYMMDD = `${number}-${number}-${number}`;
 
 const PocketCreateStep = () => {
-  const navigate = useNavigate();
   const {
     name,
     startDate: start,
@@ -28,6 +26,9 @@ const PocketCreateStep = () => {
     setCategoryId: setCategory,
     setSavedAmount,
   } = usePocketCreateStore();
+
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [isActive, setActive] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>('');
@@ -90,8 +91,9 @@ const PocketCreateStep = () => {
 
   const createPocketDirectMutate = useMutation({
     mutationFn: CreatePocketAPI,
-    onSuccess: () => {
-      console.log('생성 성공!');
+    onSuccess: (response) => {
+      queryClient.setQueryData(['pocket-create-direct'], response.data);
+      navigate('/pocket/success');
     },
     onError: () => {
       console.log('생성 실패..');

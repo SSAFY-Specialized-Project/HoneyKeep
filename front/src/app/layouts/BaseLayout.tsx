@@ -1,10 +1,11 @@
-import { useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
+import { useBasicModalStore, useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
 import { Layout } from '@/shared/ui';
 import { BasicHeader } from '@/widgets/header/ui';
-import { PocketGatheringModal, PocketUseModal } from '@/widgets/modal/ui';
+import { BasicModal, PocketGatheringModal, PocketUseModal } from '@/widgets/modal/ui';
 import { GlobalNavigation } from '@/widgets/navigation/ui';
 
 const BaseLayout = () => {
+  const { isOpen: basicModalOpen, modalProps: basicModalProps } = useBasicModalStore();
   const { isOpen: pocketModalOpen, modalProps: pocketModalProps } = usePocketUseModalStore();
   const { isOpen: gatheringModalOpen, modalProps: gatheringModalProps } = useGatheringModalStore();
   return (
@@ -13,6 +14,15 @@ const BaseLayout = () => {
       navbarSlot={<GlobalNavigation />}
       modalSlot={
         <>
+          <BasicModal
+            isOpen={basicModalOpen}
+            icon={basicModalProps?.icon}
+            title={basicModalProps?.title ?? ''}
+            itemName={basicModalProps?.itemName ?? ''}
+            description={basicModalProps?.description ?? ''}
+            buttonText={basicModalProps?.buttonText ?? ''}
+            onConfirm={basicModalProps?.onConfirm}
+          ></BasicModal>
           <PocketUseModal
             isOpen={pocketModalOpen}
             pocketId={pocketModalProps?.pocketId ?? 0}
