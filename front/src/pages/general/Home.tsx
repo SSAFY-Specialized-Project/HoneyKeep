@@ -3,7 +3,7 @@ import { MyPocketInfo } from '@/features/pocket/ui';
 import { Link } from 'react-router';
 import UpperBasicModal from '@/widgets/modal/ui/AlarmModal';
 import { useState } from 'react';
-
+import Retrospect from './Retrospect';
 const Home = () => {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -31,6 +31,7 @@ const Home = () => {
       <button onClick={handleOpen} className="bg-brand-primary-500 rounded-lg p-2 text-white">
         모달 열기
       </button>
+      <Retrospect />
     </div>
   );
 };
