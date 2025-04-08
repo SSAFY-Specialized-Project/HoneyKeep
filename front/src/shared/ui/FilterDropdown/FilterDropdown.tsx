@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import Icon from '../Icon/Icon';
 
 interface Props {
@@ -19,7 +18,7 @@ const FilterDropdown = ({ title, value, children, isOpen, setOpen }: Props) => {
         }}
         className="flex cursor-pointer items-center gap-2 px-4 py-1.5"
       >
-        <span className="text-text-lg font-bold text-gray-600">
+        <span className="text-text-md font-bold text-nowrap text-gray-600">
           {value == null ? title : value}
         </span>
         <Icon isRotate={isOpen} size="small" id="chevron-down" />

@@ -27,7 +27,7 @@ import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 import { Layout } from '@/shared/ui';
 import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
 import { Suspense } from 'react';
-import { MainSkeleton } from '@/pages/skeleton';
+import { BankPageSkeleton, MainSkeleton, PocketListSkeleton } from '@/pages/skeleton';
 import {
   Agreement,
   Certificates,
@@ -124,7 +124,11 @@ const AppRouter = createBrowserRouter([
           {
             // 포켓 목록
             path: '/pocket/list',
-            element: <PocketList />,
+            element: (
+              <Suspense fallback={<PocketListSkeleton />}>
+                <PocketList />
+              </Suspense>
+            ),
           },
         ],
       },
@@ -170,14 +174,22 @@ const AppRouter = createBrowserRouter([
           // 연결 은행 선택
           {
             path: '/mydata/accountConnect',
-            element: <AccountConnect />,
+            element: (
+              <Suspense fallback={<PocketListSkeleton />}>
+                <AccountConnect />
+              </Suspense>
+            ),
           },
 
           // 계좌 상세
           {
             // 내 게좌 목록
             path: '/accountList',
-            element: <AccountList />,
+            element: (
+              <Suspense fallback={<BankPageSkeleton />}>
+                <AccountList />
+              </Suspense>
+            ),
           },
           {
             // 내 계좌 상세
@@ -247,7 +259,11 @@ const AppRouter = createBrowserRouter([
           // 고정 지출
           {
             path: '/fixedExpense',
-            element: <FixedExpenseList />,
+            element: (
+              <Suspense fallback={<BankPageSkeleton />}>
+                <FixedExpenseList />
+              </Suspense>
+            ),
             children: [
               {
                 path: 'list',

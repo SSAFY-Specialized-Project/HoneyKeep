@@ -33,14 +33,19 @@ const MyAccountInfo = () => {
         </div>
         <button
           type="button"
-          className="text-text-sm rounded-lg border border-gray-200 px-4 py-2 font-semibold text-gray-600"
+          className="text-text-sm cursor-pointer rounded-lg border border-gray-200 px-4 py-2 font-semibold text-gray-600"
+          onClick={() => {
+            navigate('/accountList');
+          }}
         >
           편집
         </button>
       </div>
       {accountData != null ? (
         <ul className="flex flex-col gap-3">
-          {accountData.data.map((item) => {
+          {accountData.data.map((item, index) => {
+            if (index >= 2) return null;
+
             return (
               <AccountInfo
                 key={item.accountNumber}

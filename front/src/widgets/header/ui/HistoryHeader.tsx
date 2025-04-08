@@ -21,7 +21,7 @@ const HistoryHeader = () => {
       <div className="flex-1 text-center">
         {title != null ? <h1 className="text-text-xl font-semibold">{title}</h1> : null}
       </div>
-      <div className="w-6">{content}</div>
+      <div className="">{content}</div>
     </header>
   );
 };

@@ -39,7 +39,7 @@ const MyPocketInfo = () => {
         <ContentAddBox
           text="포켓 추가하기"
           onClick={() => {
-            navigate('/myAgree');
+            navigate('/pocket/create');
           }}
         />
       )}

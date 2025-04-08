@@ -22,7 +22,7 @@ const DateRangeFilterDropdown = ({
   // 날짜 포맷팅 함수
   const formatDate = (date: Date | null): string => {
     if (!date) return '';
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return `${date.getFullYear() - 2000}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   };
 
   // 드롭다운 토글
@@ -65,13 +65,14 @@ const DateRangeFilterDropdown = ({
       {/* 드롭다운 버튼 */}
       <button
         onClick={toggleDropdown}
-        className="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-4 py-2 shadow-sm hover:bg-gray-50"
+        className="flex w-full items-center justify-between gap-1 gap-2 rounded-full bg-gray-100 px-4 py-1.5"
       >
         <div className="flex items-center">
-          <Icon id="calendar" size="small" />
-          <span className="text-sm">{getDisplayText()}</span>
+          <span className="text-text-md font-bold text-nowrap text-gray-600">
+            {getDisplayText()}
+          </span>
         </div>
-        <Icon id={isOpen ? 'chevron-up' : 'chevron-down'} size="small" />
+        <Icon id={'chevron-down'} size="small" isRotate={isOpen} />
       </button>
 
       {/* 드롭다운 내용 */}

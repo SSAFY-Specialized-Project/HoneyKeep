@@ -63,7 +63,7 @@ const customFetchAPI = async <T, P, H extends Record<string, string> = Record<st
           //
 
           setTimeout(() => {
-            window.location.href = "/landing";
+            window.location.href = "/";
           }, 0);
           
           if(refreshError instanceof Error && "status" in refreshError){
