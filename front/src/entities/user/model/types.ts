@@ -50,3 +50,10 @@ export interface LoginUserResponse {
 export interface ValidatePasswordRequest {
   password: string;
 }
+
+// 로그인 된 유저의 정보
+export interface UserResponse {
+  userId: number;
+  email: string;
+  name: string;
+}

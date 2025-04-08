@@ -1,6 +1,6 @@
 import { formatWithKRW } from '@/shared/lib';
 
-interface Props {
+type Props = {
   count: number;
   totalAmount: number;
 }

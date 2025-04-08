@@ -1,34 +1,8 @@
 import { customFetchAPI } from "@/shared/api";
-
-export interface WebAuthnRegistrationStartRequest {
-  displayName?: string;
-  authenticatorAttachment: string;
-  userVerification: string;
-}
-
-export interface WebAuthnRegistrationStartResponse {
-  success: boolean;
-  message: string | null;
-  data: {
-    attestation: string;
-    challenge: string;
-    authenticatorSelection: {
-      userVerification: string;
-      residentKey: string;
-    };
-    user: {
-      id: string;
-      displayName: string;
-      name: string;
-    };
-    rp: {
-      name: string;
-      id: string;
-    };
-    timeout: number;
-  };
-  sessionId: string;
-}
+import {
+  WebAuthnRegistrationStartRequest,
+  WebAuthnRegistrationStartResponse
+} from "@/entities/certification/model/types.ts";
 
 /**
  * WebAuthn 등록 시작 API
