@@ -9,7 +9,6 @@ interface Props {
     itemName: string;
     description: string;
     buttonText: string;
-    onClose: (e: React.MouseEvent) => void;
     onConfirm: (e: React.MouseEvent) => void;
   } | null;
   openModal: (props:Props['modalProps']) => void;

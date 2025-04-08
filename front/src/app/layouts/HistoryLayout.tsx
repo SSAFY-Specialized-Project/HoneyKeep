@@ -1,12 +1,13 @@
-import { useBasicModalStore, usePocketUseModalStore } from '@/shared/store';
+import { useBasicModalStore, useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
 import { Layout } from '@/shared/ui';
 import { HistoryHeader } from '@/widgets/header/ui';
-import { PocketUseModal } from '@/widgets/modal/ui';
+import { PocketGatheringModal, PocketUseModal } from '@/widgets/modal/ui';
 import BasicModal from '@/widgets/modal/ui/BasicModal';
 
 const HistoryLayout = () => {
   const { isOpen, modalProps } = useBasicModalStore();
   const { isOpen: pocketModalOpen, modalProps: pocketModalProps } = usePocketUseModalStore();
+  const { isOpen: gatheringModalOpen, modalProps: gatheringModalProps } = useGatheringModalStore();
 
   return (
     <Layout
@@ -24,6 +25,12 @@ const HistoryLayout = () => {
             onConfirm={modalProps?.onConfirm}
           />
           <PocketUseModal isOpen={pocketModalOpen} pocketId={pocketModalProps?.pocketId ?? 0} />
+          <PocketGatheringModal
+            isOpen={gatheringModalOpen}
+            totalAmount={gatheringModalProps?.totalAmount ?? 0}
+            gatheredAmount={gatheringModalProps?.gatheredAmount ?? 0}
+            pocketId={gatheringModalProps?.pocketId ?? 0}
+          />
         </>
       }
     />

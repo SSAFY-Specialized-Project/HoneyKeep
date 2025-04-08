@@ -1,30 +1,31 @@
+import { useBasicModalStore } from '@/shared/store';
 import { Icon } from '@/shared/ui';
 import React from 'react';
 
-interface BasicModalProps {
+interface Props {
   isOpen: boolean;
   icon?: string;
   title: string;
   itemName: string;
   description: string;
   buttonText: string;
-  onClose?: (e: React.MouseEvent) => void;
   onConfirm?: (e: React.MouseEvent) => void;
 }
 
-const BasicModal: React.FC<BasicModalProps> = ({
+const BasicModal = ({
   isOpen,
   icon,
   title,
   itemName,
   description,
   buttonText,
-  onClose,
   onConfirm,
-}) => {
+}: Props) => {
+  const { closeModal } = useBasicModalStore();
+
   return (
     <div
-      onClick={onClose}
+      onClick={closeModal}
       className={`absolute z-50 h-full w-full flex-col justify-end bg-gray-900/50 p-5 ${isOpen ? 'flex' : 'hidden'}`}
     >
       <div
@@ -36,13 +37,13 @@ const BasicModal: React.FC<BasicModalProps> = ({
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {icon ? (
-              <div className=" rounded-lg">
+              <div className="rounded-lg">
                 <Icon size="small" id={icon} />
               </div>
             ) : null}
             <h2 className="text-text-xl font-bold text-gray-900">{title}</h2>
           </div>
-          <button className="p-1 text-gray-900 hover:opacity-70" onClick={onClose}>
+          <button className="p-1 text-gray-900 hover:opacity-70" onClick={closeModal}>
             <Icon size="small" id="x-lg" />
           </button>
         </div>

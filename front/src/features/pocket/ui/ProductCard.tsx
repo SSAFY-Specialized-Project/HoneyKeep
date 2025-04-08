@@ -1,3 +1,5 @@
+import { ImageContainer } from '@/shared/ui';
+
 type ProductCardProps = {
   productImage: string | null;
   productName: string;
@@ -11,21 +13,19 @@ export default function ProductCard({
   categoryName,
   productLink,
 }: ProductCardProps) {
+  const shortProductName =
+    productName.length > 15 ? productName.substring(0, 16) + '...' : productName;
+
   return (
-    <div className="flex w-[120px] flex-col items-center">
-      {/* 이미지 + 회색 배경 영역 */}
-      <div className="flex aspect-square w-full items-center justify-center rounded-2xl bg-gray-100">
-        {productImage != null ? (
-          <img src={productImage} alt={productName} className="h-[90px] w-[90px] object-contain" />
-        ) : null}
-      </div>
+    <div className="flex flex-col items-center gap-4">
+      {productImage != null ? <ImageContainer size="big" imgSrc={productImage} /> : null}
 
       {/* 텍스트 영역 */}
-      <div className="mt-2 text-center">
-        <p className="text-sm font-semibold text-black">{productName}</p>
-        <div className="mt-1 flex items-center justify-center space-x-1 text-xs">
-          <span className="text-gray-400">{categoryName}</span>
-          {productLink ?? (
+      <div className="flex flex-col gap-2 text-center">
+        <p className="text-text-lg font-semibold text-gray-900">{shortProductName}</p>
+        <div className="flex items-center justify-center space-x-1 text-xs">
+          <span className="border-r border-r-gray-400 px-1 text-gray-400">{categoryName}</span>
+          {productLink != null ? (
             <a
               href={productLink}
               target="_blank"
@@ -34,7 +34,7 @@ export default function ProductCard({
             >
               상품 페이지로 이동
             </a>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

@@ -79,5 +79,4 @@ const AccountDetail = () => {
     </div>
   );
 };
-
 export default AccountDetail;

@@ -8,11 +8,12 @@ interface Props {
   name: string;
   imgUrl: string;
   totalAmount: number;
+  savedAmount: number;
   endDate: string;
   type: 'UNUSED' | 'USING' | 'USED';
 }
 
-const PocketListItem = ({ id, name, imgUrl, totalAmount, endDate, type }: Props) => {
+const PocketListItem = ({ id, name, imgUrl, totalAmount, savedAmount, endDate, type }: Props) => {
   const navigate = useNavigate();
   const { openModal } = usePocketUseModalStore();
 
@@ -60,7 +61,7 @@ const PocketListItem = ({ id, name, imgUrl, totalAmount, endDate, type }: Props)
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.stopPropagation();
           // 포켓 관리 모달 오픈
-          openModal({ pocketId: id });
+          openModal({ pocketId: id, totalAmount, gatheredAmount: savedAmount });
         }}
       >
         <Icon size="small" id="three-dots-vertical" />

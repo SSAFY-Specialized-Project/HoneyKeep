@@ -1,6 +1,6 @@
 type YYYYMMDD = `${number}-${number}-${number}`;
 
-const convertCurrentTime = (date: YYYYMMDD | null) => {
+const convertCurrentTime = (date: YYYYMMDD | "") => {
 
   if(date == null) return null;
 

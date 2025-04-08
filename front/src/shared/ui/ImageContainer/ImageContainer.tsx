@@ -10,7 +10,7 @@ const ImageContaier = ({ imgSrc, size }: Props) => {
   };
 
   return (
-    <div className={`${IMG_SIZE[size]} overflow-hidden`}>
+    <div className={`${IMG_SIZE[size]} overflow-hidden rounded-2xl`}>
       {imgSrc ? <img src={imgSrc} alt="상품 이미지" className="object-contain" /> : null}
     </div>
   );

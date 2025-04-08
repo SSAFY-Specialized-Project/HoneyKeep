@@ -1,49 +1,79 @@
-import { Icon } from "@/shared/ui";
-import React, { useState } from "react";
+import { patchPocketGather } from '@/entities/pocket/api';
+import { addCommas } from '@/shared/lib';
+import { useGatheringModalStore } from '@/shared/store';
+import { Icon } from '@/shared/ui';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
-interface PocketGatheringModalProps {
+interface Props {
+  isOpen: boolean;
+  pocketId: number;
   totalAmount: number;
   gatheredAmount: number;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (amount: string) => void;
 }
 
-const PocketGatheringModal: React.FC<PocketGatheringModalProps> = ({
-  totalAmount,
-  gatheredAmount,
-  isOpen,
-  onClose,
-  onConfirm,
-}) => {
-  const [amount, setAmount] = useState<string>("");
+const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }: Props) => {
+  const navigate = useNavigate();
+  const closeModal = useGatheringModalStore((state) => state.closeModal);
+  const queryClient = useQueryClient();
+  const [amount, setAmount] = useState<string>('');
+
+  const gatheringPocketMutation = useMutation({
+    mutationFn: patchPocketGather,
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['pocket-detail', String(pocketId)] });
+      setAmount('0');
+      closeModal();
+
+      navigate(`/pocket/detail/${pocketId}`);
+    },
+    onError: () => {
+      console.log('에러입니다.');
+    },
+  });
 
   if (!isOpen) return null;
 
+  const handlePatchGathering = () => {
+    console.log('클릭!');
+    gatheringPocketMutation.mutate({ data: { savedAmount: { amount: Number(amount) } }, pocketId });
+  };
+
+  const handleGatherAll = () => {
+    setAmount(String(totalAmount - gatheredAmount));
+  };
+
   return (
-    <>
-      <div className="absolute bg-gray-900/50 w-full h-full" />
-      <div className="absolute bg-white rounded-3xl p-6 z-50">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-title-md font-bold">
-            {totalAmount.toLocaleString()}원 중{" "}
-            {gatheredAmount.toLocaleString()}원 모았어요
+    <div
+      onClick={closeModal}
+      className={`absolute z-50 h-full w-full flex-col justify-end bg-gray-900/50 p-5 ${isOpen ? 'flex' : 'hidden'}`}
+    >
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+        className={`flex w-full flex-col rounded-xl bg-white p-6 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-y-0' : 'translate-y-full'} `}
+      >
+        <div className="mb-8 flex items-center justify-between">
+          <h2 className="text-title-sm font-bold">
+            {addCommas(totalAmount)}원 중 {addCommas(gatheredAmount)}원 모았어요
           </h2>
-          <button onClick={onClose} className="text-gray-900">
+          <button onClick={closeModal} className="text-gray-900">
             <Icon size="small" id="x-lg" />
           </button>
         </div>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <span className="text-gray-500 text-text-md">모을 금액</span>
+            <span className="text-text-md text-gray-500">모을 금액</span>
             <div className="flex items-center">
               <input
-                type="number"
+                type="text"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="얼마를 더 모을까요?"
-                className="w-full text-text-xl placeholder:text-gray-400"
+                className="text-text-xl w-full placeholder:text-gray-400"
               />
               <span className="text-text-xl">원</span>
             </div>
@@ -51,23 +81,26 @@ const PocketGatheringModal: React.FC<PocketGatheringModalProps> = ({
           </div>
 
           <div className="flex gap-2">
-            <button className="flex-1 py-3 px-4 rounded-2xl bg-gray-100 text-text-md text-gray-900 hover:bg-gray-200">
+            <button className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 hover:bg-gray-200">
               나중에 모으기
             </button>
-            <button className="flex-1 py-3 px-4 rounded-2xl bg-gray-100 text-text-md text-[#2196f3] hover:bg-gray-200">
+            <button
+              className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-[#2196f3] hover:bg-gray-200"
+              onClick={handleGatherAll}
+            >
               전액 모으기
             </button>
           </div>
 
           <button
-            onClick={() => onConfirm(amount)}
-            className="w-full py-4 rounded-2xl bg-[#fa0] text-text-xl font-bold text-white hover:bg-[#c80]"
+            onClick={handlePatchGathering}
+            className="text-text-xl w-full rounded-2xl bg-[#fa0] py-4 font-bold text-white hover:bg-[#c80]"
           >
             확인
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

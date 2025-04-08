@@ -46,5 +46,4 @@ const AccountList = () => {
     </div>
   );
 };
-
 export default AccountList;

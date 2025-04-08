@@ -1,11 +1,14 @@
 import { BorderInput, CategoryIcon } from '@/shared/ui';
 import { useState } from 'react';
 import SelectCategoryModal from './SelectCategoryModal';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createCategoryAPI } from '@/entities/category/api';
 import { useBasicModalStore } from '@/shared/store';
+import { useNavigate } from 'react-router';
 
 const CreateCategoryForm = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { openModal, closeModal } = useBasicModalStore();
   const [isOpen, setOpen] = useState<boolean>(false);
   const [iconId, setIconId] = useState<number>(0);
@@ -14,13 +17,12 @@ const CreateCategoryForm = () => {
 
   const createCategoryMutation = useMutation({
     mutationFn: createCategoryAPI,
-    onSuccess: (response) => {
-      const data = response.data;
-      if (!data) return;
-
-      setCategoryId(data.categoryId);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['category-data'] });
+      console.log(categoryId);
       console.log('카테고리 생성 완료');
       // 생성 완료 후 행동
+      navigate(-1);
     },
     onError: () => {
       // 에러 상황 처리 필요
@@ -30,9 +32,6 @@ const CreateCategoryForm = () => {
         itemName: '카테고리 생성',
         description: '에 실패했습니다.',
         buttonText: '확인',
-        onClose: () => {
-          closeModal();
-        },
         onConfirm: () => {
           closeModal();
         },

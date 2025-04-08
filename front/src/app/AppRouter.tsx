@@ -1,12 +1,13 @@
-import { Alarm, Chatbot, Error, Home, Landing, Loading } from '@/pages/general';
+import { Alarm, Chatbot, Error, Home, Landing, Loading, SuccessPage } from '@/pages/general';
 import { Login } from '@/pages/user';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
 import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
-import { BaseLayout, HistoryLayout } from './layouts';
+import { BaseLayout, HistoryLayout, HistoryNavLayout } from './layouts';
 import {
   PocketCalendar,
   PocketCreate,
+  PocketCreateDirectStep,
   PocketCreateStep,
   PocketCreateSuccess,
   PocketDetailPage,
@@ -19,39 +20,47 @@ import {
   FixedExpenseListContent,
   FixedExpenseListFound,
 } from '@/pages/fixedExpense';
-import {
-  AccountConnect,
-  AccountDetail,
-  AccountList,
-  AccountTransfer,
-  Certification,
-  MyAgree,
-} from '@/pages/account';
+import { AccountDetail, AccountList, AccountTransfer } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
 import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 import { Layout } from '@/shared/ui';
 import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
+import { Suspense } from 'react';
+import { MainSkeleton } from '@/pages/skeleton';
+import {
+  Agreement,
+  Certificates,
+  KkulkipRegister,
+  PinVerification,
+  AccountConnect,
+} from '@/pages/mydata';
 import { AccountTransactions, AccountPockets } from '@/features/account/ui';
-
 const AppRouter = createBrowserRouter([
-  {
-    path: '/landing',
-    element: <Landing />,
-  },
-  {
-    path: '/loading',
-    element: <Loading />,
-  },
   {
     // 상단 바랑 네비게이션 없는 레이아웃
     element: <Layout />,
     children: [
       {
+        path: '/',
+        element: <Landing />,
+      },
+      {
         // 로그인
         path: '/login',
         element: <Login />,
       },
+      {
+        path: '/loading',
+        element: <Loading />,
+      },
+
+      // 성공 페이지
+      {
+        path: '/success',
+        element: <SuccessPage />,
+      },
+
       {
         element: <AuthWrapper />,
         children: [
@@ -83,14 +92,12 @@ const AppRouter = createBrowserRouter([
         children: [
           {
             // 홈
-            path: '/',
-            element: <Home />,
-            errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
-          },
-          {
-            // 홈
             path: '/home',
-            element: <Home />,
+            element: (
+              <Suspense fallback={<MainSkeleton />}>
+                <Home />
+              </Suspense>
+            ),
             errorElement: <div>홈에서 데이터를 불러오기 실패했습니다.</div>,
           },
           {
@@ -98,15 +105,26 @@ const AppRouter = createBrowserRouter([
             path: '/alarm',
             element: <Alarm />,
           },
-          {
-            // 포켓 목록
-            path: '/pocket/list',
-            element: <PocketList />,
-          },
+
           {
             // 포켓 캘린더
             path: '/pocket/calendar',
             element: <PocketCalendar />,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    element: <HistoryNavLayout />,
+    children: [
+      {
+        element: <AuthWrapper />,
+        children: [
+          {
+            // 포켓 목록
+            path: '/pocket/list',
+            element: <PocketList />,
           },
         ],
       },
@@ -122,17 +140,36 @@ const AppRouter = createBrowserRouter([
           // 계좌 연결
           {
             // 마이데이터 약관 동의
-            path: '/myAgree',
-            element: <MyAgree />,
+            path: '/mydata',
+            children: [
+              {
+                index: true,
+                element: <Agreement />,
+              },
+              {
+                path: 'agreement',
+                element: <Agreement />,
+              },
+              {
+                path: 'certificates',
+                element: <Certificates />,
+              },
+            ],
+          },
+
+          // 인증서 등록
+          {
+            path: '/:id/register',
+            element: <KkulkipRegister />,
           },
           {
-            // 자체 인증서
-            path: '/certification',
-            element: <Certification />,
+            path: '/verifyPin',
+            element: <PinVerification />,
           },
+
+          // 연결 은행 선택
           {
-            // 연결 은행 선택
-            path: '/accountConnect',
+            path: '/mydata/accountConnect',
             element: <AccountConnect />,
           },
 
@@ -182,14 +219,18 @@ const AppRouter = createBrowserRouter([
                 element: <PocketFavoriteList />,
               },
               {
-                path: 'direct',
                 element: <PocketCreateDirect />,
+                index: true,
               },
             ],
           },
           {
             path: '/pocket/create/link/step',
             element: <PocketCreateStep />,
+          },
+          {
+            path: '/pocket/create/direct/step',
+            element: <PocketCreateDirectStep />,
           },
           {
             path: '/pocket/success',

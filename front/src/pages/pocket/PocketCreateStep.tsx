@@ -54,15 +54,16 @@ const PocketCreateStep = () => {
   const createPocketMutate = useMutation({
     mutationFn: createPocketWithLinkAPI,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
       setLoading(true);
     },
     onError: () => {},
   });
 
   const handleCreatePocket = () => {
-    const newEndDate = convertCurrentTime(endDate as YYYYMMDD);
+    const newEndDate = endDate != '' ? convertCurrentTime(endDate as YYYYMMDD) : null;
 
-    if (newEndDate == null || accountId == null || categoryId == null || !crawlingUuid) return;
+    if (accountId == null || categoryId == null || !crawlingUuid) return;
 
     const data = {
       endDate: newEndDate,
