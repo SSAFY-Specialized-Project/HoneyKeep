@@ -2,15 +2,7 @@ import json
 from langchain.memory.chat_message_histories import RedisChatMessageHistory
 from langchain_core.messages.utils import messages_from_dict
 
-class ReadOnlyRedisChatMessageHistory(RedisChatMessageHistory):
-    def add_message(self, message) -> None:
-        # 저장하지 않음으로써, 대화 내역 갱신(쓰기)을 무력화
-        pass
-
-    def clear(self) -> None:
-        # 지우기 작업도 필요없다면 아무 동작도 하지 않음
-        pass
-
+class ChatMessageHistory(RedisChatMessageHistory):
     @property
     def messages(self):
         # Redis에서 리스트 형식으로 저장된 메시지들을 읽음

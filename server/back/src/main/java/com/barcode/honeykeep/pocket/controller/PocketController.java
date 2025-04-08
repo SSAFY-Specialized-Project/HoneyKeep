@@ -264,4 +264,24 @@ public class PocketController {
         return ResponseEntity.ok()
                 .body(ApiResponse.success("포켓 사용완료 처리 성공", response));
     }
+
+    /**
+     * 거래내역으로 포켓 사용하기
+     * @param userId 인증된 사용자 ID
+     * @param pocketId 사용할 포켓 ID
+     * @param request 사용할 거래내역 요청 정보
+     * @return 포켓 사용 결과 정보
+     */
+    @Transactional
+    @PatchMapping("/{pocketId}/use-transaction")
+    public ResponseEntity<ApiResponse<PocketUseTransactionResponse>> useTransactionForPocket(
+            @AuthenticationPrincipal UserId userId,
+            @PathVariable Long pocketId,
+            @RequestBody PocketUseTransactionRequest request) {
+
+        PocketUseTransactionResponse response = pocketService.useTransactionForPocket(userId.value(), pocketId, request);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success("거래내역으로 포켓 사용 성공", response));
+    }
 }
