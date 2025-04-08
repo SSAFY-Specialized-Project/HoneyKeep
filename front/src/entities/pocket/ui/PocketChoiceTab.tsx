@@ -28,7 +28,7 @@ const PocketChoiceTab = () => {
         즐겨찾는 포켓
       </NavLink>
       <NavLink
-        to="/pocket/create/"
+        to="/pocket/create"
         className={({ isActive }) =>
           `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
