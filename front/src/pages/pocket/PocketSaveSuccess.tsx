@@ -1,4 +1,4 @@
-import { Player } from '@lottiefiles/react-lottie-player';
+import Lottie from 'lottie-react';
 import ProductCard from '@/features/pocket/ui/ProductCard';
 import ProgressBar from '@/features/pocket/ui/ProgressBar';
 import successLottie from '@/assets/success.json';
@@ -11,7 +11,7 @@ type Props = {
   productLink: string;
   percentage: number;
   amountSaved: string;
-  goalAmount: string;
+  target: string;
   targetDate: string;
   linkedAccount: string;
 };
@@ -29,9 +29,14 @@ export default function PocketSaveSuccess({
   linkedAccount,
 }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col items-center px-4 py-6">
+    <div className="absolute top-0 left-0 flex h-full w-full flex-col justify-start bg-white px-4 py-6">
       {/* 애니메이션 */}
-      <Player autoplay loop src={successLottie} style={{ height: '90px', width: '90px' }} />
+      <Lottie
+        autoplay
+        loop
+        animationData={successLottie}
+        style={{ height: '90px', width: '90px' }}
+      />
 
       {/* 타이틀 */}
       <h2 className="mt-4 text-xl font-bold text-gray-800">{title}</h2>

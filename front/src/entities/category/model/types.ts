@@ -8,8 +8,8 @@ export interface CategoryWithPocket {
 }
 
 export interface createCategoryRequest {
-  name: string,
-  icon: number
+  name: string;
+  icon: number;
 }
 export interface Category {
   categoryId: number;

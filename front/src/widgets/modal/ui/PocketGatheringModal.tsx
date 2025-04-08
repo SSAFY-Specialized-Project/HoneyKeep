@@ -1,5 +1,4 @@
 import { patchPocketGather } from '@/entities/pocket/api';
-import { PocketGatherResponse } from '@/entities/pocket/model/types';
 import { addCommas } from '@/shared/lib';
 import { useGatheringModalStore } from '@/shared/store';
 import { Icon } from '@/shared/ui';
@@ -39,6 +38,10 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
   const handlePatchGathering = () => {
     console.log('클릭!');
     gatheringPocketMutation.mutate({ data: { savedAmount: { amount: Number(amount) } }, pocketId });
+  };
+
+  const handleGatherAll = () => {
+    setAmount(String(totalAmount - gatheredAmount));
   };
 
   return (
@@ -81,7 +84,10 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
             <button className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 hover:bg-gray-200">
               나중에 모으기
             </button>
-            <button className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-[#2196f3] hover:bg-gray-200">
+            <button
+              className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-[#2196f3] hover:bg-gray-200"
+              onClick={handleGatherAll}
+            >
               전액 모으기
             </button>
           </div>

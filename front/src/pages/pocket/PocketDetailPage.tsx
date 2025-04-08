@@ -1,8 +1,9 @@
-import { getPocketDetailAPI } from '@/entities/pocket/api';
+import { getPocketDetailAPI, patchPocketIsFavoriteAPI } from '@/entities/pocket/api';
 import { ProductCard, ProgressBar } from '@/features/pocket/ui';
 import { addCommas } from '@/shared/lib';
 import { useGatheringModalStore, useHeaderStore } from '@/shared/store';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { Icon } from '@/shared/ui';
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useParams } from 'react-router';
 
@@ -26,6 +27,7 @@ const PocketDetailPage = () => {
   const param = useParams();
   const pocketId = param.id;
   const { openModal } = useGatheringModalStore();
+  const queryClient = useQueryClient();
 
   const { data: pocketQuery } = useSuspenseQuery({
     queryKey: ['pocket-detail', pocketId],
@@ -38,6 +40,13 @@ const PocketDetailPage = () => {
     },
   });
 
+  const pocketFavoriteMutation = useMutation({
+    mutationFn: patchPocketIsFavoriteAPI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pocket-detail', pocketId] });
+    },
+  });
+
   useEffect(() => {
     console.log(pocketQuery.data);
   }, [pocketQuery]);
@@ -45,6 +54,13 @@ const PocketDetailPage = () => {
   if (!pocketId) {
     return;
   }
+
+  const handleIsFavorite = () => {
+    pocketFavoriteMutation.mutate({
+      pocketId: Number(pocketId),
+      data: { isFavorite: !pocketQuery.data.isFavorite },
+    });
+  };
 
   const handleGatheringButton = () => {
     openModal({
@@ -55,16 +71,19 @@ const PocketDetailPage = () => {
   };
 
   return (
-    <div className="flex h-full flex-col gap-10 p-5">
-      <div>
+    <div className="flex h-full w-full flex-col items-center justify-center gap-10 p-5">
+      <div className="relative w-fit">
         <ProductCard
           productImage={pocketQuery.data.imgUrl}
           productName={pocketQuery.data.name}
           categoryName={pocketQuery.data.categoryName}
           productLink={pocketQuery.data.link}
         />
+        <button className="absolute top-0 right-0 cursor-pointer" onClick={handleIsFavorite}>
+          <Icon id={pocketQuery.data.isFavorite ? 'fill-star' : 'non-fill-star'} size="big" />
+        </button>
       </div>
-      <div>
+      <div className="w-full">
         <ProgressBar
           percentage={Math.round(
             (pocketQuery.data.savedAmount / pocketQuery.data.totalAmount) * 100,
@@ -76,7 +95,7 @@ const PocketDetailPage = () => {
           canEdit={true}
         />
       </div>
-      <div className="mt-auto flex gap-5">
+      <div className="mt-auto flex w-full gap-5">
         <button
           type="button"
           onClick={handleGatheringButton}

@@ -26,7 +26,12 @@ const HistoryNavLayout = () => {
             onClose={modalProps?.onClose}
             onConfirm={modalProps?.onConfirm}
           />
-          <PocketUseModal isOpen={pocketModalOpen} pocketId={pocketModalProps?.pocketId ?? 0} />
+          <PocketUseModal
+            isOpen={pocketModalOpen}
+            pocketId={pocketModalProps?.pocketId ?? 0}
+            totalAmount={pocketModalProps?.totalAmount ?? 0}
+            gatheredAmount={pocketModalProps?.gatheredAmount ?? 0}
+          />
           <PocketGatheringModal
             isOpen={gatheringModalOpen}
             totalAmount={gatheringModalProps?.totalAmount ?? 0}

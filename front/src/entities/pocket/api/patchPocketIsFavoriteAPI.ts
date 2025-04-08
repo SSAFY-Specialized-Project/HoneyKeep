@@ -5,8 +5,13 @@ import {
 } from "@/entities/pocket/model/types";
 
 const patchPocketIsFavoriteAPI = (
-  pocketId: number,
-  data: PocketIsFavoriteRequest
+  {
+    pocketId,
+    data
+  }:{
+    pocketId: number,
+    data: PocketIsFavoriteRequest
+  }
 ) =>
   customFetchAPI<PocketIsFavoriteResponse, PocketIsFavoriteRequest>({
     url: `/pockets/${pocketId}/favorite`,
