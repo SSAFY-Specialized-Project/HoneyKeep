@@ -1,8 +1,8 @@
-import { BasicInput, Button } from "@/shared/ui";
-import RegisterInput from "@/shared/ui/RegisterInput/RegisterInput";
-import { AgreementModal, useLogin } from "@/features/auth/login";
-import { createPortal } from "react-dom";
-import PasswordModal from "./PasswordModal";
+import { BasicInput, Button } from '@/shared/ui';
+import RegisterInput from '@/shared/ui/RegisterInput/RegisterInput';
+import { AgreementModal, useLogin } from '@/features/auth/login';
+import { createPortal } from 'react-dom';
+import PasswordModal from './PasswordModal';
 
 const LoginForm = () => {
   const {
@@ -54,7 +54,7 @@ const LoginForm = () => {
             onChange={handleNameInput}
           />
         </div>
-        <div className={`${!nameCheck ? "hidden" : "block"}`}>
+        <div className={`${!nameCheck ? 'hidden' : 'block'}`}>
           <RegisterInput
             errorMessage={registerError}
             valueFirst={registerFirst}
@@ -64,7 +64,7 @@ const LoginForm = () => {
             onChangeSecond={handleRegisterSecondInput}
           />
         </div>
-        <div className={`${!registerCheck ? "hidden" : "block"}`}>
+        <div className={`${!registerCheck ? 'hidden' : 'block'}`}>
           <BasicInput
             id="phone"
             name="phone"
@@ -74,7 +74,7 @@ const LoginForm = () => {
             onChange={handlePhoneInput}
           />
         </div>
-        <div className={`${!phoneCheck ? "hidden" : "block"}`}>
+        <div className={`${!phoneCheck ? 'hidden' : 'block'}`}>
           <BasicInput
             errorMessage={emailError}
             id="email"
@@ -89,7 +89,7 @@ const LoginForm = () => {
             onChange={handleEmailInput}
           />
         </div>
-        <div className={`${!emailCheck ? "hidden" : "block"}`}>
+        <div className={`${!emailCheck ? 'hidden' : 'block'}`}>
           <BasicInput
             errorMessage={certificationError}
             id="certification"
@@ -124,17 +124,17 @@ const LoginForm = () => {
         />
       </div>
       {isModalOpen &&
-        document.getElementById("topLayout") &&
+        document.getElementById('topLayout') &&
         createPortal(
           <AgreementModal
             isOpen={isModalOpen}
             setIsOpen={setModalOpen}
             setPasswordOpen={setPasswordOpen}
           />,
-          document.getElementById("topLayout") as HTMLElement
+          document.getElementById('topLayout') as HTMLElement,
         )}
       {isPasswordOpen &&
-        document.getElementById("topLayout") &&
+        document.getElementById('topLayout') &&
         createPortal(
           <PasswordModal
             isOpen={isPasswordOpen}
@@ -142,7 +142,7 @@ const LoginForm = () => {
             setValue={setPassword}
             passwordCheck={passwordCheck}
           />,
-          document.getElementById("topLayout") as HTMLElement
+          document.getElementById('topLayout') as HTMLElement,
         )}
     </>
   );

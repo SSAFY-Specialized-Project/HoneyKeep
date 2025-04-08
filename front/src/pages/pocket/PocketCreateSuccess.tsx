@@ -4,7 +4,7 @@ import ProductCard from '@/features/pocket/ui/ProductCard';
 import ProgressBar from '@/features/pocket/ui/ProgressBar';
 import { useQueryClient } from '@tanstack/react-query';
 import { PocketCreateResponse } from '@/entities/pocket/model/types';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { addCommas } from '@/shared/lib';
 
 const PocketCreateSuccess = () => {
@@ -18,9 +18,9 @@ const PocketCreateSuccess = () => {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col items-center px-4 py-6">
+    <div className="flex h-full w-full flex-col items-center px-5 py-6">
       {/* 오렌지색 라운드 애니메이션 */}
-      <Player autoplay loop src={successLottie} style={{ height: '90px', width: '90px' }} />
+      <Player autoplay src={successLottie} style={{ height: '90px', width: '90px' }} />
 
       {/* 텍스트 */}
       <h2 className="mt-4 text-xl font-bold text-gray-800">포켓 만들기 성공!</h2>
@@ -35,12 +35,28 @@ const PocketCreateSuccess = () => {
       {/* 현황 ProgressBar */}
       <div className="mt-6 w-full">
         <ProgressBar
+          canEdit={false}
           percentage={Math.round((data.savedAmount / data.totalAmount) * 100)}
           amountSaved={addCommas(data.savedAmount)}
           goalAmount={addCommas(data.totalAmount)}
           targetDate={data.endDate}
           linkedAccount={data.accountName}
         />
+      </div>
+
+      <div className="mt-auto flex w-full justify-between gap-5">
+        <Link
+          to="/home"
+          className="text-title-md mt-auto w-full cursor-pointer rounded-2xl bg-gray-100 py-3 text-center font-bold text-gray-500 disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
+        >
+          홈으로
+        </Link>
+        <Link
+          to={`/pocket/detail/${data.id}`}
+          className="bg-brand-primary-500 text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
+        >
+          상세보기
+        </Link>
       </div>
     </div>
   );

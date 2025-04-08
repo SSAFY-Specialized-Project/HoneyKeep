@@ -6,10 +6,39 @@ import Bar3 from '/icon/landing/Bar3.svg';
 import Bar4 from '/icon/landing/Bar4.svg';
 import K from '/icon/landing/k.svg';
 import Name from '/icon/landing/name.svg';
+import { useEffect } from 'react';
+import { refreshTokenAPI } from '@/shared/api';
+import { useNavigate } from 'react-router';
 
 const BarComponents = [Bar1, Bar2, Bar3, Bar3, Bar2, Bar4];
 
 const Landing = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const refreshToken = async () => {
+      try {
+        const response = await refreshTokenAPI();
+
+        if (response.status == 200) {
+          console.log('인증 성공');
+          localStorage.setItem('accessToken', response.data);
+          setTimeout(() => {
+            navigate('/login');
+          }, 3500);
+        }
+      } catch (error) {
+        console.log('인증 실패..');
+        localStorage.removeItem('accessToken');
+        setTimeout(() => {
+          navigate('/login');
+        }, 3500);
+      }
+    };
+
+    refreshToken();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900">
       <div className="flex scale-[0.6] flex-col items-center">
