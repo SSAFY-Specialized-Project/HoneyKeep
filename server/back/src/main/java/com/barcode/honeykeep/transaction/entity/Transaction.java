@@ -61,4 +61,11 @@ public class Transaction {
     public void updateMemo(String memo) {
         this.memo = memo;
     }
+
+    /**
+     * 거래내역에 포켓 연결
+     */
+    public void updatePocket(Pocket pocket) {
+        this.pocket = pocket;
+    }
 }

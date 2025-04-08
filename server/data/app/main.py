@@ -22,7 +22,7 @@ app.add_middleware(
 )
 
 # 챗봇 라우터를 "/chatbot" 경로로 등록
-app.include_router(chatbot.router, prefix="/api/v1/chatbot")
+app.include_router(chatbot.router, prefix="/api/v2/chatbot")
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host=Config.HOST, port=Config.PORT, reload=True)
