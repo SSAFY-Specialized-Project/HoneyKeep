@@ -4,12 +4,15 @@ import { AccountInfo } from '@/entities/account/ui';
 import { ResponseDTO } from '@/shared/model/types';
 import { ContentAddBox, Icon } from '@/shared/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const MyAccountInfo = () => {
   const navigate = useNavigate();
-  const [noticeOpen, setNoticeOpen] = useState<boolean>(false);
+
+  const handleNotice = () => {
+    // TODO: 알림 기능 구현
+    console.log('알림 클릭');
+  };
 
   const { data: accountData } = useSuspenseQuery<ResponseDTO<Account[]>>({
     queryKey: ['accounts-info'],
@@ -17,10 +20,6 @@ const MyAccountInfo = () => {
     staleTime: 30 * 1000,
     gcTime: 60 * 1000,
   });
-
-  const handleNotice = () => {
-    setNoticeOpen(!noticeOpen);
-  };
 
   return (
     <div className="flex flex-col gap-2">

@@ -1,4 +1,4 @@
-import {Alarm, Chatbot, Error, Home, Landing, Loading, SuccessPage} from '@/pages/general';
+import { Alarm, Chatbot, Error, Home, Landing, Loading, SuccessPage } from '@/pages/general';
 import { Login } from '@/pages/user';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
@@ -20,11 +20,7 @@ import {
   FixedExpenseListContent,
   FixedExpenseListFound,
 } from '@/pages/fixedExpense';
-import {
-  AccountDetail,
-  AccountList,
-  AccountTransfer,
-} from '@/pages/account';
+import { AccountDetail, AccountList, AccountTransfer } from '@/pages/account';
 import CategoryCreate from '@/pages/pocket/CategoryCreate';
 import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
 import ExamplePage from '@/entities/pocket/ui/ExamplePage';
@@ -32,8 +28,14 @@ import { Layout } from '@/shared/ui';
 import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
 import { Suspense } from 'react';
 import { MainSkeleton } from '@/pages/skeleton';
-import {Agreement, Certificates, KkulkipRegister, PinVerification, AccountConnect} from "@/pages/mydata";
-
+import {
+  Agreement,
+  Certificates,
+  KkulkipRegister,
+  PinVerification,
+  AccountConnect,
+} from '@/pages/mydata';
+import { AccountTransactions, AccountPockets } from '@/features/account/ui';
 const AppRouter = createBrowserRouter([
   {
     // 상단 바랑 네비게이션 없는 레이아웃
@@ -56,7 +58,7 @@ const AppRouter = createBrowserRouter([
       // 성공 페이지
       {
         path: '/success',
-        element: <SuccessPage />
+        element: <SuccessPage />,
       },
 
       {
@@ -142,27 +144,27 @@ const AppRouter = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <Agreement />
+                element: <Agreement />,
               },
               {
                 path: 'agreement',
-                element: <Agreement />
+                element: <Agreement />,
               },
               {
                 path: 'certificates',
                 element: <Certificates />,
               },
-            ]
+            ],
           },
 
           // 인증서 등록
           {
             path: '/:id/register',
-            element: <KkulkipRegister />
+            element: <KkulkipRegister />,
           },
           {
             path: '/verifyPin',
-            element: <PinVerification />
+            element: <PinVerification />,
           },
 
           // 연결 은행 선택
@@ -179,8 +181,22 @@ const AppRouter = createBrowserRouter([
           },
           {
             // 내 계좌 상세
-            path: '/accountDetail/:account',
+            path: '/accountDetail/:accountId',
             element: <AccountDetail />,
+            children: [
+              {
+                path: 'detail',
+                element: <AccountTransactions />,
+              },
+              {
+                path: 'transactions',
+                element: <AccountTransactions />,
+              },
+              {
+                path: 'pockets',
+                element: <AccountPockets />,
+              },
+            ],
           },
           {
             // 계좌 이체
