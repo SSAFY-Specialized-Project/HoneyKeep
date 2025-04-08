@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { requestFCMToken, onForegroundMessage } from '../core/notification/settingFCM';
 import { MessagePayload } from 'firebase/messaging';
 
+
+
 interface FCMState {
   token: string | null;
   error: Error | null;
@@ -15,6 +17,7 @@ const useFCMStore = create<FCMState>((set) => ({
   error: null,
   isInitialized: false,
   initializeFCM: async () => {
+    console.log("이니셜라이즈 실행");
     // 이미 초기화되었으면 다시 실행하지 않음
     if (useFCMStore.getState().isInitialized) return;
     

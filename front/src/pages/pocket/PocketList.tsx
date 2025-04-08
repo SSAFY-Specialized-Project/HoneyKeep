@@ -1,7 +1,8 @@
 import { getPocketFilterList } from '@/entities/pocket/api';
 import { PocketListItem } from '@/entities/pocket/ui';
 import { CategoryFilterDropdown } from '@/features/category/ui';
-import { DuringDateDropdown, StatusFilterDropdown } from '@/features/pocket/ui';
+import { StatusFilterDropdown } from '@/features/pocket/ui';
+import { DateRangeFilterDropdown } from '@/entities/calendar/ui';
 import { useHeaderStore } from '@/shared/store';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -46,7 +47,7 @@ const PocketList = () => {
         <div className="absolute flex gap-4">
           <CategoryFilterDropdown setCategoryId={setCategoryId} />
           <StatusFilterDropdown status={status} setStatus={setStatus} />
-          <DuringDateDropdown duringDate={duringDate} setDuringDate={setDuringDate} />
+          <DateRangeFilterDropdown />
           <button
             type="button"
             onClick={() => {
