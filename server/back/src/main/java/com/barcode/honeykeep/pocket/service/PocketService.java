@@ -12,9 +12,10 @@ import com.barcode.honeykeep.pocket.exception.PocketErrorCode;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
 import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
+import com.barcode.honeykeep.transaction.entity.Transaction;
+import com.barcode.honeykeep.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ public class PocketService {
     private final CategoryService categoryService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final CrawlingService crawlingService;
+    private final TransactionService transactionService;
 
     /**
      * 포켓 생성
@@ -523,5 +525,61 @@ public class PocketService {
                 pocketRepository.save(pocket);
             }
         }
+    }
+
+    /**
+     * 거래내역으로 포켓 사용하기
+     * @param userId 사용자 ID
+     * @param pocketId 포켓 ID
+     * @param request 사용할 거래내역 요청 정보
+     * @return 포켓 사용 결과 정보
+     */
+    @Transactional
+    public PocketUseTransactionResponse useTransactionForPocket(Long userId, Long pocketId, PocketUseTransactionRequest request) {
+
+        // 포켓 조회
+        Pocket pocket = getPocketById(pocketId);
+
+        // 거래내역 조회
+        Transaction transaction = transactionService.getTransactionById(request.transactionId());
+
+        // 거래내역 금액 (양수값으로 변환)
+        Money transactionAmount = Money.of(Math.abs(transaction.getAmount().getAmountAsLong()));
+
+        // 포켓의 현재 저장 금액
+        Money currentSavedAmount = pocket.getSavedAmount();
+        Long previousAmount = currentSavedAmount.getAmountAsLong();
+        Long usedAmount = transactionAmount.getAmountAsLong();
+
+        // 초과 여부 확인 및 처리
+        boolean isExceed = currentSavedAmount.isLessThan(transactionAmount);
+        Money newSavedAmount;
+
+        if (isExceed) {
+            newSavedAmount = Money.zero();
+            pocket.updateIsExceed(true);
+        } else {
+            // 정상 차감
+            newSavedAmount = Money.of(currentSavedAmount.getAmountAsLong() - usedAmount);
+        }
+
+        // 저장 금액 업데이트
+        pocket.updateSavedAmount(newSavedAmount);
+
+        // 거래내역에 포켓 연결
+        transaction.updatePocket(pocket);
+        transactionService.saveTransaction(transaction);
+
+        // 포켓 저장
+        pocketRepository.save(pocket);
+
+        return PocketUseTransactionResponse.builder()
+                .pocketId(pocket.getId())
+                .pocketName(pocket.getName())
+                .previousAmount(previousAmount)
+                .usedAmount(usedAmount)
+                .currentAmount(newSavedAmount.getAmountAsLong())
+                .isExceed(pocket.getIsExceed())
+                .build();
     }
 }
