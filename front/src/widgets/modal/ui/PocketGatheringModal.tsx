@@ -40,6 +40,10 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
     gatheringPocketMutation.mutate({ data: { savedAmount: { amount: Number(amount) } }, pocketId });
   };
 
+  const handleGatherAll = () => {
+    setAmount(String(totalAmount - gatheredAmount));
+  };
+
   return (
     <div
       onClick={closeModal}
@@ -80,7 +84,10 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
             <button className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 hover:bg-gray-200">
               나중에 모으기
             </button>
-            <button className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-[#2196f3] hover:bg-gray-200">
+            <button
+              className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-[#2196f3] hover:bg-gray-200"
+              onClick={handleGatherAll}
+            >
               전액 모으기
             </button>
           </div>

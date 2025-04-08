@@ -6,7 +6,8 @@
   "scripts": {
     "predev": "node generate-sw.cjs",
     "dev": "vite",
-    "build": "vite build && node generate-sw.cjs",
+    "prebuild": "node generate-sw.cjs",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-sw": "node generate-sw.cjs"

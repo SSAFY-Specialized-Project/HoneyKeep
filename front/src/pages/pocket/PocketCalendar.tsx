@@ -10,8 +10,8 @@ const PocketCalendar = () => {
   });
 
   return (
-    <div className="mt-6">
-      <CustomCalendar products={productData.data} />;
+    <div className="mt-6 h-full">
+      <CustomCalendar products={productData.data} />
     </div>
   );
 };

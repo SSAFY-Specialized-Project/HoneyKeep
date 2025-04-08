@@ -6,7 +6,7 @@ export { default as createPocket } from "./createPocketAPI";
 export { default as updatePocket } from "./updatePocket";
 export { default as deletePocket } from "./deletePocketAPI";
 export { default as patchPocketGather } from "./patchPocketGatherAPI";
-export { default as patchPocketIsFavorite } from "./patchPocketIsFavoriteAPI";
+export { default as patchPocketIsFavoriteAPI } from "./patchPocketIsFavoriteAPI";
 export { default as createPocketLinkAPI } from "./createPocketLinkAPI";
 export { default as getPocketDetailAPI} from "./getPocketDetailAPI";
 export { default as CreatePocketAPI} from "./createPocketAPI";

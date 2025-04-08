@@ -1,5 +1,5 @@
-import { Button, Checkbox } from "@/shared/ui";
-import { Dispatch, SetStateAction } from "react";
+import { Button, Checkbox } from '@/shared/ui';
+import { Dispatch, SetStateAction } from 'react';
 
 interface Props {
   isOpen: boolean;
@@ -12,15 +12,15 @@ const AccountLinkModal = ({ isOpen, setIsOpen }: Props) => {
       onClick={() => {
         setIsOpen(false);
       }}
-      className={`absolute bg-gray-900/50 w-full h-full z-40 flex flex-col ${
-        isOpen ? "block" : "hidden"
+      className={`absolute z-40 flex h-full w-full flex-col bg-gray-900/50 ${
+        isOpen ? 'block' : 'hidden'
       } top-0 left-0`}
     >
       <div
         onClick={(e) => {
           e.stopPropagation();
         }}
-        className="flex flex-col mt-auto bg-white p-6 rounded-t-3xl gap-5"
+        className="mt-auto flex flex-col gap-5 rounded-t-3xl bg-white p-6"
       >
         <div className="flex items-center gap-4">
           <Checkbox
@@ -30,12 +30,7 @@ const AccountLinkModal = ({ isOpen, setIsOpen }: Props) => {
             onClick={() => {}}
           />
           <button className="ml-auto">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

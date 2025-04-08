@@ -37,7 +37,7 @@ const PocketList = () => {
         type: status == null ? null : statusMap[status],
         isFavorite,
       }),
-    staleTime: 30 * 1000 * 60,
+    staleTime: 60 * 1000,
   });
 
   return (
@@ -60,21 +60,23 @@ const PocketList = () => {
       </div>
       <div className="mt-12 h-full">
         <ul className="flex h-full flex-col gap-4 overflow-auto">
-          {pocketListQuery.data
-            ? pocketListQuery.data.map((item) => {
-                return (
-                  <PocketListItem
-                    id={item.id}
-                    name={item.name}
-                    imgUrl={item.imgUrl}
-                    totalAmount={item.totalAmount}
-                    savedAmount={item.savedAmount}
-                    endDate={item.endDate}
-                    type={item.type}
-                  />
-                );
-              })
-            : null}
+          {pocketListQuery.data != null && pocketListQuery.data.length > 0 ? (
+            pocketListQuery.data.map((item) => {
+              return (
+                <PocketListItem
+                  id={item.id}
+                  name={item.name}
+                  imgUrl={item.imgUrl}
+                  totalAmount={item.totalAmount}
+                  savedAmount={item.savedAmount}
+                  endDate={item.endDate}
+                  type={item.type}
+                />
+              );
+            })
+          ) : (
+            <li>만들어진 포켓이 없습니다.</li>
+          )}
         </ul>
       </div>
       <Link
