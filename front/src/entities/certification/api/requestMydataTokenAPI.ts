@@ -1,11 +1,7 @@
 import {customFetchAPI} from "@/shared/api";
-import {RequestCredentialsRequest} from "@/entities/certification/model/types.ts";
+import {RequestCredentialsRequest, RequestCredentialsResponse} from "@/entities/certification/model/types.ts";
 
-interface RequestCredentialsResponse {
-    token: string;
-}
-
-export const requestMydataTokenAPI = (
+const requestMydataTokenAPI = (
     headers: RequestCredentialsRequest,
 ) => customFetchAPI<RequestCredentialsResponse, void, RequestCredentialsRequest>({
     url: "/mydata/token",
@@ -13,3 +9,5 @@ export const requestMydataTokenAPI = (
     credentials: "include",
     headers
 })
+
+export default requestMydataTokenAPI;

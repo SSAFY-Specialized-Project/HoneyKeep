@@ -24,13 +24,26 @@ const AccountCheck = ({ bank, account, accountNumber, checked, onChange }: Props
           </div>
         </div>
       </label>
-      <input
-        type="checkbox"
-        name={account}
-        id={accountNumber}
-        checked={checked}
-        onChange={onChange}
-      />
+      <div
+        onClick={() => {
+          const dummyEvent = {
+            target: {
+              checked: !checked,
+              name: account,
+              id: accountNumber,
+            },
+          } as React.ChangeEvent<HTMLInputElement>;
+          onChange(dummyEvent);
+        }}
+        className="cursor-pointer"
+      >
+        <img
+          src={checked ? '/icon/assets/cheked.svg' : '/icon/assets/unchecked.svg'}
+          alt={checked ? '선택됨' : '선택되지 않음'}
+          width={24}
+          height={24}
+        />
+      </div>
     </div>
   );
 };

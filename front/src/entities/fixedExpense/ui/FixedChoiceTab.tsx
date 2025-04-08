@@ -1,18 +1,18 @@
-import { NavLink } from "react-router-dom";
-import { DetectedFixedExpenseResponse } from "@/entities/fixedExpense/model/types.ts";
+import {NavLink} from "react-router-dom";
+import {DetectedFixedExpenseResponse} from "@/entities/fixedExpense/model/types.ts";
 
-interface FixedChoiceTabProps {
-  detectedFixedExpenses: DetectedFixedExpenseResponse[];
+type Props = {
+    detectedFixedExpenses: DetectedFixedExpenseResponse[];
 }
 
-const FixedChoiceTab = ({ detectedFixedExpenses = [] }: FixedChoiceTabProps) => {
+const FixedChoiceTab = ({detectedFixedExpenses = []}: Props) => {
     const hasDetectedExpenses = detectedFixedExpenses.length > 0;
 
     return (
         <div className="flex w-full border-b border-gray-200">
             <NavLink
                 to="/fixedExpense/list"
-                className={({ isActive }) =>
+                className={({isActive}) =>
                     `flex-1 text-xl font-medium text-center py-2 border-b-2 ${
                         isActive
                             ? "text-brand-primary-600 font-bold border-brand-primary-600"
@@ -24,7 +24,7 @@ const FixedChoiceTab = ({ detectedFixedExpenses = [] }: FixedChoiceTabProps) => 
             </NavLink>
             <NavLink
                 to="/fixedExpense/found"
-                className={({ isActive }) =>
+                className={({isActive}) =>
                     `flex-1 text-xl font-medium text-center py-2 border-b-2 relative ${
                         isActive
                             ? "text-brand-primary-600 font-bold border-brand-primary-600"
