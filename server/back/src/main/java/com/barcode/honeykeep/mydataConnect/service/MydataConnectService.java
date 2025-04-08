@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.mydataConnect.dto.*;
 import com.barcode.honeykeep.user.exception.UserErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ import com.barcode.honeykeep.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -107,6 +109,7 @@ public class MydataConnectService {
         try {
             return bankApiClient.requestAccountAuth(user.getUserKey(), accountNo);
         } catch (Exception e) {
+            log.error("error: {}", e);
             throw new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND);
         }
     }
