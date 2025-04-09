@@ -55,6 +55,7 @@ const PocketCreateStep = () => {
     mutationFn: createPocketWithLinkAPI,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
+      queryClient.invalidateQueries({ queryKey: ['pocket-list-filter'] });
       setLoading(true);
     },
     onError: () => {},

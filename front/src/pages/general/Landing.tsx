@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-
 import Bar1 from '/icon/landing/Bar1.svg';
 import Bar2 from '/icon/landing/Bar2.svg';
 import Bar3 from '/icon/landing/Bar3.svg';
@@ -40,7 +39,7 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900">
+    <div className="flex h-full flex-col items-center justify-center bg-gray-900">
       <div className="flex scale-[0.6] flex-col items-center">
         {/* 로고 영역 */}
         <div className="flex items-center space-x-2">

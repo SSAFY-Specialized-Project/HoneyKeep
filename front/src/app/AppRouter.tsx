@@ -360,6 +360,14 @@ const AppRouter = createBrowserRouter([
             ),
           },
           {
+            path: '/category/create',
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <CategoryCreate />
+              </Suspense>
+            ),
+          },
+          {
             path: '/pocket/success',
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
@@ -372,14 +380,6 @@ const AppRouter = createBrowserRouter([
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
                 <PocketDetailPage />
-              </Suspense>
-            ),
-          },
-          {
-            path: '/category/create',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <CategoryCreate />
               </Suspense>
             ),
           },
