@@ -43,7 +43,10 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
   const generateIndicatorData = () => {
     const dateMap: Record<string, DateIndicatorData> = {};
 
-    products.forEach((product) => {
+    // products가 null이거나 undefined인 경우 빈 배열로 처리
+    (products || []).forEach((product) => {
+      if (!product) return; // product가 null이거나 undefined인 경우 건너뛰기
+
       const endDate = new Date(product.endDate);
       const year = endDate.getFullYear();
       const month = endDate.getMonth();
@@ -103,6 +106,8 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
 
   // 날짜에 인디케이터 추가하는 함수
   const addIndicatorsToDate = (dates: CalendarDate[]): CalendarDate[] => {
+    if (!indicatorData || !Array.isArray(indicatorData)) return dates;
+
     return dates.map((date) => {
       const matchingData = indicatorData.find(
         (data) => data.year === date.year && data.month === date.month && data.day === date.day,
@@ -152,7 +157,8 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
 
     // 다음 달의 첫 날짜들
     const nextMonthDays: CalendarDate[] = [];
-    const totalDaysDisplayed: number = prevMonthDays.length + currentMonthDays.length;
+    const totalDaysDisplayed: number =
+      (prevMonthDays?.length || 0) + (currentMonthDays?.length || 0);
     const remainingCells: number = 42 - totalDaysDisplayed; // 6주(42일) 표시
 
     for (let i = 1; i <= remainingCells; i++) {
@@ -196,13 +202,22 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
 
   // 제품 데이터가 변경되면 인디케이터 데이터 업데이트
   useEffect(() => {
-    if (products.length > 0) {
+    if (products && Array.isArray(products) && products.length > 0) {
       setIndicatorData(generateIndicatorData());
     }
   }, [products]);
 
   // 선택된 날짜 변경 시 해당 날짜의 제품 목록 업데이트
   useEffect(() => {
+    if (!indicatorData || !Array.isArray(indicatorData)) {
+      // indicatorData가 없는 경우 빈 제품 목록 설정
+      setSelectedProducts([]);
+      if (onDateSelect) {
+        onDateSelect(selectedDate, []);
+      }
+      return;
+    }
+
     const selectedDateData = indicatorData.find(
       (data) =>
         data.year === selectedDate.getFullYear() &&
@@ -324,6 +339,7 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
             {/* 인디케이터 표시 - 항상 같은 공간 차지 */}
             <div className="mt-1 flex h-2 gap-1">
               {date.indicators &&
+                Array.isArray(date.indicators) &&
                 date.indicators.length > 0 &&
                 date.indicators.map((indicator, i) => (
                   <div
@@ -343,9 +359,10 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
             {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일 포켓 목록
           </h3>
           <ul className="flex flex-1 flex-col gap-3 overflow-auto">
-            {selectedProducts.length > 0 ? (
+            {selectedProducts && Array.isArray(selectedProducts) && selectedProducts.length > 0 ? (
               selectedProducts.map((product) => (
                 <PocketListItem
+                  key={product.id}
                   id={product.id}
                   name={product.name}
                   imgUrl={product.imgUrl}

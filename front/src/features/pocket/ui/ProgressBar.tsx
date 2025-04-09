@@ -2,6 +2,7 @@ import { Icon } from '@/shared/ui';
 
 interface ProgressBarProps {
   percentage: number; // 저장된 퍼센트 (0~100)
+  limitPercentage: number;
   amountSaved: string; // 현재까지 모은 금액
   goalAmount: string; // 목표 금액
   targetDate?: string; // 목표일 (선택)
@@ -11,6 +12,7 @@ interface ProgressBarProps {
 
 const ProgressBar = ({
   percentage,
+  limitPercentage,
   amountSaved,
   goalAmount,
   targetDate,
@@ -33,7 +35,7 @@ const ProgressBar = ({
         <div className="bg-brand-primary-100 h-1.5 w-full rounded">
           <div
             className="bg-brand-primary-500 h-full rounded transition-all duration-500 ease-in-out"
-            style={{ width: `${percentage}%` }}
+            style={{ width: `${limitPercentage}%` }}
           />
         </div>
       </div>

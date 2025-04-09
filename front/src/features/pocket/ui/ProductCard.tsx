@@ -18,7 +18,7 @@ export default function ProductCard({
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {productImage != null ? <ImageContainer size="big" imgSrc={productImage} /> : null}
+      <ImageContainer size="big" imgSrc={productImage} />
 
       {/* 텍스트 영역 */}
       <div className="flex flex-col gap-2 text-center">

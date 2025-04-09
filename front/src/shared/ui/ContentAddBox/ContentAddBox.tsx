@@ -8,9 +8,9 @@ const ContentAddBox = ({ text, onClick }: Props) => {
     <button
       type="button"
       onClick={onClick}
-      className="py-15 w-full border border-dashed border-gray-400 rounded-[1.25rem]"
+      className="w-full cursor-pointer rounded-[1.25rem] border border-dashed border-gray-400 py-15"
     >
-      <span className="text-gray-400 text-text-xl text-center">{`+ ${text}`}</span>
+      <span className="text-text-xl text-center text-gray-400">{`+ ${text}`}</span>
     </button>
   );
 };

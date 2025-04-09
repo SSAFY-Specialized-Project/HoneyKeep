@@ -1,4 +1,5 @@
 import { deletePocketAPI } from '@/entities/pocket/api';
+import { addCommas } from '@/shared/lib';
 import { useBasicModalStore, useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
 import { Icon, ModalOptionButton } from '@/shared/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,11 +7,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 interface Props {
   isOpen: boolean;
   pocketId: number;
+  pocketName: string;
   totalAmount: number;
   gatheredAmount: number;
 }
 
-const PocketUseModal = ({ isOpen, pocketId, totalAmount, gatheredAmount }: Props) => {
+const PocketUseModal = ({ isOpen, pocketId, pocketName, totalAmount, gatheredAmount }: Props) => {
   const { closeModal: closeUseModal } = usePocketUseModalStore();
   const { openModal: openGatheringModal } = useGatheringModalStore();
   const { openModal: openBasicModal, closeModal: closeBasicModal } = useBasicModalStore();
@@ -48,8 +50,8 @@ const PocketUseModal = ({ isOpen, pocketId, totalAmount, gatheredAmount }: Props
     openBasicModal({
       icon: 'exclamation-triangle',
       title: '포켓 삭제',
-      itemName: '필리핀 바나나',
-      description: '포켓에 모은 116,000원이 초기화해요.',
+      itemName: pocketName,
+      description: `포켓에 모은 ${addCommas(gatheredAmount)}원이 초기화해요.`,
       buttonText: '포켓 삭제',
       onConfirm: () => {
         deletePocketMutation.mutate(pocketId);

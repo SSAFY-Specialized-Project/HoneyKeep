@@ -1,8 +1,8 @@
+import { Button, Checkbox } from '@/shared/ui';
 import { useState } from 'react';
-import { Button, Checkbox } from '../../shared/ui';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
-const Retrospect = () => {
+const PocketSurvey = () => {
   const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [otherReason, setOtherReason] = useState<string>('');
@@ -69,4 +69,4 @@ const Retrospect = () => {
   );
 };
 
-export default Retrospect;
+export default PocketSurvey;

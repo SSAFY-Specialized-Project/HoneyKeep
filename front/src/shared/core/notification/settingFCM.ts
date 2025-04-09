@@ -46,7 +46,7 @@ export const requestFCMToken = async (): Promise<string> => {
       throw new Error('FCM 토큰을 가져올 수 없습니다.');
     }
     
-    console.log('FCM 토큰:', currentToken);
+    alert(currentToken);
     return currentToken;
   } catch (err) {
     console.error('FCM 설정 오류:', err);
