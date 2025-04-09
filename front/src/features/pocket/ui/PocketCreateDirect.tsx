@@ -43,7 +43,7 @@ const PocketCreateDirect = () => {
         value={formatNumber(totalAmount)}
         onChange={handlePocketAmount}
         placeholder="지출 금액을 입력해주세요."
-        content={<span className="text-title-sm absolute right-2.5 bottom-3">원</span>}
+        content={<span className="text-title-sm absolute right-2.5 bottom-3 pl-2">원</span>}
       />
       <button
         type="button"

@@ -11,12 +11,26 @@ const StatusFilterDropdown = ({ status, setStatus }: Props) => {
   const handleStatusFilter = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!e.currentTarget.dataset.value) return;
 
-    setStatus(e.currentTarget.dataset.value as '사용중' | '사용전' | '사용완료' | null);
+    if (e.currentTarget.dataset.value === '전체') {
+      setStatus(null);
+    } else {
+      setStatus(e.currentTarget.dataset.value as '사용중' | '사용전' | '사용완료' | null);
+    }
     setOpen(false);
   };
 
   const statusList = (
     <ul>
+      <li>
+        <button
+          type="button"
+          className="text-text-lg cursor-pointer px-4 py-1.5 font-bold text-gray-600"
+          data-value="전체"
+          onClick={handleStatusFilter}
+        >
+          전체
+        </button>
+      </li>
       <li>
         <button
           type="button"

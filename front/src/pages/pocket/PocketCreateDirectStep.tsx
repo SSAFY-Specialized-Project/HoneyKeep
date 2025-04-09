@@ -67,8 +67,8 @@ const PocketCreateStep = () => {
   }, [categoryId]);
 
   useEffect(() => {
-    setDisabled(accountId == null || categoryId == null || Number(chargeAmount) <= 0);
-  }, [accountId, categoryId, chargeAmount]);
+    setDisabled(accountId == null || categoryId == null);
+  }, [accountId, categoryId]);
 
   const handleStartDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStartDate(e.currentTarget.value);
