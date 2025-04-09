@@ -5,7 +5,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { ResponseDTO } from '@/shared/model/types';
 import type { AccountDetail } from '@/entities/account/model/types';
 import getAccountTransactionPocket from '@/entities/account/api/getAccountTransactionPocket';
-import { Outlet, useNavigate, useLocation, useParams, NavLink } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import AccountChoiceTab from '@/entities/account/ui/AccountChoiceTab';
 
 const AccountDetail = () => {
@@ -43,7 +43,7 @@ const AccountDetail = () => {
   }, [location.pathname, navigate]);
 
   return (
-    <div className="bg-brand-background flex flex-1 flex-col">
+    <div className="bg-brand-background flex h-full flex-1 flex-col px-5">
       {/* 계좌 정보 섹션 */}
       <div className="mb-5">
         {accountData && (
@@ -68,14 +68,12 @@ const AccountDetail = () => {
       </div>
 
       {/* 송금하기 버튼 */}
-      <NavLink to="/myAgree" className="px-4 pb-4">
-        <button
-          type="button"
-          className="text-text-md bg-brand-primary-500 hover:bg-brand-primary-600 w-full cursor-pointer rounded-lg p-4 font-medium text-white"
-        >
-          송금하기
-        </button>
-      </NavLink>
+      <Link
+        to="/"
+        className="bg-brand-primary-500 text-title-md mt-3 mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+      >
+        송금하기
+      </Link>
     </div>
   );
 };

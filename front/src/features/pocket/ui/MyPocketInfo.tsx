@@ -29,7 +29,10 @@ const MyPocketInfo = () => {
                 imageId={item.icon}
                 name={item.name}
                 pocketCount={item.pockets.length}
-                totalAmount={item.pockets.reduce((acc, pocket) => acc + pocket.totalAmount, 0)}
+                totalAmount={item.pockets.reduce((acc, pocket) => {
+                  if (pocket.type == 'USED') return acc;
+                  return acc + pocket.totalAmount;
+                }, 0)}
                 pocketList={item.pockets}
               />
             );
@@ -39,7 +42,7 @@ const MyPocketInfo = () => {
         <ContentAddBox
           text="포켓 추가하기"
           onClick={() => {
-            navigate('/myAgree');
+            navigate('/pocket/create');
           }}
         />
       )}

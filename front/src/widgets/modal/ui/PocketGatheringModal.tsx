@@ -59,7 +59,7 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
           <h2 className="text-title-sm font-bold">
             {addCommas(totalAmount)}원 중 {addCommas(gatheredAmount)}원 모았어요
           </h2>
-          <button onClick={closeModal} className="text-gray-900">
+          <button onClick={closeModal} className="cursor-pointer text-gray-900">
             <Icon size="small" id="x-lg" />
           </button>
         </div>

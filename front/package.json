@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "check-env": "node -e \"console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID)\"",
     "predev": "node generate-sw.cjs",
     "dev": "vite",
     "prebuild": "node generate-sw.cjs",

@@ -1,41 +1,64 @@
-import { Alarm, Chatbot, Error, Home, Landing, Loading, SuccessPage } from '@/pages/general';
-import { Login } from '@/pages/user';
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
 import AuthWrapper from './AuthWrapper';
-import { Payment, QRPayment, QRSuccess } from '@/pages/payment';
 import { BaseLayout, HistoryLayout, HistoryNavLayout } from './layouts';
-import {
-  PocketCalendar,
-  PocketCreate,
-  PocketCreateDirectStep,
-  PocketCreateStep,
-  PocketCreateSuccess,
-  PocketDetailPage,
-  PocketList,
-} from '@/pages/pocket';
-import {
-  FixedExpenseCreate,
-  FixedExpenseList,
-  FixedExpenseDetail,
-  FixedExpenseListContent,
-  FixedExpenseListFound,
-} from '@/pages/fixedExpense';
-import { AccountDetail, AccountList, AccountTransfer } from '@/pages/account';
-import CategoryCreate from '@/pages/pocket/CategoryCreate';
-import PocketCreateLink from '@/features/pocket/ui/PocketCreateLink';
-import ExamplePage from '@/entities/pocket/ui/ExamplePage';
 import { Layout } from '@/shared/ui';
-import { PocketCreateDirect, PocketFavoriteList } from '@/features/pocket/ui';
-import { Suspense } from 'react';
-import { MainSkeleton } from '@/pages/skeleton';
 import {
-  Agreement,
-  Certificates,
-  KkulkipRegister,
-  PinVerification,
-  AccountConnect,
-} from '@/pages/mydata';
-import { AccountTransactions, AccountPockets } from '@/features/account/ui';
+  BankPageSkeleton,
+  DefaultLoadingSkeleton,
+  MainSkeleton,
+  PocketListSkeleton,
+} from '@/pages/skeleton';
+
+// 일반 페이지 컴포넌트 lazy 로딩
+const Landing = lazy(() => import('@/pages/general/Landing'));
+const Login = lazy(() => import('@/pages/user/Login'));
+const SuccessPage = lazy(() => import('@/pages/general/SuccessPage'));
+const Home = lazy(() => import('@/pages/general/Home'));
+const Alarm = lazy(() => import('@/pages/general/Alarm'));
+const Chatbot = lazy(() => import('@/pages/general/Chatbot'));
+const Error = lazy(() => import('@/pages/general/Error'));
+
+// 결제 관련 컴포넌트
+const Payment = lazy(() => import('@/pages/payment/Payment'));
+const QRPayment = lazy(() => import('@/pages/payment/QRPayment'));
+const QRSuccess = lazy(() => import('@/pages/payment/QRSuccess'));
+
+// 포켓 관련 컴포넌트
+const PocketCalendar = lazy(() => import('@/pages/pocket/PocketCalendar'));
+const PocketList = lazy(() => import('@/pages/pocket/PocketList'));
+const PocketCreate = lazy(() => import('@/pages/pocket/PocketCreate'));
+const PocketCreateStep = lazy(() => import('@/pages/pocket/PocketCreateStep'));
+const PocketCreateDirectStep = lazy(() => import('@/pages/pocket/PocketCreateDirectStep'));
+const PocketCreateSuccess = lazy(() => import('@/pages/pocket/PocketCreateSuccess'));
+const PocketDetailPage = lazy(() => import('@/pages/pocket/PocketDetailPage'));
+const CategoryCreate = lazy(() => import('@/pages/pocket/CategoryCreate'));
+const PocketCreateLink = lazy(() => import('@/features/pocket/ui/PocketCreateLink'));
+const PocketCreateDirect = lazy(() => import('@/features/pocket/ui/PocketCreateDirect'));
+const PocketFavoriteList = lazy(() => import('@/features/pocket/ui/PocketFavoriteList'));
+const ExamplePage = lazy(() => import('@/entities/pocket/ui/ExamplePage'));
+
+// 계좌 관련 컴포넌트
+const AccountList = lazy(() => import('@/pages/account/AccountList'));
+const AccountDetail = lazy(() => import('@/pages/account/AccountDetail'));
+const AccountTransfer = lazy(() => import('@/pages/account/AccountTransfer'));
+const AccountTransactions = lazy(() => import('@/features/account/ui/AccountTransactions'));
+const AccountPockets = lazy(() => import('@/features/account/ui/AccountPockets'));
+
+// 고정 지출 관련 컴포넌트
+const FixedExpenseList = lazy(() => import('@/pages/fixedExpense/FixedExpenseList'));
+const FixedExpenseCreate = lazy(() => import('@/pages/fixedExpense/FixedExpenseCreate'));
+const FixedExpenseDetail = lazy(() => import('@/pages/fixedExpense/FixedExpenseDetail'));
+const FixedExpenseListContent = lazy(() => import('@/pages/fixedExpense/FixedExpenseListContent'));
+const FixedExpenseListFound = lazy(() => import('@/pages/fixedExpense/FixedExpenseListFound'));
+
+// 마이데이터 관련 컴포넌트
+const Agreement = lazy(() => import('@/pages/mydata/Agreement'));
+const Certificates = lazy(() => import('@/pages/mydata/Certificates'));
+const KkulkipRegister = lazy(() => import('@/pages/mydata/KkulkipRegister'));
+const PinVerification = lazy(() => import('@/pages/mydata/PinVerification'));
+const AccountConnect = lazy(() => import('@/pages/mydata/AccountConnect'));
+
 const AppRouter = createBrowserRouter([
   {
     // 상단 바랑 네비게이션 없는 레이아웃
@@ -43,22 +66,30 @@ const AppRouter = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <Landing />,
+        element: (
+          <Suspense fallback={<DefaultLoadingSkeleton />}>
+            <Landing />
+          </Suspense>
+        ),
       },
       {
         // 로그인
         path: '/login',
-        element: <Login />,
-      },
-      {
-        path: '/loading',
-        element: <Loading />,
+        element: (
+          <Suspense fallback={<DefaultLoadingSkeleton />}>
+            <Login />
+          </Suspense>
+        ),
       },
 
       // 성공 페이지
       {
         path: '/success',
-        element: <SuccessPage />,
+        element: (
+          <Suspense fallback={<DefaultLoadingSkeleton />}>
+            <SuccessPage />
+          </Suspense>
+        ),
       },
 
       {
@@ -67,17 +98,29 @@ const AppRouter = createBrowserRouter([
           {
             // 결제
             path: '/payment',
-            element: <Payment />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <Payment />
+              </Suspense>
+            ),
           },
           {
             // QR 결제
             path: '/qrPayment',
-            element: <QRPayment />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <QRPayment />
+              </Suspense>
+            ),
           },
           {
             // QR 결제 완료
             path: '/qrSuccess',
-            element: <QRSuccess />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <QRSuccess />
+              </Suspense>
+            ),
           },
         ],
       },
@@ -103,13 +146,21 @@ const AppRouter = createBrowserRouter([
           {
             // 알람 설정
             path: '/alarm',
-            element: <Alarm />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <Alarm />
+              </Suspense>
+            ),
           },
 
           {
             // 포켓 캘린더
             path: '/pocket/calendar',
-            element: <PocketCalendar />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <PocketCalendar />
+              </Suspense>
+            ),
           },
         ],
       },
@@ -124,7 +175,11 @@ const AppRouter = createBrowserRouter([
           {
             // 포켓 목록
             path: '/pocket/list',
-            element: <PocketList />,
+            element: (
+              <Suspense fallback={<PocketListSkeleton />}>
+                <PocketList />
+              </Suspense>
+            ),
           },
         ],
       },
@@ -144,15 +199,27 @@ const AppRouter = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <Agreement />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <Agreement />
+                  </Suspense>
+                ),
               },
               {
                 path: 'agreement',
-                element: <Agreement />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <Agreement />
+                  </Suspense>
+                ),
               },
               {
                 path: 'certificates',
-                element: <Certificates />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <Certificates />
+                  </Suspense>
+                ),
               },
             ],
           },
@@ -160,128 +227,232 @@ const AppRouter = createBrowserRouter([
           // 인증서 등록
           {
             path: '/:id/register',
-            element: <KkulkipRegister />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <KkulkipRegister />
+              </Suspense>
+            ),
           },
           {
             path: '/verifyPin',
-            element: <PinVerification />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <PinVerification />
+              </Suspense>
+            ),
           },
 
           // 연결 은행 선택
           {
             path: '/mydata/accountConnect',
-            element: <AccountConnect />,
+            element: (
+              <Suspense fallback={<PocketListSkeleton />}>
+                <AccountConnect />
+              </Suspense>
+            ),
           },
 
           // 계좌 상세
           {
             // 내 게좌 목록
             path: '/accountList',
-            element: <AccountList />,
+            element: (
+              <Suspense fallback={<BankPageSkeleton />}>
+                <AccountList />
+              </Suspense>
+            ),
           },
           {
             // 내 계좌 상세
             path: '/accountDetail/:accountId',
-            element: <AccountDetail />,
+            element: (
+              <Suspense fallback={<BankPageSkeleton />}>
+                <AccountDetail />
+              </Suspense>
+            ),
             children: [
               {
                 path: 'detail',
-                element: <AccountTransactions />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <AccountTransactions />
+                  </Suspense>
+                ),
               },
               {
                 path: 'transactions',
-                element: <AccountTransactions />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <AccountTransactions />
+                  </Suspense>
+                ),
               },
               {
                 path: 'pockets',
-                element: <AccountPockets />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <AccountPockets />
+                  </Suspense>
+                ),
               },
             ],
           },
           {
             // 계좌 이체
             path: '/accountTransfer/:account',
-            element: <AccountTransfer />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <AccountTransfer />
+              </Suspense>
+            ),
           },
 
           // 포켓
           {
             // 포켓 생성
             path: '/pocket/create',
-            element: <PocketCreate />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <PocketCreate />
+              </Suspense>
+            ),
             children: [
               {
                 path: 'link',
-                element: <PocketCreateLink />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <PocketCreateLink />
+                  </Suspense>
+                ),
               },
               {
                 path: 'favorite',
-                element: <PocketFavoriteList />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <PocketFavoriteList />
+                  </Suspense>
+                ),
               },
               {
-                element: <PocketCreateDirect />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <PocketCreateDirect />
+                  </Suspense>
+                ),
                 index: true,
               },
             ],
           },
           {
             path: '/pocket/create/link/step',
-            element: <PocketCreateStep />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <PocketCreateStep />
+              </Suspense>
+            ),
           },
           {
             path: '/pocket/create/direct/step',
-            element: <PocketCreateDirectStep />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <PocketCreateDirectStep />
+              </Suspense>
+            ),
           },
           {
             path: '/pocket/success',
-            element: <PocketCreateSuccess />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <PocketCreateSuccess />
+              </Suspense>
+            ),
           },
           {
             path: '/pocket/detail/:id',
-            element: <PocketDetailPage />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <PocketDetailPage />
+              </Suspense>
+            ),
           },
           {
             path: '/category/create',
-            element: <CategoryCreate />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <CategoryCreate />
+              </Suspense>
+            ),
           },
           // 고정 지출
           {
             path: '/fixedExpense',
-            element: <FixedExpenseList />,
+            element: (
+              <Suspense fallback={<BankPageSkeleton />}>
+                <FixedExpenseList />
+              </Suspense>
+            ),
             children: [
               {
                 path: 'list',
-                element: <FixedExpenseListContent />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <FixedExpenseListContent />
+                  </Suspense>
+                ),
               },
               {
                 path: 'found',
-                element: <FixedExpenseListFound />,
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <FixedExpenseListFound />
+                  </Suspense>
+                ),
               },
             ],
           },
           {
             // 고정 지출 생성
             path: '/fixedExpense/create',
-            element: <FixedExpenseCreate />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <FixedExpenseCreate />
+              </Suspense>
+            ),
           },
           {
             // 고정 지출 상세
             path: '/fixedExpense/:id',
-            element: <FixedExpenseDetail />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <FixedExpenseDetail />
+              </Suspense>
+            ),
           },
           // 챗봇
           {
             path: '/chatbot',
-            element: <Chatbot />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <Chatbot />
+              </Suspense>
+            ),
           },
           {
             path: '/error',
-            element: <Error />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <Error />
+              </Suspense>
+            ),
           },
           // 예시 페이지
           {
             path: '/e',
-            element: <ExamplePage />,
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <ExamplePage />
+              </Suspense>
+            ),
           },
         ],
       },

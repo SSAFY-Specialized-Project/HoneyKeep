@@ -49,7 +49,7 @@ const AccountInfo = ({
         <button
           type="button"
           onClick={onClickSend}
-          className="text-gary-700 text-text-sm rounded-lg border border-gray-200 px-3 py-2"
+          className="text-gary-700 text-text-sm cursor-pointer rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-100"
         >
           송금하기
         </button>
