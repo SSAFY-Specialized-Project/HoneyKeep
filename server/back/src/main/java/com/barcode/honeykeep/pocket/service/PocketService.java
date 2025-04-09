@@ -16,6 +16,7 @@ import com.barcode.honeykeep.pocket.exception.PocketErrorCode;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
 import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
+import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 public class PocketService {
 
     private final PocketRepository pocketRepository;
+    private final TransactionRepository transactionRepository;
     private final AccountService accountService;
     private final CategoryService categoryService;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -129,7 +131,7 @@ public class PocketService {
                 .category(category)
                 .name(null)
                 .productName(null)
-                .totalAmount(null)
+                .totalAmount(Money.zero())
                 .savedAmount(Money.zero())
                 .link(null)
                 .startDate(pocketManualRequest.getStartDate())
@@ -138,6 +140,7 @@ public class PocketService {
                 .type(PocketType.UNUSED)
                 .imgUrl(null)
                 .crawlingUuid(pocketManualRequest.getCrawlingUuid())
+                .isActivated(true)
                 .build();
 
         Pocket savedPocket = pocketRepository.save(pocket);
@@ -147,12 +150,7 @@ public class PocketService {
 
         // Redis에서 UUID로 크롤링 데이터 있는지 조회
         Object crawlingData = redisTemplate.opsForValue().get("crawling:" + pocketManualRequest.getCrawlingUuid());
-        if (!(crawlingData instanceof HashMap)) {
-            PocketCrawlingResult pocketCrawlingResult = (PocketCrawlingResult) crawlingData;
-
-            if(pocketCrawlingResult == null) {
-                throw new CustomException(PocketErrorCode.REDIS_SAVE_ERROR);
-            }
+        if (crawlingData instanceof PocketCrawlingResult pocketCrawlingResult) {
 
             // 크롤링 완료된 데이터 업데이트
             if (pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
@@ -514,6 +512,16 @@ public class PocketService {
     @Transactional
     public PocketUpdateResponse completePocketPayment(Long pocketId) {
         Pocket pocket = getPocketById(pocketId);
+
+        Long usedAmount = transactionRepository.sumAmountByPocketId(pocketId);
+        Long totalAmount = pocket.getTotalAmount().getAmountAsLong();
+
+        if (usedAmount > totalAmount) {
+            Long exceedAmount = usedAmount - totalAmount;
+
+            // todo :  알림 전송 & 설문 요청
+
+        }
 
         pocket.updateType(PocketType.USED);
 

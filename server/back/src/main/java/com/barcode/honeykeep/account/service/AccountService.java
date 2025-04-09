@@ -12,6 +12,7 @@ import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.notification.dto.AccountTransferNotificationDTO;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.pocket.type.PocketType;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import com.barcode.honeykeep.transaction.type.TransactionType;
@@ -126,69 +127,23 @@ public class AccountService {
 
         //출금 알림 DTO 생성 (출금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO withdrawalNotification = AccountTransferNotificationDTO.builder()
-                .notificationType(PushType.TRANSFER.getType())
                 .transactionType(TransactionType.WITHDRAWAL)
                 .amount(transferAmount) //출금 금액
                 .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
                 .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
                 .transferDate(now) //현재 시간
                 .build();
-
-        try {
-            notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
-            log.info("계좌이체(출금) 알림 전송 성공 - 사용자 ID: {}", withdrawAccount.getUser().getId());
-
-            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
-            String formattedAmount = nf.format(transferAmount);
-
-            // 전송 성공 시 알림 DB 저장
-            String title = "계좌이체";
-            // payAmount가 BigDecimal인 경우 적절한 포맷 적용 (여기서는 단순 문자열로 처리)
-            String body = String.format("%s 님, 출금 %s 원이 출금 되었습니다.",
-                    withdrawAccount.getUser().getName(), formattedAmount);
-            notificationService.saveNotification(
-                    withdrawAccount.getUser().getId(),
-                    PushType.TRANSFER,
-                    title,
-                    body
-            );
-        } catch (Exception e) {
-            log.error("계좌이체(출금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
-                    withdrawAccount.getUser().getId(), e.getMessage(), e);
-        }
-
+        notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
 
         // 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
-                .notificationType(PushType.TRANSFER.getType())
                 .transactionType(TransactionType.DEPOSIT)
                 .amount(transferAmount) //입금 금액
                 .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
                 .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
                 .transferDate(now) //현재 시간
                 .build();
-        try {
-            // FCM 전송: 입금 알림 전송 시도
-            notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
-            log.info("계좌이체(입금) 알림 전송 성공 - 사용자 ID: {}", depositAccount.getUser().getId());
-
-            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
-            String formattedAmount = nf.format(transferAmount);
-
-            // 전송 성공 시 알림 DB 저장
-            String title = "계좌이체";
-            String body = String.format("%s 님, %s 원이 입금 되었습니다.",
-                    depositAccount.getUser().getName(), formattedAmount);
-            notificationService.saveNotification(
-                    depositAccount.getUser().getId(),
-                    PushType.TRANSFER,
-                    title,
-                    body
-            );
-        } catch (Exception e) {
-            log.error("계좌이체(입금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
-                    depositAccount.getUser().getId(), e.getMessage(), e);
-        }
+        notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
 
 
         return TransferExecutionResponse.builder()
@@ -215,6 +170,8 @@ public class AccountService {
                     .totalPocketAmount(calculateTotalPocketAmount(account))
                     .pocketCount(account.getPockets().size())
                     .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                    .totalUsedPocketAmount(calculateUsedTotalPocketAmount(account))
+                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateActivePocketAmount(account)))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -251,6 +208,7 @@ public class AccountService {
                         .accountId(account.getId())
                         .accountName(account.getAccountName())
                         .memo(transaction.getMemo())
+                        .pocketId(transaction.getPocket() != null ? transaction.getPocket().getId() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -295,4 +253,26 @@ public class AccountService {
         return total;
     }
 
+    //활성화된 포켓들(UNUSED, USING)의 금액 합 계산 (USED 상태 제외)
+    private BigDecimal calculateActivePocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            // USED 상태가 아닌 포켓만 합산 (UNUSED, USING 상태인 경우)
+            if (pocket.getType() != PocketType.USED) {
+                total = total.add(pocket.getSavedAmount().getAmount());
+            }
+        }
+        return total;
+    }
+
+    // 모든 포켓에서 사용한 모든 금액 계산
+    private BigDecimal calculateUsedTotalPocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            total = total.add(pocket.getTotalAmount().getAmount());
+        }
+        return total;
+    }
 }
