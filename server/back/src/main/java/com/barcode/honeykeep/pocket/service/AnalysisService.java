@@ -112,6 +112,8 @@ public class AnalysisService {
             for (TransactionDetailResponse txn : detail.getTransactionList()) {
                 long amount = txn.amount().longValue();
                 if (txn.pocketId() != null) {
+                    log.info("Pocket ID: {}", txn.pocketId());
+
                     ctx.plannedAmount += amount;
                     ctx.pocketSpendingMap.merge(txn.pocketId(), amount, Long::sum);
                 } else {
@@ -155,8 +157,8 @@ public class AnalysisService {
                 .countReasonsGroupedByUser(userId)
                 .stream()
                 .map(p -> OverspendingReasonCountResponse.builder()
-                        .label(p.label())
-                        .count(p.count())
+                        .label(p.getLabel())
+                        .count(p.getCount())
                         .build())
                 .toList();
         return SpendingAnalysisResponse.builder()
@@ -171,6 +173,7 @@ public class AnalysisService {
                                 .exceededAmount(ctx.exceededAmount)
                                 .build()
                 )
+                .overspendingReasons(reasons)
                 .build();
     }
 
