@@ -1,0 +1,4 @@
+-- 아래 SQL은 각 테이블의 데이터를 삭제합니다.
+TRUNCATE TABLE accounts CASCADE;
+TRUNCATE TABLE banks CASCADE;
+TRUNCATE TABLE users CASCADE;
