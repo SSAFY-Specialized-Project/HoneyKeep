@@ -138,6 +138,7 @@ public class PocketService {
                 .type(PocketType.UNUSED)
                 .imgUrl(null)
                 .crawlingUuid(pocketManualRequest.getCrawlingUuid())
+                .isActivated(false)
                 .build();
 
         Pocket savedPocket = pocketRepository.save(pocket);
