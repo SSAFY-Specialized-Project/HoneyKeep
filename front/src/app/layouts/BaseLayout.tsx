@@ -26,6 +26,7 @@ const BaseLayout = () => {
           <PocketUseModal
             isOpen={pocketModalOpen}
             pocketId={pocketModalProps?.pocketId ?? 0}
+            pocketName={pocketModalProps?.pocketName ?? ''}
             totalAmount={pocketModalProps?.totalAmount ?? 0}
             gatheredAmount={pocketModalProps?.gatheredAmount ?? 0}
           />

@@ -429,14 +429,7 @@ const AppRouter = createBrowserRouter([
             ),
           },
           // 챗봇
-          {
-            path: '/chatbot',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <Chatbot />
-              </Suspense>
-            ),
-          },
+
           {
             path: '/error',
             element: (
@@ -451,6 +444,14 @@ const AppRouter = createBrowserRouter([
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
                 <ExamplePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: '/chatbot',
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <Chatbot />
               </Suspense>
             ),
           },

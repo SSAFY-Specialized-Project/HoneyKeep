@@ -8,16 +8,19 @@ const customFetchAPI = async <T, P, H extends Record<string, string> = Record<st
   credentials = "same-origin",
   data,
   headers,
+  end = "Java"
 }:{
   url: string;
   method: "GET"| "POST"| "PUT"| "DELETE"| "PATCH";
   credentials?: RequestCredentials,
   data?: P;
   headers?: H;
+  end?: "Java" | "Python"
 }):Promise<ResponseDTO<T>> => {
 
   const body = data ? JSON.stringify(data) : null;
   const accessToken = localStorage.getItem("accessToken");
+  const makeURL = end == "Java" ? apiURL(url) : `https://j12a405.p.ssafy.io/api/v2${url}`
 
   try{
 
@@ -28,7 +31,7 @@ const customFetchAPI = async <T, P, H extends Record<string, string> = Record<st
 
     const mergedHeaders = { ...defaultHeaders, ...headers };
 
-    const response = await fetch(apiURL(url), {
+    const response = await fetch(makeURL, {
       method,
       headers: mergedHeaders,
       credentials,
@@ -50,7 +53,7 @@ const customFetchAPI = async <T, P, H extends Record<string, string> = Record<st
 
             localStorage.setItem("accessToken", refreshResponse.data);
 
-            return customFetchAPI({url, method, credentials, data, headers});
+            return customFetchAPI({url, method, credentials, data, headers, end});
 
           }
 
