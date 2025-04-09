@@ -81,7 +81,7 @@ public class AnalysisService {
      */
     private long calculatePocketTotal(List<AccountResponse> accounts) {
         return accounts.stream()
-                .mapToLong(a -> a.getTotalPocketAmount().longValue())
+                .mapToLong(a -> a.getTotalUsedPocketAmount().longValue())
                 .sum();
     }
 
@@ -155,8 +155,8 @@ public class AnalysisService {
                 .countReasonsGroupedByUser(userId)
                 .stream()
                 .map(p -> OverspendingReasonCountResponse.builder()
-                        .label(p.label())
-                        .count(p.count())
+                        .label(p.getLabel())
+                        .count(p.getCount())
                         .build())
                 .toList();
         return SpendingAnalysisResponse.builder()
@@ -171,6 +171,7 @@ public class AnalysisService {
                                 .exceededAmount(ctx.exceededAmount)
                                 .build()
                 )
+                .overspendingReasons(reasons)
                 .build();
     }
 
