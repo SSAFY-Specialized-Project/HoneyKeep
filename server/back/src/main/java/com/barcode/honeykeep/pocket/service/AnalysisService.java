@@ -112,8 +112,6 @@ public class AnalysisService {
             for (TransactionDetailResponse txn : detail.getTransactionList()) {
                 long amount = txn.amount().longValue();
                 if (txn.pocketId() != null) {
-                    log.info("Pocket ID: {}", txn.pocketId());
-
                     ctx.plannedAmount += amount;
                     ctx.pocketSpendingMap.merge(txn.pocketId(), amount, Long::sum);
                 } else {
