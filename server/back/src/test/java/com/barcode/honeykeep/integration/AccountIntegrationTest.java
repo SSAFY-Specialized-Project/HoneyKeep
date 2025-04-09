@@ -285,7 +285,120 @@ public class AccountIntegrationTest {
      */
     @Test
     @Order(3)
-    void 경쟁_상태_테스트(){
+    void 경쟁_상태_테스트() throws InterruptedException{
+// CountDownLatch: 두 작업이 동시에 시작하도록 준비한다.
+        CountDownLatch startLatch = new CountDownLatch(1);
+        // ExecutorService: 두 개의 작업을 동시에 처리하는 스레드 풀 생성
+        ExecutorService executor = Executors.newFixedThreadPool(2);
 
+        // 작업 1: 사용자1의 계좌 A → 계좌 B (1,000원 이체)
+        Runnable taskUser1Transfer = () -> {
+            try {
+                // 작업 시작 전 latch에서 대기
+                startLatch.await();
+                // 사용자1의 access token을 사용 (이미 로그인되어 있다고 가정)
+                String requestJson = "{" +
+                        "\"withdrawAccountId\": 1," +
+                        "\"depositAccountNumber\": \"B-0001\"," +
+                        "\"transferAmount\": 1000" +
+                        "}";
+                given()
+                        .header("Authorization", "Bearer " + accessTokenUser1)
+                        .contentType(ContentType.JSON)
+                        .body(requestJson)
+                        .when()
+                        .post("/api/v1/accounts/execute")
+                        .then()
+                        .statusCode(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        };
+
+        // 작업 2: 사용자2의 계좌 C → 계좌 B (500원 이체)
+        Runnable taskUser2Transfer = () -> {
+            try {
+                // 작업 시작 전 latch에서 대기
+                startLatch.await();
+                // 사용자2의 access token 사용
+                String requestJson = "{" +
+                        "\"withdrawAccountId\": 3," +
+                        "\"depositAccountNumber\": \"B-0001\"," +
+                        "\"transferAmount\": 500" +
+                        "}";
+                given()
+                        .header("Authorization", "Bearer " + accessTokenUser2)
+                        .contentType(ContentType.JSON)
+                        .body(requestJson)
+                        .when()
+                        .post("/api/v1/accounts/execute")
+                        .then()
+                        .statusCode(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        };
+
+        // 두 작업을 스레드 풀에 제출한다.
+        executor.submit(taskUser1Transfer);
+        executor.submit(taskUser2Transfer);
+
+        // 모든 스레드가 동시에 시작하도록 latch의 카운트를 0으로 만든다.
+        startLatch.countDown();
+
+        // 작업 완료를 위해 스레드 풀 종료 및 완료 대기
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+            Thread.sleep(100);
+        }
+
+        // 최종 잔액 검증
+        // 계좌 A (출금 계좌, 사용자1)의 최종 잔액이 9,000원인지 검증
+        Float withdrawBalance =
+                given()
+                        .header("Authorization", "Bearer " + accessTokenUser1)
+                        .contentType(ContentType.JSON)
+                        .when()
+                        .get("/api/v1/accounts/1")
+                        .then()
+                        .statusCode(200)
+                        .extract().path("data.accountBalance");
+
+
+        BigDecimal actualWithdrawBalance = BigDecimal.valueOf(withdrawBalance);
+        BigDecimal expectedWithdrawBalance = new BigDecimal("9000.00");
+
+        assertTrue(expectedWithdrawBalance.compareTo(actualWithdrawBalance) == 0,
+                "계좌 A의 잔액이 예상과 다릅니다. 예상: " + expectedWithdrawBalance + ", 실제: " + actualWithdrawBalance);
+
+        // 계좌 C (출금 계좌, 사용자2)의 최종 잔액이 7,500원인지 검증
+        Float depositWithdrawBalance =
+                given()
+                        .header("Authorization", "Bearer " + accessTokenUser2)
+                        .contentType(ContentType.JSON)
+                        .when()
+                        .get("/api/v1/accounts/3")
+                        .then()
+                        .statusCode(200)
+                        .extract().path("data.accountBalance");
+        BigDecimal actualCBalance = BigDecimal.valueOf(depositWithdrawBalance);
+        BigDecimal expectedCBalance = new BigDecimal("7500.00");
+        assertTrue(expectedCBalance.compareTo(actualCBalance) == 0,
+                "계좌 C의 잔액이 예상과 다릅니다. 예상: " + expectedCBalance + ", 실제: " + actualCBalance);
+
+        // 계좌 B (입금 계좌)의 최종 잔액이 6,500원인지 검증
+        Float depositBalance =
+                given()
+                        .header("Authorization", "Bearer " + accessTokenUser1)
+                        .contentType(ContentType.JSON)
+                        .when()
+                        .get("/api/v1/accounts/2")
+                        .then()
+                        .statusCode(200)
+                        .extract().path("data.accountBalance");
+        BigDecimal actualDepositBalance = BigDecimal.valueOf(depositBalance);
+        BigDecimal expectedDepositBalance = new BigDecimal("6500.00");
+        assertTrue(expectedDepositBalance.compareTo(actualDepositBalance) == 0,
+                "계좌 B의 잔액이 예상과 다릅니다. 예상: " + expectedDepositBalance + ", 실제: " + actualDepositBalance);
     }
 }
