@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FixedChoiceTab, FixedExpenseTotal } from '@/entities/fixedExpense/ui';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import BasicModal from '@/widgets/modal/ui/BasicModal.tsx';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import {
@@ -141,7 +141,7 @@ const FixedExpenseList = () => {
   };
 
   return (
-    <div className="bg-brand-background relative flex h-full flex-1 flex-col gap-5">
+    <div className="relative flex h-full flex-1 flex-col gap-5 px-5">
       {/* 내 고정지출 요약 */}
       <FixedExpenseTotal count={fixedExpenses.length} totalAmount={totalAmount} />
 
@@ -179,11 +179,12 @@ const FixedExpenseList = () => {
 
       {/* 추가 버튼 (고정지출 목록 탭이면서 편집 모드가 아닐 때만 표시) */}
       {isFixedExpenseListTab && !isEditMode && (
-        <NavLink to="/fixedExpense/create" className="px-4 pb-4">
-          <button className="text-m w-full cursor-pointer rounded-lg bg-yellow-400 p-4 font-medium text-white hover:bg-yellow-500">
-            고정지출 추가하기
-          </button>
-        </NavLink>
+        <Link
+          to="/fixedExpense/create"
+          className="bg-brand-primary-500 text-title-md mt-3 mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+        >
+          고정지출 추가하기
+        </Link>
       )}
     </div>
   );

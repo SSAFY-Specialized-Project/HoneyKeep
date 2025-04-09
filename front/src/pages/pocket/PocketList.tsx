@@ -7,7 +7,6 @@ import { useHeaderStore } from '@/shared/store';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { convertCurrentTime } from '@/shared/lib';
 
 const PocketList = () => {
   const setTitle = useHeaderStore((state) => state.setTitle);
@@ -80,8 +79,8 @@ const PocketList = () => {
           </button>
         </div>
       </div>
-      <div className="mt-12 h-full">
-        <ul className="flex h-full flex-col gap-4 overflow-auto">
+      <div className="h-full overflow-auto pt-10">
+        <ul className="flex h-full flex-col gap-4">
           {pocketListQuery.data != null && pocketListQuery.data.length > 0 ? (
             pocketListQuery.data.map((item) => {
               return (

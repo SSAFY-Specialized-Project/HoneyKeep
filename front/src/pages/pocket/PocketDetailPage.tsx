@@ -1,7 +1,11 @@
-import { getPocketDetailAPI, patchPocketIsFavoriteAPI } from '@/entities/pocket/api';
+import {
+  deletePocketAPI,
+  getPocketDetailAPI,
+  patchPocketIsFavoriteAPI,
+} from '@/entities/pocket/api';
 import { ProductCard, ProgressBar } from '@/features/pocket/ui';
-import { addCommas } from '@/shared/lib';
-import { useGatheringModalStore, useHeaderStore } from '@/shared/store';
+import { addCommas, extractDate } from '@/shared/lib';
+import { useBasicModalStore, useGatheringModalStore, useHeaderStore } from '@/shared/store';
 import { Icon } from '@/shared/ui';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -9,15 +13,24 @@ import { useParams } from 'react-router';
 
 const PocketDetailPage = () => {
   const setContent = useHeaderStore((state) => state.setContent);
+  const { openModal: openBasicModal, closeModal: closeBasicModal } = useBasicModalStore();
+
+  // 삭제하기
+  const deletePocketMutation = useMutation({
+    mutationFn: (pocketId: number) => deletePocketAPI(pocketId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
+      closeBasicModal();
+    },
+    onError: () => {},
+  });
 
   useEffect(() => {
     setContent(
       <button
         type="button"
         className="text-text-xl cursor-pointer font-semibold text-gray-600"
-        onClick={() => {
-          console.log('버튼 클릭!');
-        }}
+        onClick={handleDelete}
       >
         삭제하기
       </button>,
@@ -55,6 +68,19 @@ const PocketDetailPage = () => {
     return;
   }
 
+  const handleDelete = () => {
+    openBasicModal({
+      icon: 'exclamation-triangle',
+      title: '포켓 삭제',
+      itemName: pocketQuery.data.name,
+      description: `포켓에 모은 ${addCommas(pocketQuery.data.savedAmount)}원이 초기화해요.`,
+      buttonText: '포켓 삭제',
+      onConfirm: () => {
+        deletePocketMutation.mutate(Number(pocketId));
+      },
+    });
+  };
+
   const handleIsFavorite = () => {
     pocketFavoriteMutation.mutate({
       pocketId: Number(pocketId),
@@ -88,9 +114,14 @@ const PocketDetailPage = () => {
           percentage={Math.round(
             (pocketQuery.data.savedAmount / pocketQuery.data.totalAmount) * 100,
           )}
+          limitPercentage={
+            Math.round((pocketQuery.data.savedAmount / pocketQuery.data.totalAmount) * 100) > 100
+              ? 100
+              : Math.round((pocketQuery.data.savedAmount / pocketQuery.data.totalAmount) * 100)
+          }
           amountSaved={addCommas(pocketQuery.data.savedAmount)}
           goalAmount={addCommas(pocketQuery.data.totalAmount)}
-          targetDate={pocketQuery.data.endDate}
+          targetDate={extractDate(pocketQuery.data.endDate)}
           linkedAccount={pocketQuery.data.accountName}
           canEdit={true}
         />

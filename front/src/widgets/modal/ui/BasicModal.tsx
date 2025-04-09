@@ -43,12 +43,15 @@ const BasicModal = ({
             ) : null}
             <h2 className="text-text-xl font-bold text-gray-900">{title}</h2>
           </div>
-          <button className="p-1 text-gray-900 hover:opacity-70" onClick={closeModal}>
+          <button
+            className="cursor-pointer p-1 text-gray-900 hover:opacity-70"
+            onClick={closeModal}
+          >
             <Icon size="small" id="x-lg" />
           </button>
         </div>
         <div className="mb-6">
-          <p className="text-text-sm text-left">
+          <p className="text-text-sm flex gap-2 text-left">
             <span className="font-bold text-gray-900">{itemName}</span>
             <span className="text-gray-600">{description}</span>
           </p>

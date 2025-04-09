@@ -5,6 +5,7 @@ interface Props{
   setIsOpen: (isOpen: boolean) => void;
   modalProps: {
     pocketId: number;
+    pocketName: string;
     totalAmount: number;
     gatheredAmount: number;
   } | null;
