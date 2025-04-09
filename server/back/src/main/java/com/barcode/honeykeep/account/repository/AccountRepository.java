@@ -32,7 +32,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * Pessimistic Lock을 걸어 출금 계좌를 조회한다.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select a from Account a where a.id = :accountId")
+    @Query("select a from Account a where a.id in :accountId order by a.id asc")
     Optional<Account> findAccountForUpdate(@Param("accountId") Long accountId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -40,6 +40,20 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findAccountForUpdateByAccountNumber(@Param("accountNumber") String accountNumber);
 
     Boolean existsAccountByAccountNumber(String accountNumber);
+
+    /**
+     * 여러 계좌를 한 번에 조회하고 PESSIMISTIC_WRITE 락을 획득한다.
+     * 전달된 계좌 ID 목록에 해당하는 모든 Account를 ID 오름차순으로 정렬하여 반환한다.
+     *
+     * 데드락을 방지하기 위해, 여러 계좌에 대해 락을 요청할 때 항상 일정한 순서(낮은 ID부터 높은 ID)를 따라 락을 획득하도록 한다.
+     *
+     * @param ids 조회할 계좌 ID 목록
+     * @return 해당 계좌들 목록 (ID 오름차순 정렬)
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.id in :ids order by a.id asc")
+    List<Account> findAccountsForUpdateByIds(@Param("ids") List<Long> ids);
+
 
 }
 
