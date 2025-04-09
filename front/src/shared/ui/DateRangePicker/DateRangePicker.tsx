@@ -268,13 +268,13 @@ const DateRangePicker = ({
       <div className="mt-4 flex justify-end space-x-2">
         <button
           onClick={handleCancel}
-          className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100"
+          className="cursor-pointer rounded border border-gray-300 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100"
         >
           취소
         </button>
         <button
           onClick={handleApply}
-          className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+          className="cursor-pointer rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
           disabled={!startDate || !endDate}
         >
           적용

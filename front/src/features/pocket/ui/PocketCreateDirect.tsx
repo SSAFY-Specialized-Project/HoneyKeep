@@ -11,7 +11,15 @@ const PocketCreateDirect = () => {
   };
 
   const handlePocketAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTotalAmount(Number(e.currentTarget.value));
+    const value = e.currentTarget.value.replace(/,/g, '');
+    const numberValue = Number(value);
+    if (!isNaN(numberValue)) {
+      setTotalAmount(numberValue);
+    }
+  };
+
+  const formatNumber = (num: number) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
   const handleCreatePocket = () => {
@@ -31,8 +39,8 @@ const PocketCreateDirect = () => {
       <BorderInput
         type="text"
         label="amount"
-        labelText="채울 금액"
-        value={String(totalAmount)}
+        labelText="포켓 총 금액"
+        value={formatNumber(totalAmount)}
         onChange={handlePocketAmount}
         placeholder="지출 금액을 입력해주세요."
         content={<span className="text-title-sm absolute right-2.5 bottom-3">원</span>}

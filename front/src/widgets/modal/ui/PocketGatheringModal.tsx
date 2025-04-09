@@ -1,5 +1,5 @@
 import { patchPocketGather } from '@/entities/pocket/api';
-import { addCommas } from '@/shared/lib';
+import { addCommas, formatCurrency } from '@/shared/lib';
 import { useGatheringModalStore } from '@/shared/store';
 import { Icon } from '@/shared/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -70,7 +70,7 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
             <div className="flex items-center">
               <input
                 type="text"
-                value={amount}
+                value={formatCurrency(amount)}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="얼마를 더 모을까요?"
                 className="text-text-xl w-full placeholder:text-gray-400"
@@ -81,11 +81,11 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
           </div>
 
           <div className="flex gap-2">
-            <button className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 hover:bg-gray-200">
+            <button className="text-text-md cursor-pointer rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 hover:bg-gray-200">
               나중에 모으기
             </button>
             <button
-              className="text-text-md rounded-2xl bg-gray-100 px-4 py-3 text-[#2196f3] hover:bg-gray-200"
+              className="text-text-md cursor-pointer rounded-2xl bg-gray-100 px-4 py-3 text-[#2196f3] hover:bg-gray-200"
               onClick={handleGatherAll}
             >
               전액 모으기
@@ -94,7 +94,7 @@ const PocketGatheringModal = ({ isOpen, totalAmount, gatheredAmount, pocketId }:
 
           <button
             onClick={handlePatchGathering}
-            className="text-text-xl w-full rounded-2xl bg-[#fa0] py-4 font-bold text-white hover:bg-[#c80]"
+            className="text-text-xl w-full cursor-pointer rounded-2xl bg-[#fa0] py-4 font-bold text-white hover:bg-[#c80]"
           >
             확인
           </button>

@@ -30,7 +30,12 @@ const AccountLinkModal = ({ isOpen, setIsOpen }: Props) => {
             onClick={() => {}}
           />
           <button className="ml-auto">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-6 w-6 cursor-pointer"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

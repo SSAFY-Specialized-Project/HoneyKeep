@@ -1,4 +1,5 @@
 import { BankIcon } from '@/shared/ui';
+import { formatWithKRW } from '@/shared/lib';
 
 interface Props {
   id: string;
@@ -29,12 +30,14 @@ const AccountPocketInfo = ({
               <span className="text-text-sm font-medium text-gray-600">{`${bank} ${accountNumber}`}</span>
             </div>
           </div>
-          <span className="">{currentAmount} 원</span>
+          <span className="">{formatWithKRW(currentAmount)}</span>
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex w-full justify-between">
             <span className="text-text-lg">포켓 후 잔액</span>
-            <span className="text-text-lg text-extra font-semibold">{remainingAmount} 원</span>
+            <span className="text-text-lg text-extra font-semibold">
+              {formatWithKRW(remainingAmount)}
+            </span>
           </div>
           <div className="flex w-full justify-between">
             <span className="text-text-sm text-gray-600">연결된 포켓</span>

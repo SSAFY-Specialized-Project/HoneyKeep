@@ -25,7 +25,7 @@ const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
   return (
     <div className="flex flex-col gap-3">
       <button
-        className="flex w-full items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
+        className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
         onClick={() => {
           setOpen(!isOpen);
         }}
@@ -70,7 +70,7 @@ const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
         onClick={() => {
           navigate('/category/create');
         }}
-        className="flex w-full items-center justify-center rounded-2xl border border-gray-200 py-4"
+        className="flex w-full cursor-pointer items-center justify-center rounded-2xl border border-gray-200 py-4"
       >
         <span className="text-text-xl text-gray-900">새 카테고리 추가</span>
       </button>
