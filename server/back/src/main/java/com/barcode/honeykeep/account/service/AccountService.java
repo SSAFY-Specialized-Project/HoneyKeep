@@ -76,54 +76,47 @@ public class AccountService {
      */
     @Transactional
     public TransferExecutionResponse executeTransfer(TransferExecutionRequest request, Long userId) {
-        // 1. 출금 계좌와 입금 계좌의 ID를 구합니다.
+        // 1. 출금 계좌 ID는 직접 요청에서 얻습니다.
         Long withdrawId = request.getWithdrawAccountId();
-        // 입금 계좌는 계좌 번호로 조회되므로, 먼저 임시로 조회하여 ID를 구합니다.
-        Account depositTemp = accountRepository.findAccountForUpdateByAccountNumber(request.getDepositAccountNumber())
-                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
-        Long depositId = depositTemp.getId();
 
-        // 2. 두 계좌의 ID 목록을 생성하고, 일관된 순서(예: 오름차순)로 조회합니다.
+        // 2. 입금 계좌의 ID는 계좌 번호로 단순 조회(락 없이)하여 구합니다.
+        Long depositId = accountRepository.findAccountIdByAccountNumber(request.getDepositAccountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+        // 3. 두 계좌의 ID 목록 생성 후 동시에 락을 획득하는 bulk 조회
         List<Long> accountIds = Arrays.asList(withdrawId, depositId);
         List<Account> accounts = accountRepository.findAccountsForUpdateByIds(accountIds);
         if (accounts.size() != 2) {
             throw new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND);
         }
 
-        // 3. 조회된 계좌에서 출금/입금 계좌를 올바르게 식별합니다.
+        // 4. 조회된 계좌들은 ID 오름차순으로 정렬되어 있음 => 출금/입금 계좌 식별
         Account withdrawAccount, depositAccount;
-
-        // 조회된 계좌들은 ID 오름차순으로 정렬되어 있다.
         if (accounts.get(0).getId().equals(withdrawId)) {
             withdrawAccount = accounts.get(0);
             depositAccount = accounts.get(1);
         } else {
-            // 만약 조회된 순서가 반대라면, swap 합니다.
             withdrawAccount = accounts.get(1);
             depositAccount = accounts.get(0);
         }
 
-        // 4. 소유자 검증
+        // 5. 소유자 검증 및 이체 금액, 잔액 체크
         if (!withdrawAccount.getUser().getId().equals(userId)) {
             throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
         }
-
-        // 5. 이체 금액
         BigDecimal transferAmount = request.getTransferAmount();
-
-        // 6. 잔액 부족 체크
         if (withdrawAccount.getAccountBalance().getAmount().compareTo(transferAmount) < 0) {
             throw new CustomException(AccountErrorCode.INSUFFICIENT_FUNDS);
         }
 
-        // 7. 계좌 업데이트: 출금 및 입금
+        // 6. 계좌 업데이트: 출금 및 입금
         BigDecimal newWithdrawBalance = withdrawAccount.getAccountBalance().getAmount().subtract(transferAmount);
         withdrawAccount.updateBalance(new Money(newWithdrawBalance));
 
         BigDecimal newDepositBalance = depositAccount.getAccountBalance().getAmount().add(transferAmount);
         depositAccount.updateBalance(new Money(newDepositBalance));
 
-        // 8. 거래내역 저장: 출금 거래내역
+        // 7. 거래내역 저장
         transactionService.createTransaction(
                 withdrawAccount,
                 depositAccount.getUser().getName(),
@@ -131,8 +124,6 @@ public class AccountService {
                 new Money(newWithdrawBalance),
                 TransactionType.WITHDRAWAL
         );
-
-        // 9. 거래내역 저장: 입금 거래내역
         transactionService.createTransaction(
                 depositAccount,
                 withdrawAccount.getUser().getName(),
@@ -141,29 +132,26 @@ public class AccountService {
                 TransactionType.DEPOSIT
         );
 
-
         LocalDateTime now = LocalDateTime.now();
 
-        //출금 알림 DTO 생성 (출금 계좌 사용자에게 보냄)
+        // 8. 알림 전송 (이 부분은 추후 비동기 처리 등으로 개선 가능)
         AccountTransferNotificationDTO withdrawalNotification = AccountTransferNotificationDTO.builder()
                 .transactionType(TransactionType.WITHDRAWAL)
-                .amount(transferAmount) //출금 금액
-                .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
-                .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
-                .transferDate(now) //현재 시간
+                .amount(transferAmount)
+                .withdrawAccountName(withdrawAccount.getAccountName())
+                .depositAccountName(depositAccount.getAccountName())
+                .transferDate(now)
                 .build();
         notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
 
-        // 입금 알림 DTO 생성 (입금 계좌 사용자에게 보냄)
         AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
                 .transactionType(TransactionType.DEPOSIT)
-                .amount(transferAmount) //입금 금액
-                .withdrawAccountName(withdrawAccount.getAccountName()) //출금 계좌명
-                .depositAccountName(depositAccount.getAccountName()) //입금 계좌명
-                .transferDate(now) //현재 시간
+                .amount(transferAmount)
+                .withdrawAccountName(withdrawAccount.getAccountName())
+                .depositAccountName(depositAccount.getAccountName())
+                .transferDate(now)
                 .build();
         notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
-
 
         return TransferExecutionResponse.builder()
                 .withdrawAccountId(withdrawAccount.getId())

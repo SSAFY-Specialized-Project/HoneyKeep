@@ -150,7 +150,7 @@ public class AccountIntegrationTest {
 
         // 2. 계좌 B 잔액 확인
         Float depositBalanceDouble = given()
-                .header("Authorization", "Bearer " + accessTokenUser2)
+                .header("Authorization", "Bearer " + accessTokenUser1)
                 .contentType(ContentType.JSON)
                 .when()
                 .get("/api/v1/accounts/2")
