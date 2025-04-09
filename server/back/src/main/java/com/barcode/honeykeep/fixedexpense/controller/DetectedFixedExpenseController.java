@@ -4,6 +4,7 @@ import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.dto.DetectedFixedExpenseUpdateRequest;
+import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseRequest;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.service.DetectedFixedExpenseService;
 import lombok.RequiredArgsConstructor;
@@ -59,8 +60,9 @@ public class DetectedFixedExpenseController {
     @PatchMapping("/{id}/approve")
     public ResponseEntity<ApiResponse<FixedExpenseResponse>> approveDetectedFixedExpense(
             @AuthenticationPrincipal UserId userId,
-            @PathVariable Long id) {
-        FixedExpenseResponse response = detectedFixedExpenseService.approveDetectedFixedExpense(userId.value(), id);
+            @PathVariable Long id,
+            @RequestBody FixedExpenseRequest request) {
+        FixedExpenseResponse response = detectedFixedExpenseService.approveDetectedFixedExpense(userId.value(), id, request);
 
         return ResponseEntity.ok()
                 .body(ApiResponse.success("발견된 고정 지출 등록 성공", response));
