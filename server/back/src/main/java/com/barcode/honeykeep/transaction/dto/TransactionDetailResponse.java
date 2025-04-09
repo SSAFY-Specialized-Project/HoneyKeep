@@ -15,5 +15,6 @@ public record TransactionDetailResponse(
         TransactionType type,
         Long accountId,
         String accountName,
-        String memo
+        String memo,
+        Long pocketId // 거래 시 사용한 포켓 정보 보기 위해 추가
 ) {}

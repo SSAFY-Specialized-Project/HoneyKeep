@@ -3,6 +3,7 @@ package com.barcode.honeykeep.pocket.controller;
 import com.barcode.honeykeep.common.response.ApiResponse;
 import com.barcode.honeykeep.common.vo.UserId;
 import com.barcode.honeykeep.pocket.dto.*;
+import com.barcode.honeykeep.pocket.service.AnalysisService;
 import com.barcode.honeykeep.pocket.service.PocketService;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import java.util.List;
 public class PocketController {
     
     private final PocketService pocketService;
+    private final AnalysisService analysisService; // 분석용 서비스 추가
 
     /**
      * 포켓 만들기
@@ -264,6 +266,35 @@ public class PocketController {
         return ResponseEntity.ok()
                 .body(ApiResponse.success("포켓 사용완료 처리 성공", response));
     }
+
+    /**
+     * 초과 사용 원인 제출
+     * @param pocketId 포켓 ID (PathVariable)
+     * @param request 사용자 설문 (Reason 텍스트)
+     */
+    @PostMapping("/{pocketId}/overspending-reason")
+    public ResponseEntity<ApiResponse<Void>> submitOverspendingReason(
+            @PathVariable Long pocketId,
+            @RequestBody OverspendingReasonRequest request
+    ) {
+        analysisService.saveOverspendingReason(pocketId, request);
+        return ResponseEntity.ok(ApiResponse.success("초과 지출 원인이 저장되었습니다.", null));
+    }
+
+    /**
+     * 포켓 분석 정보 조회
+     * @param userId 인증된 사용자 ID
+     * @return
+     */
+    @GetMapping("/analysis")
+    public ResponseEntity<ApiResponse<com.barcode.honeykeep.pocket.dto.SpendingAnalysisResponse>> getSpendingAnalysis(
+            @AuthenticationPrincipal UserId userId) {
+
+        com.barcode.honeykeep.pocket.dto.SpendingAnalysisResponse response = analysisService.getSpendingAnalysis(userId.value());
+
+        return ResponseEntity.ok(ApiResponse.success("소비 분석 조회 성공", response));
+    }
+
 
     /**
      * 거래내역으로 포켓 사용하기
