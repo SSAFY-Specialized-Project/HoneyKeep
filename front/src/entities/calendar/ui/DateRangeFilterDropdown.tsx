@@ -65,7 +65,7 @@ const DateRangeFilterDropdown = ({
       {/* 드롭다운 버튼 */}
       <button
         onClick={toggleDropdown}
-        className="flex w-full items-center justify-between gap-1 gap-2 rounded-full bg-gray-100 px-4 py-1.5"
+        className="flex w-full cursor-pointer items-center justify-between gap-1 gap-2 rounded-full bg-gray-100 px-4 py-1.5"
       >
         <div className="flex items-center">
           <span className="text-text-md font-bold text-nowrap text-gray-600">

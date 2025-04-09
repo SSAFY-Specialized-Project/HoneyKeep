@@ -41,6 +41,7 @@ const SelectCategoryModal = ({ isOpen, setId, setOpen }: Props) => {
           <span className="text-title-sm font-semibold">아이콘</span>
           <button
             type="button"
+            className="cursor-pointer"
             onClick={() => {
               setOpen(false);
             }}
@@ -50,7 +51,12 @@ const SelectCategoryModal = ({ isOpen, setId, setOpen }: Props) => {
         </div>
         <div className="flex flex-wrap gap-5">
           {numbers.map((number) => (
-            <button key={number} onClick={handleClickCategory} data-index={number}>
+            <button
+              key={number}
+              className="cursor-pointer"
+              onClick={handleClickCategory}
+              data-index={number}
+            >
               <CategoryIcon category={number} size="normal" />
             </button>
           ))}

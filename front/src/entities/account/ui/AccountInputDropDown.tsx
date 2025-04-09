@@ -30,7 +30,7 @@ const AccountInfoDropDown = ({ accountId, setAccountId, setAccountBalance }: Pro
   return (
     <div>
       <button
-        className="flex w-full items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
+        className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
         onClick={() => {
           setOpen(!isOpen);
         }}

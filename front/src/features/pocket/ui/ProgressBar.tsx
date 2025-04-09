@@ -1,4 +1,5 @@
 import { Icon } from '@/shared/ui';
+import { formatWithKRW } from '@/shared/lib';
 
 interface ProgressBarProps {
   percentage: number; // 저장된 퍼센트 (0~100)
@@ -45,7 +46,7 @@ const ProgressBar = ({
         <div className="flex justify-between px-4 py-3">
           <span className="font-medium">포켓 금액</span>
           <div className="flex items-center gap-2">
-            <span className="font-bold">{goalAmount} 원</span>
+            <span className="font-bold">{formatWithKRW(goalAmount)}</span>
             {canEdit ? (
               <button type="button" onClick={() => {}} className="cursor-pointer">
                 <Icon id="chevron-right" size="xSmall" />

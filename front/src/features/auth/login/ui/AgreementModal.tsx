@@ -212,7 +212,7 @@ const AgreementModal = ({ isOpen, setIsOpen, setPasswordOpen }: Props) => {
             setPasswordOpen(true);
           }}
           disabled={disabled}
-          className="text-white"
+          className="cursor-pointer text-white"
         />
       </div>
     </div>

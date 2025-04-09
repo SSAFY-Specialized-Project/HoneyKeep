@@ -76,7 +76,7 @@ export default function Description() {
         {/* 질문 1 */}
         <div className="mb-4 overflow-hidden rounded-xl bg-white shadow-md">
           <button
-            className="flex w-full items-center justify-between border-b border-gray-100 p-5 text-left"
+            className="flex w-full cursor-pointer items-center justify-between border-b border-gray-100 p-5 text-left"
             onClick={() => toggleFaq('faq1')}
           >
             <div className="flex items-center">
@@ -140,7 +140,7 @@ export default function Description() {
         {/* 질문 2 */}
         <div className="mb-4 overflow-hidden rounded-xl bg-white shadow-md">
           <button
-            className="flex w-full items-center justify-between border-b border-gray-100 p-5 text-left"
+            className="flex w-full cursor-pointer items-center justify-between border-b border-gray-100 p-5 text-left"
             onClick={() => toggleFaq('faq2')}
           >
             <div className="flex items-center">
@@ -237,7 +237,7 @@ export default function Description() {
         {/* 질문 3 */}
         <div className="mb-4 overflow-hidden rounded-xl bg-white shadow-md">
           <button
-            className="flex w-full items-center justify-between border-b border-gray-100 p-5 text-left"
+            className="flex w-full cursor-pointer items-center justify-between border-b border-gray-100 p-5 text-left"
             onClick={() => toggleFaq('faq3')}
           >
             <div className="flex items-center">
@@ -325,7 +325,7 @@ export default function Description() {
         {/* 질문 4 */}
         <div className="mb-4 overflow-hidden rounded-xl bg-white shadow-md">
           <button
-            className="flex w-full items-center justify-between border-b border-gray-100 p-5 text-left"
+            className="flex w-full cursor-pointer items-center justify-between border-b border-gray-100 p-5 text-left"
             onClick={() => toggleFaq('faq4')}
           >
             <div className="flex items-center">
@@ -401,7 +401,7 @@ export default function Description() {
         {/* 질문 5 */}
         <div className="mb-4 overflow-hidden rounded-xl bg-white shadow-md">
           <button
-            className="flex w-full items-center justify-between border-b border-gray-100 p-5 text-left"
+            className="flex w-full cursor-pointer items-center justify-between border-b border-gray-100 p-5 text-left"
             onClick={() => toggleFaq('faq5')}
           >
             <div className="flex items-center">
@@ -489,7 +489,7 @@ export default function Description() {
               </p>
             </div>
 
-            <button className="flex items-center rounded-full bg-[var(--color-brand-primary-500)] px-6 py-2 font-medium shadow-md">
+            <button className="flex cursor-pointer items-center rounded-full bg-[var(--color-brand-primary-500)] px-6 py-2 font-medium shadow-md">
               <MessageCircle className="mr-2" size={16} />
               챗봇에게 물어보기
             </button>

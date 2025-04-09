@@ -49,7 +49,7 @@ const Checkbox = ({
       </div>
       {showButton && onClick && (
         <button type="button" onClick={onClick}>
-          <img src="/icon/assets/x-lg.svg" alt="닫기" className="h-5 w-5" />
+          <img src="/icon/assets/x-lg.svg" alt="닫기" className="h-5 w-5 cursor-pointer" />
         </button>
       )}
     </div>
