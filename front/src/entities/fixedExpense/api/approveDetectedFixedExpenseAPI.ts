@@ -1,10 +1,15 @@
 import {customFetchAPI} from "@/shared/api";
-import {FixedExpenseResponse} from "@/entities/fixedExpense/model/types.ts";
+import {FixedExpenseRequest, FixedExpenseResponse} from "@/entities/fixedExpense/model/types.ts";
 
-const approveDetectedFixedExpenseAPI = (id: number) => customFetchAPI<FixedExpenseResponse, void>({
-    url: `/fixed-expenses/detection/${id}/approve`,
-    method: "PATCH",
-    credentials: "include"
-});
+const approveDetectedFixedExpenseAPI = (params: {
+    id: number;
+    data: FixedExpenseRequest
+}) =>
+    customFetchAPI<FixedExpenseResponse, FixedExpenseRequest>({
+        url: `/fixed-expenses/detection/${params.id}/approve`,
+        method: "PATCH",
+        credentials: "include",
+        data: params.data,
+    });
 
 export default approveDetectedFixedExpenseAPI; 

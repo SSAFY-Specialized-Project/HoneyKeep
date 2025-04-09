@@ -11,7 +11,9 @@ export type Bank = "시티은행"
     | "새마을금고"
     | "카카오뱅크"
     | "KEB하나은행"
-    | "경남은행";
+    | "경남은행"
+    | "신한은행"
+    ;
 
 export interface ResponseDTO<T> {
     status: number;

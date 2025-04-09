@@ -20,8 +20,8 @@ const BankIcon = ({ bank }: Props) => {
     카카오뱅크: 'kakao',
     KEB하나은행: 'hana',
     경남은행: 'gyeongnam',
+    신한은행: 'shinhan'
   };
-
   //_sprite.svg#${mapping[bank]}
   return (
     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
