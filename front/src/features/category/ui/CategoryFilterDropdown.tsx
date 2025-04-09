@@ -18,30 +18,46 @@ const CategoryFilterDropdown = ({ setCategoryId }: Props) => {
   });
 
   const handleCategoryFilter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!e.currentTarget.dataset.value || !e.currentTarget.dataset.id) return;
-    setCategoryId(Number(e.currentTarget.dataset.id));
-    setCategory(e.currentTarget.dataset.value);
+    if (!e.currentTarget.dataset.value) return;
+
+    if (e.currentTarget.dataset.id === 'all') {
+      setCategoryId(null);
+      setCategory(null);
+    } else if (e.currentTarget.dataset.id) {
+      setCategoryId(Number(e.currentTarget.dataset.id));
+      setCategory(e.currentTarget.dataset.value);
+    }
     setOpen(false);
   };
 
-  const categoryList =
-    categoryData?.data != null ? (
-      <ul className="">
-        {categoryData?.data.map((item) => (
-          <li key={item.categoryId}>
-            <button
-              type="button"
-              className="text-text-lg cursor-pointer px-4 py-1.5 font-bold text-gray-600"
-              data-value={item.name}
-              data-id={item.categoryId}
-              onClick={handleCategoryFilter}
-            >
-              {item.name}
-            </button>
-          </li>
-        ))}
-      </ul>
-    ) : null;
+  const categoryList = (
+    <ul className="">
+      <li>
+        <button
+          type="button"
+          className="text-text-lg cursor-pointer px-4 py-1.5 font-bold text-gray-600"
+          data-value="전체"
+          data-id="all"
+          onClick={handleCategoryFilter}
+        >
+          전체
+        </button>
+      </li>
+      {categoryData?.data.map((item) => (
+        <li key={item.categoryId}>
+          <button
+            type="button"
+            className="text-text-lg cursor-pointer px-4 py-1.5 font-bold text-gray-600"
+            data-value={item.name}
+            data-id={item.categoryId}
+            onClick={handleCategoryFilter}
+          >
+            {item.name}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <FilterDropdown
