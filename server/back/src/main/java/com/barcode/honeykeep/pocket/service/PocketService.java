@@ -6,6 +6,10 @@ import com.barcode.honeykeep.category.entity.Category;
 import com.barcode.honeykeep.category.service.CategoryService;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.common.vo.Money;
+import com.barcode.honeykeep.notification.dto.CrawlingNotificationDTO;
+import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.service.NotificationService;
+import com.barcode.honeykeep.notification.type.PushType;
 import com.barcode.honeykeep.pocket.dto.*;
 import com.barcode.honeykeep.pocket.entity.Pocket;
 import com.barcode.honeykeep.pocket.exception.PocketErrorCode;
@@ -17,17 +21,16 @@ import com.barcode.honeykeep.transaction.service.TransactionService;
 import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,6 +45,8 @@ public class PocketService {
     private final CategoryService categoryService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final CrawlingService crawlingService;
+    private final NotificationDispatcher notificationDispatcher;
+    private final NotificationService notificationService;
     private final TransactionService transactionService;
 
     /**
@@ -162,6 +167,25 @@ public class PocketService {
                 savedPocket = pocketRepository.save(savedPocket);
                 redisTemplate.delete("crawling:" + pocketManualRequest.getCrawlingUuid());
                 log.info("포켓(ID: {})에 크롤링 결과 업데이트 완료, UUID: {}", savedPocket.getId(), pocketManualRequest.getCrawlingUuid());
+
+                CrawlingNotificationDTO crawlingNotificationDTO =  CrawlingNotificationDTO.builder()
+                        .notificationType(PushType.CRAWLING.getType())
+                        .productName(productName)
+                        .build();
+
+                try {
+                    notificationDispatcher.send(PushType.CRAWLING, account.getUser().getId(), crawlingNotificationDTO);
+                    log.info("FCM 알림 전송 성공");
+
+                    // FCM 전송이 성공했으므로, 알림 내역을 DB에 저장합니다.
+                    String title = "Crawling 완료";
+                    String body = String.format("%s 포켓 정보 입력이 완료되었습니다.", productName);
+                    notificationService.saveNotification(account.getUser().getId(), PushType.CRAWLING, title, body);
+                } catch (Exception e) {
+                    log.error("알림 전송 실패. 알림 내역을 저장하지 않습니다. 사용자 ID: {}, 에러: {}", PushType.CRAWLING, e.getMessage(), e);
+                }
+
+
             } else {
                 log.warn("크롤링 결과가 완료 상태가 아님, UUID: {}", pocketManualRequest.getCrawlingUuid());
             }
@@ -540,6 +564,7 @@ public class PocketService {
         }
     }
 
+
     /**
      * 거래내역으로 포켓 사용하기
      * @param userId 사용자 ID
@@ -595,4 +620,6 @@ public class PocketService {
                 .isExceed(pocket.getIsExceed())
                 .build();
     }
+
+
 }
