@@ -61,7 +61,7 @@ const PocketListItem = ({ id, name, imgUrl, totalAmount, savedAmount, endDate, t
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.stopPropagation();
           // 포켓 관리 모달 오픈
-          openModal({ pocketId: id, totalAmount, gatheredAmount: savedAmount });
+          openModal({ pocketId: id, totalAmount, gatheredAmount: savedAmount, pocketName: name });
         }}
       >
         <Icon size="small" id="three-dots-vertical" />
