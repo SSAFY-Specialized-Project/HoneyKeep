@@ -129,7 +129,7 @@ public class PocketService {
                 .category(category)
                 .name(null)
                 .productName(null)
-                .totalAmount(null)
+                .totalAmount(Money.zero())
                 .savedAmount(Money.zero())
                 .link(null)
                 .startDate(pocketManualRequest.getStartDate())
@@ -147,12 +147,7 @@ public class PocketService {
 
         // Redis에서 UUID로 크롤링 데이터 있는지 조회
         Object crawlingData = redisTemplate.opsForValue().get("crawling:" + pocketManualRequest.getCrawlingUuid());
-        if (!(crawlingData instanceof HashMap)) {
-            PocketCrawlingResult pocketCrawlingResult = (PocketCrawlingResult) crawlingData;
-
-            if(pocketCrawlingResult == null) {
-                throw new CustomException(PocketErrorCode.REDIS_SAVE_ERROR);
-            }
+        if (crawlingData instanceof PocketCrawlingResult pocketCrawlingResult) {
 
             // 크롤링 완료된 데이터 업데이트
             if (pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
