@@ -81,7 +81,7 @@ public class AnalysisService {
      */
     private long calculatePocketTotal(List<AccountResponse> accounts) {
         return accounts.stream()
-                .mapToLong(a -> a.getTotalPocketAmount().longValue())
+                .mapToLong(a -> a.getTotalUsedPocketAmount().longValue())
                 .sum();
     }
 

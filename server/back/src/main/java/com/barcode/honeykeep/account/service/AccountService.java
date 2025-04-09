@@ -165,6 +165,7 @@ public class AccountService {
                     .totalPocketAmount(calculateTotalPocketAmount(account))
                     .pocketCount(account.getPockets().size())
                     .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                    .totalUsedPocketAmount(calculateUsedTotalPocketAmount(account))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -201,6 +202,7 @@ public class AccountService {
                         .accountId(account.getId())
                         .accountName(account.getAccountName())
                         .memo(transaction.getMemo())
+                        .pocketId(transaction.getPocket() != null ? transaction.getPocket().getId() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -245,4 +247,13 @@ public class AccountService {
         return total;
     }
 
+    // 모든 포켓에서 사용한 모든 금액 계산
+    private BigDecimal calculateUsedTotalPocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            total = total.add(pocket.getTotalAmount().getAmount());
+        }
+        return total;
+    }
 }

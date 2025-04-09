@@ -34,4 +34,7 @@ public class AccountResponse {
 
     //여유 자산
     private BigDecimal spareBalance;
+
+    // 연동된 모든 포켓을 통해 사용한 금액
+    private BigDecimal totalUsedPocketAmount;
 }
