@@ -162,6 +162,8 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
+
+
         ],
       },
     ],
@@ -383,44 +385,9 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-          // 고정 지출
+
+          // 고정 지출 상세
           {
-            path: '/fixedExpense',
-            element: (
-              <Suspense fallback={<BankPageSkeleton />}>
-                <FixedExpenseList />
-              </Suspense>
-            ),
-            children: [
-              {
-                path: 'list',
-                element: (
-                  <Suspense fallback={<DefaultLoadingSkeleton />}>
-                    <FixedExpenseListContent />
-                  </Suspense>
-                ),
-              },
-              {
-                path: 'found',
-                element: (
-                  <Suspense fallback={<DefaultLoadingSkeleton />}>
-                    <FixedExpenseListFound />
-                  </Suspense>
-                ),
-              },
-            ],
-          },
-          {
-            // 고정 지출 생성
-            path: '/fixedExpense/create',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <FixedExpenseCreate />
-              </Suspense>
-            ),
-          },
-          {
-            // 고정 지출 상세
             path: '/fixedExpense/:id',
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
@@ -455,11 +422,58 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
+
         ],
       },
     ],
   },
-  {},
+  {
+    element: <HistoryNavLayout />,
+    children: [
+      {
+        element: <AuthWrapper/>,
+        children: [
+          // 고정 지출
+          {
+            path: '/fixedExpense',
+            element: (
+                <Suspense fallback={<BankPageSkeleton />}>
+                  <FixedExpenseList />
+                </Suspense>
+            ),
+            children: [
+              {
+                path: 'list',
+                element: (
+                    <Suspense fallback={<DefaultLoadingSkeleton />}>
+                      <FixedExpenseListContent />
+                    </Suspense>
+                ),
+              },
+              {
+                path: 'found',
+                element: (
+                    <Suspense fallback={<DefaultLoadingSkeleton />}>
+                      <FixedExpenseListFound />
+                    </Suspense>
+                ),
+              },
+            ],
+          },
+          {
+            // 고정 지출 생성
+            path: '/fixedExpense/create',
+            element: (
+                <Suspense fallback={<DefaultLoadingSkeleton />}>
+                  <FixedExpenseCreate />
+                </Suspense>
+            ),
+          },
+        ]
+      }
+
+    ]
+  },
 ]);
 
 export default AppRouter;

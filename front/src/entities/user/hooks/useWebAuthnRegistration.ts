@@ -162,7 +162,7 @@ export const useWebAuthnRegistration = (): UseWebAuthnRegistrationReturn => {
                         attestationObject: bufferToBase64Url(attestationResponse.attestationObject),
                     },
                     // clientExtensionResults는 null이 아닌 빈 객체로 전송
-                    clientExtensionResults: credential.getClientExtensionResults() || {},
+                    clientExtensionResults: (credential.getClientExtensionResults() || {}) as Record<string, AuthenticationExtensionsClientOutputs>,
                 },
                 deviceName: deviceName || `${displayName}의 기기`
             };
