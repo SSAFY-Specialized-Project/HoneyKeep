@@ -14,6 +14,7 @@ import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
 import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.service.TransactionService;
+import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 public class PocketService {
 
     private final PocketRepository pocketRepository;
+    private final TransactionRepository transactionRepository;
     private final AccountService accountService;
     private final CategoryService categoryService;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -467,6 +469,7 @@ public class PocketService {
     }
 
     /**
+     * todo : 사용할 때마다 거래 내역에 포켓 매칭해야 함
      * 포켓 사용 시작 처리
      * @param pocketId 사용 시작할 포켓 ID
      * @return 업데이트된 포켓 정보
@@ -490,6 +493,16 @@ public class PocketService {
     @Transactional
     public PocketUpdateResponse completePocketPayment(Long pocketId) {
         Pocket pocket = getPocketById(pocketId);
+
+        Long usedAmount = transactionRepository.sumAmountByPocketId(pocketId);
+        Long totalAmount = pocket.getTotalAmount().getAmountAsLong();
+
+        if (usedAmount > totalAmount) {
+            Long exceedAmount = usedAmount - totalAmount;
+
+            // todo :  알림 전송 & 설문 요청
+
+        }
 
         pocket.updateType(PocketType.USED);
 

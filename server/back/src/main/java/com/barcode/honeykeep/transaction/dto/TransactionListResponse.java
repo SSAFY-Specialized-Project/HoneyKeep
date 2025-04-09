@@ -17,6 +17,7 @@ public record TransactionListResponse(
             Long amount,
             Long balance,
             LocalDateTime date,
-            TransactionType type
+            TransactionType type,
+            Long pocketId // 포켓 분석 시 계획 소비 판별을 위해 포켓 아이디를 응답 dto에 추가
     ) {}
 }

@@ -108,6 +108,7 @@ public class TransactionService {
                 .balance(transaction.getBalance().getAmountAsLong())
                 .date(transaction.getDate())
                 .type(transaction.getType())
+                .pocketId(transaction.getPocket() != null ? transaction.getPocket().getId() : null) // 포켓 아이디 추가
                 .build();
     }
 
@@ -116,6 +117,7 @@ public class TransactionService {
      */
     private TransactionDetailResponse mapToTransactionDetailResponse(Transaction transaction) {
         Account account = transaction.getAccount();
+        Pocket pocket = transaction.getPocket();
 
         return TransactionDetailResponse.builder()
                 .id(transaction.getId())
@@ -127,6 +129,7 @@ public class TransactionService {
                 .accountId(account != null ? account.getId() : null)
                 .accountName(account != null ? account.getAccountName() : null)
                 .memo(transaction.getMemo())
+                .pocketId(pocket != null ? pocket.getId() : null)
                 .build();
     }
 

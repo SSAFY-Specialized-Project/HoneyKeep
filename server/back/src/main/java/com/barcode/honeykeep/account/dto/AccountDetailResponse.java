@@ -19,6 +19,7 @@ public class AccountDetailResponse {
 
     // 계좌 번호
     private String accountNumber;
+
     // 계좌 잔액 (Money 임베디드 객체에서 추출한 값)
     private BigDecimal accountBalance;
 
