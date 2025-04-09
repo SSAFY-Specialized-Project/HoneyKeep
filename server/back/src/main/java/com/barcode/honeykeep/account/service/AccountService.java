@@ -208,6 +208,7 @@ public class AccountService {
                         .accountId(account.getId())
                         .accountName(account.getAccountName())
                         .memo(transaction.getMemo())
+                        .pocketId(transaction.getPocket() != null ? transaction.getPocket().getId() : null)
                         .build())
                 .collect(Collectors.toList());
 
