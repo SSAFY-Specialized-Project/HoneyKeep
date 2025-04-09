@@ -28,7 +28,7 @@ public class NotificationService {
 
 
     @Transactional
-    public Notification saveNotification(Long userId, PushType type, String title, String body){
+    public Notification saveNotification(Long userId, PushType type, String title, String body) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException((UserErrorCode.USER_NOT_FOUND)));
 
@@ -39,13 +39,18 @@ public class NotificationService {
                 .body(body)
                 .isRead(false)
                 .build();
-
-        Notification savedNotification = notificationRepository.save(notification);
-        log.info("알림 저장 완료 - 사용자ID: {}, 알림ID: {}", userId, savedNotification.getId());
+        Notification savedNotification=null;
+        try {
+            savedNotification = notificationRepository.save(notification);
+            log.info("알림 저장 완료 - 사용자ID: {}, 알림ID: {}", userId, savedNotification.getId());
+            return savedNotification;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return savedNotification;
     }
 
-    public List<NotificationResponse> getNotifications(Long userId){
+    public List<NotificationResponse> getNotifications(Long userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(notification -> NotificationResponse.builder()
@@ -62,10 +67,10 @@ public class NotificationService {
     @Transactional
     public NotificationResponse notificationAsRead(Long userId, Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(()-> new CustomException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
 
         // 알림의 소유자가 인증된 사용자와 일치하는지 검증
-        if (!notification.getUser().getId().equals(userId)){
+        if (!notification.getUser().getId().equals(userId)) {
             throw new CustomException(AuthErrorCode.FORBIDDEN_ACCESS);
         }
 

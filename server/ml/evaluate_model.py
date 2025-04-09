@@ -25,7 +25,7 @@ print("라이브러리 및 기본 모델 파라미터 준비 완료.")
 # --- 1. 데이터 불러오기 및 준비 --- #
 # --- ▼▼▼ 사용자 입력 필요 ▼▼▼ ---
 # 1. 라벨링된 568개 데이터가 있는 파일의 경로를 지정하세요.
-data_path = 'data/detected_fixed_expenses.csv' # 예시 경로입니다. 실제 파일 경로로 수정하세요.
+data_path = 'ml/data/detected_fixed_expenses.csv' # 예시 경로입니다. 실제 파일 경로로 수정하세요.
 
 # 2. 실제 라벨(1=ACCEPTED, 0=REJECTED)이 저장된 컬럼 이름을 지정하세요.
 label_column = 'status' # 예시 컬럼 이름입니다. 실제 컬럼 이름으로 수정하세요.
@@ -136,7 +136,7 @@ DEFAULT_MODEL_PARAMS['scale_pos_weight'] = calculated_scale_pos_weight
 print(f"모델 파라미터 scale_pos_weight 업데이트: {DEFAULT_MODEL_PARAMS['scale_pos_weight']:.2f}")
 
 # --- 2. 교차 검증 설정 및 실행 루프 --- #
-k = 5 # k값 설정 (보통 5 또는 10)
+k = 10 # k값 설정 (보통 5 또는 10)
 # 데이터 수에 따라 k값 조정 (최소 2개 필요)
 k = min(k, pos_count, neg_count)
 if k < 2:

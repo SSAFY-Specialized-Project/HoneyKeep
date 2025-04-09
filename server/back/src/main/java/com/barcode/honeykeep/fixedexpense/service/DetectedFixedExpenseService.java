@@ -8,9 +8,11 @@ import com.barcode.honeykeep.account.dto.AccountSummaryDto;
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
+import com.barcode.honeykeep.auth.entity.User;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseRequest;
 import com.barcode.honeykeep.fixedexpense.dto.FixedExpenseResponse;
 import com.barcode.honeykeep.fixedexpense.entity.FixedExpense;
+import com.barcode.honeykeep.fixedexpense.repository.FixedExpenseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,8 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DetectedFixedExpenseService {
 
     private final DetectedFixedExpenseRepository detectedFixedExpenseRepository;
+    private final FixedExpenseRepository fixedExpenseRepository;
     private final AccountRepository accountRepository;
-    private final FixedExpenseService fixedExpenseService;
 
     public List<DetectedFixedExpenseResponse> getAllDetectedFixedExpenses(Long userId) {
         List<DetectedFixedExpense> detectedFixedExpenses = detectedFixedExpenseRepository.findByUser_IdAndStatus(userId, DetectionStatus.DETECTED);
@@ -105,7 +107,7 @@ public class DetectedFixedExpenseService {
     }
 
     @Transactional
-    public FixedExpenseResponse approveDetectedFixedExpense(Long userId, Long id) {
+    public FixedExpenseResponse approveDetectedFixedExpense(Long userId, Long id, FixedExpenseRequest request) {
         DetectedFixedExpense detectedFixedExpense = detectedFixedExpenseRepository.findById(id)
                 .orElseThrow(() -> new CustomException(FixedExpenseErrorCode.FIXED_EXPENSE_NOT_FOUND));
 
@@ -116,36 +118,38 @@ public class DetectedFixedExpenseService {
         // 더티체킹
         detectedFixedExpense.approve();
 
-        // 날짜 계산 - 매월 averageDay 일에 지불하는 것으로
-        LocalDate today = LocalDate.now();
+        Account account = accountRepository.findByAccountNumber(request.accountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+        User user = detectedFixedExpense.getUser();
 
-        // 시작일 계산 - lastTransactionDate에서 거꾸로 계산하여 첫 발생일 추정
-        // 현실적으로 첫 발생일 정확한 계산은 어렵다.
-        LocalDate startDate;
-        if (detectedFixedExpense.getLastTransactionDate() != null) {
-            // 있는 날짜 중 가장 오래된 거래 날짜 사용
-            startDate = detectedFixedExpense.getLastTransactionDate().minusMonths(
-                    detectedFixedExpense.getTransactionCount() - 1L);
-        } else {
-            // 정보가 없으면 6개월 전으로 추정 (데이터 수집 기간 기준)
-            startDate = today.minusMonths(6);
-        }
+        FixedExpense fixedExpense = FixedExpense.builder()
+                .account(account)
+                .user(user)
+                .name(request.name())
+                .money(request.money())
+                .startDate(request.startDate())
+                .payDay(request.payDay())
+                .transactionCount(detectedFixedExpense.getTransactionCount())
+                .memo("자동 감지된 고정지출에서 승인됨")
+                .build();
 
-        // 시작일에 실제 평균 지불일자 반영
-        startDate = startDate.withDayOfMonth(Math.min(detectedFixedExpense.getAverageDay(), startDate.lengthOfMonth()));
-
-        FixedExpenseRequest request = new FixedExpenseRequest(
-                detectedFixedExpense.getAccount().getAccountNumber(),
-                detectedFixedExpense.getName(),
-                detectedFixedExpense.getAverageAmount(),
-                startDate,                                  // 추정된 시작일
-                detectedFixedExpense.getAverageDay(),     // 평균 지불일
-                detectedFixedExpense.getTransactionCount(),
-                "자동 감지된 고정지출에서 승인됨"
-        );
+        FixedExpense saved = fixedExpenseRepository.save(fixedExpense);
 
         // 고정지출로 저장
-        return fixedExpenseService.createFixedExpenses(userId, request);
+        return new FixedExpenseResponse(
+                saved.getId(),
+                new AccountSummaryDto(
+                        account.getBank().getName(),
+                        account.getAccountName(),
+                        account.getAccountNumber()
+                ),
+                saved.getName(),
+                saved.getMoney(),
+                saved.getStartDate(),
+                saved.getPayDay(),
+                saved.getTransactionCount(),
+                saved.getMemo()
+        );
     }
 
 }
