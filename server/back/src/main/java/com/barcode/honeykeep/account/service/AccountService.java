@@ -12,6 +12,7 @@ import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.notification.dto.AccountTransferNotificationDTO;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.pocket.type.PocketType;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import com.barcode.honeykeep.transaction.type.TransactionType;
@@ -214,7 +215,7 @@ public class AccountService {
                     .bankName(account.getBank().getName())
                     .totalPocketAmount(calculateTotalPocketAmount(account))
                     .pocketCount(account.getPockets().size())
-                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateActivePocketAmount(account)))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -262,7 +263,7 @@ public class AccountService {
                 .accountName(account.getAccountName())
                 .totalPocketAmount(calculateTotalPocketAmount(account))
                 .pocketCount(account.getPockets().size())
-                .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                .spareBalance(account.getAccountBalance().getAmount().subtract(calculateActivePocketAmount(account)))
                 .transactionList(transactionDtos) // TransactionDetailResponse DTO 리스트 사용
                 .pocketList(pocketDtos)
                 .build();
@@ -291,6 +292,19 @@ public class AccountService {
 
         for (Pocket pocket : account.getPockets()) {
             total = total.add(pocket.getSavedAmount().getAmount());
+        }
+        return total;
+    }
+
+    //활성화된 포켓들(UNUSED, USING)의 금액 합 계산 (USED 상태 제외)
+    private BigDecimal calculateActivePocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            // USED 상태가 아닌 포켓만 합산 (UNUSED, USING 상태인 경우)
+            if (pocket.getType() != PocketType.USED) {
+                total = total.add(pocket.getSavedAmount().getAmount());
+            }
         }
         return total;
     }
