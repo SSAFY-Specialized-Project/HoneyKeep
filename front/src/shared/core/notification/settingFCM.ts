@@ -1,3 +1,4 @@
+import { customFetchAPI } from "@/shared/api";
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, MessagePayload, onMessage } from "firebase/messaging";
 
@@ -27,9 +28,45 @@ const firebaseConfig: FirebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-// 서비스 워커 등록 및 FCM 토큰 얻기 함수
-export const requestFCMToken = async (): Promise<string> => {
+// 알림 권한 요청 함수
+export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
+    if (!('Notification' in window)) {
+      console.warn('이 브라우저는 알림을 지원하지 않습니다.');
+      return false;
+    }
+
+    // 이미 권한이 있는 경우
+    if (Notification.permission === 'granted') {
+      return true;
+    }
+
+    // 이미 권한이 거부된 경우
+    if (Notification.permission === 'denied') {
+      console.warn('알림 권한이 이전에 거부되었습니다.');
+      return false;
+    }
+
+    // 권한 요청
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  } catch (err) {
+    console.error('알림 권한 요청 오류:', err);
+    return false;
+  }
+};
+
+// 서비스 워커 등록 및 FCM 토큰 얻기 함수
+export const requestFCMToken = async (): Promise<string | null> => {
+  try {
+
+    // 먼저 알림 권한 요청
+    const hasPermission = await requestNotificationPermission();
+    if (!hasPermission) {
+      console.warn('알림 권한이 없어 FCM 토큰을 가져올 수 없습니다.');
+      return null;
+    }
+
     if (!('serviceWorker' in navigator)) {
       throw new Error('서비스 워커를 지원하지 않는 브라우저입니다.');
     }
@@ -45,13 +82,18 @@ export const requestFCMToken = async (): Promise<string> => {
     if (!currentToken) {
       throw new Error('FCM 토큰을 가져올 수 없습니다.');
     }
-    console.log("FCM 토큰일세", currentToken);
+    console.log("토큰 서버에 전송!");
+    await sendTokenToServer(currentToken);
+
+    sessionStorage.setItem("FCMToken", currentToken);
     return currentToken;
   } catch (err) {
     console.error('FCM 설정 오류:', err);
     throw err;
   }
 };
+
+const sendTokenToServer = (token:string) => customFetchAPI({url: "/notifications/token", method:"POST", data:{token}});
 
 export type MessageHandler = (payload: MessagePayload) => void;
 

@@ -17,7 +17,9 @@ const BasicHeader = () => {
           <Link to="/chatbot">
             <Icon id={'chat-dots'} size="big" />
           </Link>
-          <Icon id={'qr-code'} size="big" />
+          <Link to="/qrPayment">
+            <Icon id={'qr-code'} size="big" />
+          </Link>
           <button onClick={handleOpenModal} className="cursor-pointer">
             <Icon id={'alarm'} size="big" />
           </button>
