@@ -58,6 +58,7 @@ const CreateCategoryForm = () => {
       >
         <button
           type="button"
+          className="cursor-pointer"
           onClick={() => {
             setOpen(true);
           }}

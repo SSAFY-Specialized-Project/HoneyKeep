@@ -57,7 +57,7 @@ const BasicModal = ({
           </p>
         </div>
         <button
-          className="bg-brand-primary-500 text-text-xl hover:bg-brand-primary-300 w-full rounded-xl py-4 font-bold text-white"
+          className="bg-brand-primary-500 text-text-xl hover:bg-brand-primary-300 w-full cursor-pointer rounded-xl py-4 font-bold text-white"
           onClick={onConfirm}
         >
           {buttonText}

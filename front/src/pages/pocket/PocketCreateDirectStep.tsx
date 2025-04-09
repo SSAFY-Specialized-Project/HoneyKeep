@@ -1,7 +1,7 @@
 import { AccountInputDropdown } from '@/entities/account/ui';
 import CategoryInputDropDown from '@/entities/category/ui/CategoryInputDropDown';
 import { CreatePocketAPI } from '@/entities/pocket/api';
-import { convertCurrentTime } from '@/shared/lib';
+import { convertCurrentTime, formatCurrency } from '@/shared/lib';
 import usePocketCreateStore from '@/shared/store/usePocketCreateStore';
 import { BorderInput, Icon, ToggleButton } from '@/shared/ui';
 import { SearchLoadingModal } from '@/widgets/modal/ui';
@@ -79,12 +79,11 @@ const PocketCreateStep = () => {
   };
 
   const handleChargeAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const regex = /^[0-9]+$/;
-
-    const newValue = e.currentTarget.value;
+    const regex = /^[0-9,]+$/;
+    const newValue = e.currentTarget.value.replace(/,/g, '');
 
     // 비어있거나 숫자로만 구성된 경우에만 값을 업데이트
-    if (newValue === '' || regex.test(newValue)) {
+    if (newValue === '' || /^\d+$/.test(newValue)) {
       setChargeAmount(newValue);
     }
   };
@@ -153,7 +152,7 @@ const PocketCreateStep = () => {
           type="text"
           label="amount"
           labelText="채울 금액"
-          value={chargeAmount}
+          value={chargeAmount ? formatCurrency(chargeAmount) : ''}
           onChange={handleChargeAmount}
           placeholder="0"
           content={<span className="text-title-sm absolute right-2.5 bottom-3">원</span>}

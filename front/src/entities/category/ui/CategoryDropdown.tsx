@@ -1,5 +1,6 @@
 import { Pocket } from '@/entities/pocket/model/types';
 import { PocketListItem } from '@/entities/pocket/ui';
+import { formatWithKRW } from '@/shared/lib';
 import { CategoryIcon, Icon } from '@/shared/ui';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -32,7 +33,9 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
             <span className="text-text-xl font-semibold text-gray-900">{name}</span>
             <div className="flex gap-2">
               <span className="text-text-sm text-gray-500">{`${pocketCount}개 항목`}</span>
-              <span className="text-text-sm text-gray-900">{`${totalAmount}원`}</span>
+              <span className="text-text-sm text-gray-900">
+                {formatWithKRW(`${totalAmount}원`)}
+              </span>
             </div>
           </div>
         </div>

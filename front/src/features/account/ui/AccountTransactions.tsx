@@ -24,6 +24,7 @@ const AccountTransactions = () => {
               amount={transaction.amount}
               balance={transaction.balance}
               date={transaction.date}
+              type={transaction.type}
             />
           ))
         )}

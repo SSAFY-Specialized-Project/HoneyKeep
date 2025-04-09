@@ -45,7 +45,7 @@ export default function PaymentComplete({ merchantName, amount, accountName }: P
       {/* 하단 버튼 */}
       <button
         onClick={handleHome}
-        className="bg-brand-primary-500 hover:bg-brand-primary-400 mt-6 w-full rounded-xl py-4 text-base font-bold text-white"
+        className="bg-brand-primary-500 hover:bg-brand-primary-400 mt-6 w-full cursor-pointer rounded-xl py-4 text-base font-bold text-white"
       >
         홈으로
       </button>
