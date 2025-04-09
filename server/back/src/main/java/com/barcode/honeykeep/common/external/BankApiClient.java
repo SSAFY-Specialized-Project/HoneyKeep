@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 public class BankApiClient {
 
     private final WebClient externalBankWebClient;
+    private static final Logger log = LoggerFactory.getLogger(BankApiClient.class);
 
     @Value("${external.bank.institution-code}")
     private String institutionCode;
@@ -85,6 +88,8 @@ public class BankApiClient {
     }
 
     public BankAuthForMydataResponse requestAccountAuth(String userKey, String accountNo) {
+        log.info("Requesting account auth for accountNo: {}", accountNo);
+        
         Map<String, Object> header = createHeader(
                 "openAccountAuth", "openAccountAuth", userKey
         );
@@ -94,22 +99,32 @@ public class BankApiClient {
         body.put("accountNo", accountNo);
         body.put("authText", "SSAFY");
 
-        Map<String, Object> response = externalBankWebClient.post()
-                .uri("/edu/accountAuth/openAccountAuth")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                .block();
+        log.info("Request body: {}", body);
 
-        if (response == null || !response.containsKey("REC")) {
-            throw new CustomException(MydataErrorCode.ACCOUNT_AUTH_FAILED);
+        try {
+            Map<String, Object> response = externalBankWebClient.post()
+                    .uri("/edu/accountAuth/openAccountAuth")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block();
+
+            log.info("Response: {}", response);
+
+            if (response == null || !response.containsKey("REC")) {
+                log.error("Invalid response format: {}", response);
+                throw new CustomException(MydataErrorCode.ACCOUNT_AUTH_FAILED);
+            }
+
+            Map<String, Object> rec = (Map<String, Object>) response.get("REC");
+            return new BankAuthForMydataResponse(
+                    rec.get("transactionUniqueNo").toString(),
+                    rec.get("accountNo").toString()
+            );
+        } catch (Exception e) {
+            log.error("Error during account auth request: {}", e.getMessage(), e);
+            throw e;
         }
-
-        Map<String, Object> rec = (Map<String, Object>) response.get("REC");
-        return new BankAuthForMydataResponse(
-                rec.get("transactionUniqueNo").toString(),
-                rec.get("accountNo").toString()
-        );
     }
 
 

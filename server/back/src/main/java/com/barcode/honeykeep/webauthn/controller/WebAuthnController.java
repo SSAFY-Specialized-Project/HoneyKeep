@@ -34,7 +34,7 @@ public class WebAuthnController {
      * 클라이언트에 등록에 필요한 challenge와 옵션 반환
      */
     @PostMapping("/register/start")
-    public ResponseEntity<WebAuthnResponse<?>> startRegistration(
+    public ResponseEntity<ApiResponse<?>> startRegistration(
             @AuthenticationPrincipal UserId userId,
             @Valid @RequestBody RegistrationRequest request) {
 
@@ -47,11 +47,11 @@ public class WebAuthnController {
         );
         WebAuthnResponse<?> response = webAuthnService.startRegistration(request);
 
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        return response.isSuccess() ?
+                ResponseEntity.ok()
+                        .body(ApiResponse.success(response)) :
+                ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.badRequest(response.getMessage()));
     }
 
     /**
@@ -59,17 +59,17 @@ public class WebAuthnController {
      * 클라이언트로부터 받은 인증 데이터를 검증하고 사용자 인증정보 저장
      */
     @PostMapping("/register/finish")
-    public ResponseEntity<WebAuthnResponse<?>> finishRegistration(
+    public ResponseEntity<ApiResponse<?>> finishRegistration(
             @AuthenticationPrincipal UserId userId,
             @Valid @RequestBody RegistrationFinishRequest request) {
 
         WebAuthnResponse<?> response = webAuthnService.finishRegistration(request);
 
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        return response.isSuccess() ?
+                ResponseEntity.ok()
+                        .body(ApiResponse.success(response)) :
+                ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.badRequest(response.getMessage()));
     }
 
     /**
@@ -77,7 +77,7 @@ public class WebAuthnController {
      * 클라이언트에 인증에 필요한 challenge와 옵션 반환
      */
     @PostMapping("/authenticate/start")
-    public ResponseEntity<WebAuthnResponse<?>> startAuthentication(
+    public ResponseEntity<ApiResponse<?>> startAuthentication(
             @AuthenticationPrincipal UserId userId,
             @Valid @RequestBody(required = false) AuthenticationRequest request) {
 
@@ -87,11 +87,11 @@ public class WebAuthnController {
 
         WebAuthnResponse<?> response = webAuthnService.startAuthentication(request);
 
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        return response.isSuccess() ?
+                ResponseEntity.ok()
+                        .body(ApiResponse.success(response)) :
+                ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.badRequest(response.getMessage()));
     }
 
     /**
@@ -99,7 +99,7 @@ public class WebAuthnController {
      * 클라이언트로부터 받은 인증 데이터를 검증하고 인증 결과 반환
      */
     @PostMapping("/authenticate/finish")
-    public ResponseEntity<WebAuthnResponse<?>> finishAuthentication(
+    public ResponseEntity<ApiResponse<?>> finishAuthentication(
             @AuthenticationPrincipal UserId userId,
             @Valid @RequestBody AuthenticationFinishRequest request) {
 
@@ -109,11 +109,11 @@ public class WebAuthnController {
             // 인증에 대한 임시 토큰 발급 후 쿠키에 저장
             // AuthenticationFinishRequest가 record 타입이므로 맵에서 정보 추출
             String authenticatorId = "default"; // 보통 credential ID는 응답에서 추출하지만, 여기서는 기본값 사용
-            
+
             // 강력 인증 레벨 설정 - 사용자 검증 기준
             // 실제로는 request.credential() 맵에서 userVerification 값을 확인해야 함
             String authLevel = "STRONG"; // 기본적으로 강력 인증으로 설정
-            
+
             // WebAuthn 인증 정보로 토큰 생성
             WebAuthnAuthDetails authDetails = new WebAuthnAuthDetails(authLevel, authenticatorId);
             String authToken = webAuthnTokenService.generateWebAuthnToken(userId.value().toString(), authDetails);
@@ -129,9 +129,10 @@ public class WebAuthnController {
 
             return ResponseEntity.ok()
                     .header("Set-Cookie", authTokenCookie.toString())
-                    .body(response);
+                    .body(ApiResponse.success(response));
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.badRequest(response.getMessage()));
         }
     }
 

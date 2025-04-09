@@ -6,7 +6,30 @@ import os
 import re
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix    
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
+import collections.abc # Use this for robust checking
+
+# --- Helper Function to Convert NumPy Types ---
+def convert_numpy_types(obj):
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        # Handle potential NaN values before converting to float
+        if np.isnan(obj):
+            return None # Or return 0.0, depending on desired behavior for NaN
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        # Convert numpy arrays to lists, applying conversion to elements
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, collections.abc.Mapping): # Check if it's a dictionary-like object
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, collections.abc.Sequence) and not isinstance(obj, (str, bytes)): # Check if it's a list/tuple but not string/bytes
+        return [convert_numpy_types(item) for item in obj]
+    else:
+        return obj
+# ---------------------------------------------
 
 # 전역 변수 및 설정
 MODEL_PATH = 'model/fixed_expense_model.pkl'
@@ -50,9 +73,11 @@ def train(data):
         return {'status': 'insufficient_data', 'samples': len(df)}
     
     # 모델 학습에 필요한 특성 선택
-    feature_columns = ['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 
-                       'avgInterval', 'userId', 'weekendRatio', 'intervalStd', 
-                       'intervalCv', 'continuityRatio', 'amountTrendSlope', 'amountTrendR2']
+    feature_columns = [
+        'amountScore', 'dateScore', 'persistenceScore', 'transactionCount',
+        'avgInterval',          'weekendRatio', 'intervalStd',
+        'intervalCv', 'continuityRatio', 'amountTrendSlope', 'amountTrendR2'
+    ]
     
     # 실제 존재하는 컬럼만 선택
     X_columns = [col for col in feature_columns if col in df.columns]
@@ -189,23 +214,24 @@ def train(data):
     # 모델 저장
     save_model(model)
     
-    # 특성 중요도 계산
-    feature_importance = dict(zip(X.columns, model.feature_importances_))
+    # 특성 중요도 계산 (변환 적용)
+    feature_importance = {k: float(v) for k, v in zip(X.columns, model.feature_importances_)}
     
-    # 학습 결과 반환
+    # 학습 결과 반환 (최종 변환 적용)
     result = {
-        'status': 'success', 
-        'metrics': metrics,
-        'feature_importance': {k: float(v) for k, v in feature_importance.items()},
+        'status': 'success',
+        'metrics': metrics, # metrics 내부 값들은 이미 float/int/list로 변환됨
+        'feature_importance': feature_importance,
         'training_samples': int(len(df)),
         'class_distribution': {
             'positive': int(pos_class_count),
             'negative': int(neg_class_count),
-            'positive_ratio': float(pos_class_count / len(y))
+            'positive_ratio': float(pos_class_count / len(y)) if len(y) > 0 else 0.0
         },
         'feedback_approved': int(df[df['status'] == 'APPROVED'].shape[0]),
         'feedback_rejected': int(df[df['status'] == 'REJECTED'].shape[0]),
-        'best_parameters': {k: (float(v) if isinstance(v, (np.float32, np.float64)) else v) 
+        'best_parameters': {k: (float(v) if isinstance(v, (np.float32, np.float64, np.floating)) else
+                                (int(v) if isinstance(v, np.integer) else v))
                             for k, v in best_params.items()}
     }
     
@@ -220,16 +246,18 @@ def train(data):
     drift_result = save_metrics(metrics, version=model_version)
     send_alert(drift_result)
     
-    return result
+    return convert_numpy_types(result) # 최종 결과 전체에 변환 적용
 
 # FixedExpenseDetector 클래스 구현
 class FixedExpenseDetector:
     def __init__(self, amount_weight=0.15, date_weight=0.25,
-                 persistence_weight=0.4, periodicity_weight=0.2):
+                 persistence_weight=0.4, periodicity_weight=0.2,
+                 rule_candidate_threshold=0.5):
         self.amount_weight = amount_weight
         self.date_weight = date_weight
         self.persistence_weight = persistence_weight
         self.periodicity_weight = periodicity_weight
+        self.rule_candidate_threshold = rule_candidate_threshold
 
     def detect(self, transactions_df, enable_ml=False):
         """
@@ -271,101 +299,143 @@ class FixedExpenseDetector:
                           persistence_score * self.persistence_weight +
                           periodicity_score * self.periodicity_weight)
 
-            # 사용자 ID 추출
-            user_id = int(group['userId'].iloc[0]) if 'userId' in group.columns else None
-            
+            # --- 1단계: 규칙 기반 필터링 ---
+            if rule_score < self.rule_candidate_threshold:
+                continue # 임계값 미만이면 후보에서 제외하고 다음 그룹으로
+            # -------------------------------
+
             # 거래 ID 생성 (가맹점명 + 계좌ID 조합)
             account_id = int(group['accountId'].iloc[0]) if 'accountId' in group.columns else 'unknown'
             transaction_id = f"{merchant}_{account_id}"
             
-            # ML 모델 사용 가능한 경우
+            # --- 2단계: ML 모델 예측 (후보 그룹에 대해서만) ---
+            is_fixed_expense = False # 기본값은 False
             ml_prediction = False
             ml_confidence = 0.0
             use_ml_model = False
+            features = {} # features 딕셔너리 초기화
 
-            # ML 모델 입력 특성
-            base_features = {
-                'amountScore': amount_score,
-                'dateScore': date_score,
-                'persistenceScore': persistence_score,
-                'transactionCount': len(group),
-                'avgInterval': self._calculate_avg_interval(group),
-            }
-
-            # 고급 특성 추가
-            advanced_features = self._extract_advanced_features(group)
-            features = {**base_features, **advanced_features, 'transactionId': transaction_id, 'userId': user_id, 'accountId': account_id}
-
-            # ML 모델 예측 시도 - 사용자별 피드백이 10개 이상인 경우에만
             try:
                 model = get_model()
-                # 해당 사용자에게 ML 모델 적용 가능 여부 확인
-                # 자바에서 전달한 ML 적용 가능 사용자 목록 사용
-                if MODEL_TRAINED and user_id and enable_ml:
+                if MODEL_TRAINED:
                     use_ml_model = True
+                    # ML 모델 입력 특성 계산
+                    base_features = {
+                        'amountScore': amount_score,
+                        'dateScore': date_score,
+                        'persistenceScore': persistence_score,
+                        'transactionCount': len(group),
+                        'avgInterval': self._calculate_avg_interval(group),
+                    }
+                    advanced_features = self._extract_advanced_features(group)
+                    features = {**base_features, **advanced_features, 'transactionId': transaction_id, 'accountId': account_id}
                     
                     # 특성 확인 및 누락된 특성 추가
-                    required_features = ['amountScore', 'dateScore', 'persistenceScore', 'transactionCount', 
-                                        'avgInterval', 'userId', 'weekendRatio', 'intervalStd', 'intervalCv',
+                    required_features = ['amountScore', 'dateScore', 'persistenceScore', 'transactionCount',
+                                        'avgInterval',          'weekendRatio', 'intervalStd', 'intervalCv',
                                         'continuityRatio', 'amountTrendSlope', 'amountTrendR2']
-                    
-                    # 누락된 특성 채우기
                     features_for_model = {k: features.get(k, 0.0) for k in required_features}
-                    
-                    # 예측용 데이터프레임 생성
                     X = pd.DataFrame([features_for_model])
                     
+                    # ML 예측 수행 및 최종 판단
                     ml_prediction = bool(model.predict(X)[0])
+                    is_fixed_expense = ml_prediction # ML 예측 결과를 최종 판단으로 사용
+                    
+                    # 신뢰도 계산 (결과 저장용)
                     proba = model.predict_proba(X)[0]
                     ml_confidence = float(proba[1] if ml_prediction else proba[0])
                 else:
-                    ml_prediction = rule_score >= 0.65
-            except Exception as e:
-                print(f"ML 예측 오류: {e}")
-                ml_prediction = rule_score >= 0.65
-            
-            # 규칙 기반 점수를 0~1 사이로 정규화
-            rule_probability = min(1.0, rule_score)
-            
-            # 조합된 확률 계산
-            if use_ml_model:
-                ml_weight = 0.7  # ML 모델의 가중치
-                rule_weight = 0.3  # 규칙 기반의 가중치
-                combined_probability = (ml_confidence * ml_weight) + (rule_probability * rule_weight)
-            else:
-                combined_probability = rule_probability
-            
-            # 최종 판단
-            is_fixed_expense = combined_probability >= 0.55
+                    # 학습된 모델이 없을 경우의 Fallback 처리
+                    # 예: 규칙 점수가 특정 기준 이상이면 True (기존 로직과 유사하게)
+                    is_fixed_expense = rule_score >= 0.55 # 또는 다른 기준 적용 가능
+                    ml_prediction = is_fixed_expense # Fallback 결과를 ml_prediction에도 반영
+                    # features 계산 (결과 저장용, 모델 없어도 기본 점수는 계산 가능)
+                    base_features = {
+                        'amountScore': amount_score,
+                        'dateScore': date_score,
+                        'persistenceScore': persistence_score,
+                        'transactionCount': len(group),
+                        'avgInterval': self._calculate_avg_interval(group),
+                    }
+                    advanced_features = self._extract_advanced_features(group) # 계산 시도
+                    features = {**base_features, **advanced_features, 'transactionId': transaction_id, 'accountId': account_id}
 
+            except Exception as e:
+                print(f"ML 예측 또는 Fallback 오류: {e}")
+                # 오류 발생 시 Fallback (예: 규칙 점수 기준)
+                is_fixed_expense = rule_score >= 0.55
+                ml_prediction = is_fixed_expense
+                # features 계산 (오류 시에도 최대한 정보 남기기)
+                try:
+                    base_features = {
+                        'amountScore': amount_score,
+                        'dateScore': date_score,
+                        'persistenceScore': persistence_score,
+                        'transactionCount': len(group),
+                        'avgInterval': self._calculate_avg_interval(group),
+                    }
+                    advanced_features = self._extract_advanced_features(group)
+                    features = {**base_features, **advanced_features, 'transactionId': transaction_id, 'accountId': account_id}
+                except: # 특성 계산 중 오류 시 빈 딕셔너리
+                    features = {'transactionId': transaction_id, 'accountId': account_id}
+            # --------------------------------------------------
+
+            # 최종적으로 고정 지출로 판단된 경우만 candidates 리스트에 추가
             if is_fixed_expense:
                 # 기본 정보 계산
                 avg_amount = group['amount'].mean()
                 avg_day = int(round(group['date'].dt.day.mean()))
                 latest_date = group['date'].max()
+                # user_id 추출 로직 수정: features 딕셔너리에서 먼저 찾고, 없으면 group에서 찾음
+                user_id_val = group['userId'].iloc[0] if 'userId' in group.columns and not group['userId'].empty else 'unknown'
+                # account_id 추출 로직 수정
+                account_id_val = group['accountId'].iloc[0] if 'accountId' in group.columns and not group['accountId'].empty else 'unknown'
 
-                candidates.append({
+                # features 딕셔너리 생성 및 값들 소수점 처리 (금액 관련만)
+                base_features = {
+                    'amountScore': amount_score, # 소수점 처리 제거
+                    'dateScore': date_score, # 소수점 처리 제거
+                    'persistenceScore': persistence_score, # 소수점 처리 제거
+                    'transactionCount': len(group),
+                    'avgInterval': self._calculate_avg_interval(group), # 소수점 처리 제거
+                }
+                advanced_features = self._extract_advanced_features(group) # 내부에서 amountTrendSlope만 round 처리됨
+                features = {
+                    **base_features,
+                    **advanced_features,
+                    'transactionId': transaction_id,
+                    'accountId': account_id_val, # accountId 저장
+                    'userId': user_id_val       # userId 저장
+                }
+                features = convert_numpy_types(features) # features 딕셔너리 내부 NumPy 타입 변환
+
+                # 최종 후보 딕셔너리 생성 (소수점 처리 적용)
+                candidate_data = {
                     'merchant': merchant,
                     'transactionId': transaction_id,
-                    'amountScore': float(amount_score),
-                    'dateScore': float(date_score),
-                    'persistenceScore': float(persistence_score),
-                    'periodicityScore': float(periodicity_score),
-                    'totalScore': float(rule_score),
-                    'mlConfidence': float(ml_confidence),
-                    'averageAmount': round(float(avg_amount), 2),
-                    'averageDay': int(avg_day),
-                    'transactionCount': int(len(group)),
+                    'amountScore': amount_score, # 소수점 처리 제거
+                    'dateScore': date_score, # 소수점 처리 제거
+                    'persistenceScore': persistence_score, # 소수점 처리 제거
+                    'periodicityScore': periodicity_score, # 소수점 처리 제거
+                    'totalScore': rule_score, # 소수점 처리 제거
+                    'mlConfidence': ml_confidence, # 소수점 처리 제거
+                    'averageAmount': round(avg_amount, 2), # 금액만 소수점 둘째 자리
+                    'averageDay': avg_day,
+                    'transactionCount': len(group),
                     'latestDate': latest_date.strftime('%Y-%m-%d'),
-                    'userId': user_id,
-                    'accountId': account_id,
+                    'accountId': account_id_val,
+                    'userId': user_id_val,
                     'status': 'DETECTED',
                     'features': features,
                     'usingMlModel': use_ml_model,
                     'originalMerchant': group['original_merchant'].iloc[0] if 'original_merchant' in group.columns else merchant
-                })
+                }
 
-        return candidates
+                # 최종 후보 딕셔너리 전체에 대해 NumPy 타입 변환 적용
+                candidates.append(convert_numpy_types(candidate_data))
+
+        # 최종 반환 전에 전체 candidates 리스트에 대해 변환 적용 (이중 확인)
+        return convert_numpy_types(candidates)
 
     def _preprocess(self, df):
         # 필요한 필드가 있는지 확인
@@ -601,46 +671,61 @@ class FixedExpenseDetector:
         
         # 2. 사용자 행동 기반 특성
         # 해당 사용자의 다른 거래와 비교한 상대적 크기
-        user_id = group['userId'].iloc[0]
+        # user_id = group['userId'].iloc[0] # 이 부분은 고급 특성 추출인데, userId를 사용하지 않으므로 주석 처리하거나 관련 로직 제거
         account_id = group['accountId'].iloc[0]
         
         # 이 기능 구현을 위해 모든 거래에 대한 참조가 필요함
         # 데이터베이스나 캐시에서 사용자 평균 거래액을 가져와야 함
-        # features['relative_to_user_avg'] = group['amount'].mean() / user_avg_transaction
+        # features['relative_to_user_avg'] = group['amount'].mean() / user_avg_transaction # userId가 없으면 이 특성은 계산 불가
         
         # 3. 시계열 특성
         # 거래일 간격의 표준편차 (낮을수록 고정지출 가능성 높음)
         dates = sorted(group['date'])
-        if len(dates) >= 3:
+        if len(dates) >= 3: # 최소 3개의 날짜가 있어야 간격 계산 가능
             intervals = [(dates[i] - dates[i-1]).days for i in range(1, len(dates))]
-            features['intervalStd'] = np.std(intervals)
-            
-            # 거래 간격의 변동 계수 (낮을수록 규칙적)
-            features['intervalCv'] = np.std(intervals) / np.mean(intervals) if np.mean(intervals) > 0 else 0
+            if intervals: # 간격 리스트가 비어있지 않은 경우에만 계산
+                std_interval = np.std(intervals)
+                mean_interval = np.mean(intervals)
+                features['intervalStd'] = std_interval # 소수점 처리 제거
+                features['intervalCv'] = std_interval / mean_interval if mean_interval > 0 else 0.0 # 소수점 처리 제거
+            else:
+                features['intervalStd'] = 0.0
+                features['intervalCv'] = 0.0
         else:
-            features['intervalStd'] = 0
-            features['intervalCv'] = 0
+            features['intervalStd'] = 0.0
+            features['intervalCv'] = 0.0
         
         # 4. 연속성 특성 - 거래 누락 비율 (낮을수록 고정지출 가능성 높음)
         first_date = group['date'].min()
         last_date = group['date'].max()
         expected_count = (last_date.to_period('M') - first_date.to_period('M')).n + 1
         actual_count = len(group['date'].dt.to_period('M').unique())
-        features['continuityRatio'] = actual_count / expected_count if expected_count > 0 else 0
+        features['continuityRatio'] = actual_count / expected_count if expected_count > 0 else 0.0 # 소수점 처리 제거
         
-        # 5. 금액 경향성 (고정지출은 보통 금액이 증가하거나 고정)
+        # 5. 금액 경향성 (Slope만 소수점 처리)
         if len(group) >= 3:
             amounts = group.sort_values('date')['amount'].values
             try:
                 from scipy.stats import linregress
-                slope, _, rvalue, _, _ = linregress(range(len(amounts)), amounts)
-                features['amountTrendSlope'] = slope
-                features['amountTrendR2'] = rvalue ** 2
-            except:
-                features['amountTrendSlope'] = 0
-                features['amountTrendR2'] = 0
+                # linregress는 최소 2개의 점이 필요
+                if len(amounts) >= 2:
+                    slope, _, rvalue, _, _ = linregress(range(len(amounts)), amounts)
+                    features['amountTrendSlope'] = round(slope, 2) # 금액 경향 기울기만 소수점 둘째 자리
+                    features['amountTrendR2'] = rvalue ** 2 # R2는 소수점 처리 제거
+                else:
+                    features['amountTrendSlope'] = 0.0
+                    features['amountTrendR2'] = 0.0
+            except ImportError:
+                 print("scipy.stats.linregress 를 찾을 수 없습니다. 경향성 분석 건너뜀.")
+                 features['amountTrendSlope'] = 0.0
+                 features['amountTrendR2'] = 0.0
+            except ValueError as e: # 데이터 부족 등 linregress 내부 오류 처리
+                print(f"금액 경향성 계산 오류 (linregress): {e}")
+                features['amountTrendSlope'] = 0.0
+                features['amountTrendR2'] = 0.0
         else:
-            features['amountTrendSlope'] = 0
-            features['amountTrendR2'] = 0
-        
-        return features
+            features['amountTrendSlope'] = 0.0
+            features['amountTrendR2'] = 0.0
+
+        # 최종 반환 전에 features 딕셔너리 타입 변환 (NumPy 타입 변환은 유지)
+        return convert_numpy_types(features)

@@ -92,7 +92,7 @@ public class TransactionService {
     /**
      * ID로 거래내역 조회하는 헬퍼 메서드
      */
-    private Transaction getTransactionById(Long transactionId) {
+    public Transaction getTransactionById(Long transactionId) {
         return transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new CustomException(TransactionErrorCode.TRANSACTION_NOT_FOUND));
     }
@@ -188,5 +188,13 @@ public class TransactionService {
                                          TransactionType type) {
 
         return createTransaction(account, pocket, name, amount, balance, LocalDateTime.now(), type);
+    }
+
+    /**
+     * 거래내역 저장
+     */
+    @Transactional
+    public Transaction saveTransaction(Transaction transaction) {
+        return transactionRepository.save(transaction);
     }
 }

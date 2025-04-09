@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
+import com.barcode.honeykeep.account.dto.AccountSummaryDto;
 import com.barcode.honeykeep.account.entity.Account;
 import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
@@ -42,8 +43,11 @@ public class DetectedFixedExpenseService {
                 .sorted(Comparator.comparing(DetectedFixedExpense::getDetectionScore).reversed())
                 .map(d -> DetectedFixedExpenseResponse.builder()
                         .id(d.getId())
-                        .bankName(d.getAccount().getBank().getName())
-                        .accountName(d.getAccount().getAccountName())
+                        .account(new AccountSummaryDto(
+                                d.getAccount().getBank().getName(),
+                                d.getAccount().getAccountName(),
+                                d.getAccount().getAccountNumber()
+                        ))
                         .name(d.getName())
                         .averageAmount(d.getAverageAmount().toString())
                         .averageDay(d.getAverageDay())
@@ -75,8 +79,11 @@ public class DetectedFixedExpenseService {
 
         return DetectedFixedExpenseResponse.builder()
                 .id(detectedFixedExpense.getId())
-                .bankName(detectedFixedExpense.getAccount().getBank().getName())
-                .accountName(detectedFixedExpense.getAccount().getAccountName())
+                .account(new AccountSummaryDto(
+                        detectedFixedExpense.getAccount().getBank().getName(),
+                        detectedFixedExpense.getAccount().getAccountName(),
+                        detectedFixedExpense.getAccount().getAccountNumber()
+                ))
                 .name(detectedFixedExpense.getName())
                 .averageAmount(detectedFixedExpense.getAverageAmount().toString())
                 .averageDay(detectedFixedExpense.getAverageDay())
@@ -111,7 +118,6 @@ public class DetectedFixedExpenseService {
 
         // 날짜 계산 - 매월 averageDay 일에 지불하는 것으로
         LocalDate today = LocalDate.now();
-        LocalDate payDay = today.withDayOfMonth(Math.min(detectedFixedExpense.getAverageDay(), today.lengthOfMonth()));
 
         // 시작일 계산 - lastTransactionDate에서 거꾸로 계산하여 첫 발생일 추정
         // 현실적으로 첫 발생일 정확한 계산은 어렵다.
@@ -132,8 +138,9 @@ public class DetectedFixedExpenseService {
                 detectedFixedExpense.getAccount().getAccountNumber(),
                 detectedFixedExpense.getName(),
                 detectedFixedExpense.getAverageAmount(),
-                startDate,  // 추정된 시작일
-                payDay,     // 평균 지불일
+                startDate,                                  // 추정된 시작일
+                detectedFixedExpense.getAverageDay(),     // 평균 지불일
+                detectedFixedExpense.getTransactionCount(),
                 "자동 감지된 고정지출에서 승인됨"
         );
 

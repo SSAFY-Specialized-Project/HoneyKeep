@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @Getter
 public class AccountTransferNotificationDTO {
 
+    private String notificationType;
+
     private TransactionType transactionType;
 
     private BigDecimal amount;
@@ -23,6 +25,5 @@ public class AccountTransferNotificationDTO {
 
     private String depositAccountName;
 
-    // 이체 일시 (알림에 포함할 시간 정보)
     private LocalDateTime transferDate;
 }

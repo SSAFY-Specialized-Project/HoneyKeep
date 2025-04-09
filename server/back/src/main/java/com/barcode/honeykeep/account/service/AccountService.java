@@ -6,11 +6,13 @@ import com.barcode.honeykeep.account.exception.AccountErrorCode;
 import com.barcode.honeykeep.account.repository.AccountRepository;
 import com.barcode.honeykeep.common.exception.CustomException;
 import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.service.NotificationService;
 import com.barcode.honeykeep.notification.type.PushType;
 import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
 import com.barcode.honeykeep.common.vo.Money;
 import com.barcode.honeykeep.notification.dto.AccountTransferNotificationDTO;
 import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.pocket.type.PocketType;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
 import com.barcode.honeykeep.transaction.service.TransactionService;
 import com.barcode.honeykeep.transaction.type.TransactionType;
@@ -20,8 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +37,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionService transactionService;
     private final NotificationDispatcher notificationDispatcher;
+    private final NotificationService notificationService;
 
     //이체 하기 전 실행 로직
     //출금 계좌와 입금 계좌를 단순 조회하여 정보를 반환
@@ -166,6 +171,7 @@ public class AccountService {
                     .pocketCount(account.getPockets().size())
                     .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
                     .totalUsedPocketAmount(calculateUsedTotalPocketAmount(account))
+                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateActivePocketAmount(account)))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -202,7 +208,6 @@ public class AccountService {
                         .accountId(account.getId())
                         .accountName(account.getAccountName())
                         .memo(transaction.getMemo())
-                        .pocketId(transaction.getPocket() != null ? transaction.getPocket().getId() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -243,6 +248,19 @@ public class AccountService {
 
         for (Pocket pocket : account.getPockets()) {
             total = total.add(pocket.getSavedAmount().getAmount());
+        }
+        return total;
+    }
+
+    //활성화된 포켓들(UNUSED, USING)의 금액 합 계산 (USED 상태 제외)
+    private BigDecimal calculateActivePocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            // USED 상태가 아닌 포켓만 합산 (UNUSED, USING 상태인 경우)
+            if (pocket.getType() != PocketType.USED) {
+                total = total.add(pocket.getSavedAmount().getAmount());
+            }
         }
         return total;
     }
