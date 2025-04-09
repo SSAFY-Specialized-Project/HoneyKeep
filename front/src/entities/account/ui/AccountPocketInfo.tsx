@@ -1,9 +1,10 @@
 import { BankIcon } from '@/shared/ui';
 import { formatWithKRW } from '@/shared/lib';
+import { Bank } from '@/shared/model/types.ts';
 
 interface Props {
   id: string;
-  bank: string;
+  bank: Bank;
   account: string;
   accountNumber: string;
   currentAmount: number;
@@ -24,7 +25,7 @@ const AccountPocketInfo = ({
       <div className="flex w-full flex-col gap-2.5 p-4">
         <div className="flex w-full items-center justify-between">
           <div className="flex gap-3">
-            <BankIcon bank="시티은행" />
+            <BankIcon bank={bank} />
             <div className="flex flex-col">
               <span className="text-text-md font-medium text-gray-800">{account}</span>
               <span className="text-text-sm font-medium text-gray-600">{`${bank} ${accountNumber}`}</span>
