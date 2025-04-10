@@ -237,6 +237,7 @@ public class AccountService {
         List<PocketSummaryResponse> pocketDtos = account.getPockets().stream()
                 .map(pocket -> PocketSummaryResponse.builder()
                         .id(pocket.getId())
+                        .accountId(pocket.getAccount().getId())
                         .name(pocket.getName())
                         .accountName(account.getAccountName())
                         .totalAmount(pocket.getTotalAmount().getAmountAsLong())

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 @Builder
 public record PocketSummaryResponse(
     Long id,
+    Long accountId,
     String name,
     String accountName,
     Long totalAmount,
