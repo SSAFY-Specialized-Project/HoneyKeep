@@ -20,22 +20,24 @@ const PocketFavoriteList = () => {
   if (!pocketFavoriteData) return;
 
   return (
-    <div className="flex h-full flex-col">
-      <ul className="flex flex-col gap-4 overflow-auto">
-        {pocketFavoriteData.data != null ? (
-          pocketFavoriteData.data.map((item) => (
-            <li key={item.id}>
-              <FavoritePocketItem
-                name={item.name}
-                imgUrl={item.imgUrl}
-                totalAmount={item.totalAmount}
-              />
-            </li>
-          ))
-        ) : (
-          <li>즐겨찾기 목록이 없습니다.</li>
-        )}
-      </ul>
+    <div className="flex h-full flex-col flex-1">
+        <div className="gap-4 overflow-auto">
+            <ul>
+                {pocketFavoriteData.data != null ? (
+                    pocketFavoriteData.data.map((item) => (
+                        <li key={item.id}>
+                            <FavoritePocketItem
+                                name={item.name}
+                                imgUrl={item.imgUrl}
+                                totalAmount={item.totalAmount}
+                            />
+                        </li>
+                    ))
+                ) : (
+                    <li>즐겨찾기 목록이 없습니다.</li>
+                )}
+            </ul>
+        </div>
       <button
         type="button"
         disabled={false}

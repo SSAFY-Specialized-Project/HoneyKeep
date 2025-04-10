@@ -1,15 +1,18 @@
-import React from "react";
+import React, { MouseEvent } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { FixedExpenseFound } from "@/entities/fixedExpense/ui";
 import { DetectedFixedExpenseResponse } from "@/entities/fixedExpense/model/types.ts";
+import { useBasicModalStore } from "@/shared/store";
+import { UseMutateFunction } from '@tanstack/react-query';
+import { ResponseDTO, ResponseErrorDTO } from '@/shared/model/types';
 
 // Outlet context 타입 정의
 type ContextType = {
     detectedFixedExpenses: DetectedFixedExpenseResponse[];
-    setDeleteItemInfo: React.Dispatch<React.SetStateAction<{ id: number; title: string } | null>>;
-    setModalType: React.Dispatch<React.SetStateAction<'fixed' | 'detected'>>;
-    setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     navigate: ReturnType<typeof useNavigate>;
+    isEditMode?: boolean;
+    deleteDetectedExpense: UseMutateFunction<ResponseDTO<void>, ResponseErrorDTO | Error, number, unknown>;
+    deleteFixedExpense?: UseMutateFunction<ResponseDTO<void>, ResponseErrorDTO | Error, number, unknown>;
 };
 
 // 문자열에서 숫자만 추출하는 함수
@@ -19,13 +22,13 @@ const extractNumberFromString = (str: string): number => {
 };
 
 const FixedExpenseListFound = () => {
-    const { 
-        detectedFixedExpenses, 
-        setDeleteItemInfo, 
-        setModalType, 
-        setIsModalOpen,
-        navigate 
+    const {
+        detectedFixedExpenses,
+        navigate,
+        deleteDetectedExpense
     } = useOutletContext<ContextType>();
+
+    const { openModal, closeModal } = useBasicModalStore();
 
     const handleDetectedFixedExpenseRegister = (item: DetectedFixedExpenseResponse) => {
         // 문자열에서 숫자만 추출
@@ -48,12 +51,18 @@ const FixedExpenseListFound = () => {
     };
 
     const handleDetectedFixedExpenseDelete = (item: DetectedFixedExpenseResponse) => {
-        setDeleteItemInfo({
-            id: item.id,
-            title: item.name
+        openModal({
+            icon: "exclamation-triangle",
+            title: '발견된 고정지출 삭제',
+            itemName: item.name,
+            description: '을 발견된 고정지출 목록에서 삭제할까요?',
+            buttonText: '삭제',
+            onConfirm: (e: React.MouseEvent) => {
+                e.preventDefault();
+                deleteDetectedExpense(item.id);
+                closeModal();
+            }
         });
-        setModalType('detected');
-        setIsModalOpen(true);
     };
 
     return (
