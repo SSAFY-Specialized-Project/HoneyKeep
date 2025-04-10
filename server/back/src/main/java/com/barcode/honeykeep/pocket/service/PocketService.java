@@ -16,9 +16,9 @@ import com.barcode.honeykeep.pocket.exception.PocketErrorCode;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
 import com.barcode.honeykeep.pocket.type.CrawlingStatusType;
 import com.barcode.honeykeep.pocket.type.PocketType;
-import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import com.barcode.honeykeep.transaction.entity.Transaction;
 import com.barcode.honeykeep.transaction.service.TransactionService;
+import com.barcode.honeykeep.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -131,7 +131,7 @@ public class PocketService {
                 .category(category)
                 .name(null)
                 .productName(null)
-                .totalAmount(Money.zero())
+                .totalAmount(null)
                 .savedAmount(Money.zero())
                 .link(null)
                 .startDate(pocketManualRequest.getStartDate())
@@ -140,7 +140,6 @@ public class PocketService {
                 .type(PocketType.UNUSED)
                 .imgUrl(null)
                 .crawlingUuid(pocketManualRequest.getCrawlingUuid())
-                .isActivated(true)
                 .build();
 
         Pocket savedPocket = pocketRepository.save(pocket);
@@ -150,7 +149,12 @@ public class PocketService {
 
         // Redis에서 UUID로 크롤링 데이터 있는지 조회
         Object crawlingData = redisTemplate.opsForValue().get("crawling:" + pocketManualRequest.getCrawlingUuid());
-        if (crawlingData instanceof PocketCrawlingResult pocketCrawlingResult) {
+        if (!(crawlingData instanceof HashMap)) {
+            PocketCrawlingResult pocketCrawlingResult = (PocketCrawlingResult) crawlingData;
+
+            if(pocketCrawlingResult == null) {
+                throw new CustomException(PocketErrorCode.REDIS_SAVE_ERROR);
+            }
 
             // 크롤링 완료된 데이터 업데이트
             if (pocketCrawlingResult.getStatus().equals(CrawlingStatusType.COMPLETED)) {
@@ -489,6 +493,7 @@ public class PocketService {
     }
 
     /**
+     * todo : 사용할 때마다 거래 내역에 포켓 매칭해야 함
      * 포켓 사용 시작 처리
      * @param pocketId 사용 시작할 포켓 ID
      * @return 업데이트된 포켓 정보
