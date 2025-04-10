@@ -1,4 +1,3 @@
-import { PocketDropdown } from '@/entities/pocket/ui';
 import { useQuery } from '@tanstack/react-query';
 import { getAccountTransactionPocket } from '../api';
 import { useEffect } from 'react';
@@ -22,12 +21,12 @@ const QRAccount = ({ bankName, accountName, accountId, accountBalance }: Props) 
     console.log(accountData);
   }, [accountData]);
 
-  if (!accountData || accountData.data.pocketList.length == 0) return null;
+  if (!accountData) return null;
 
   return (
     <div
       onClick={() => {}}
-      className="bg-brand-primary-500 flex h-40 w-90 flex-col gap-6 rounded-xl p-3"
+      className="embla__slide bg-brand-primary-500 flex flex-col gap-6 rounded-xl p-3"
     >
       <div
         onClick={(e) => {
@@ -46,9 +45,6 @@ const QRAccount = ({ bankName, accountName, accountId, accountBalance }: Props) 
       </div>
       <div className="flex justify-between">
         <span className="text-text-sm font-bold text-white">출금 포켓</span>
-        {accountData?.data != null ? (
-          <PocketDropdown pockets={accountData?.data.pocketList} />
-        ) : null}
       </div>
     </div>
   );

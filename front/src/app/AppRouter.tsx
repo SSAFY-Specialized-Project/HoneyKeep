@@ -106,15 +106,7 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-          {
-            // QR 결제
-            path: '/qrPayment',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <QRPayment />
-              </Suspense>
-            ),
-          },
+
           {
             // QR 결제 완료
             path: '/qrSuccess',
@@ -423,6 +415,15 @@ const AppRouter = createBrowserRouter([
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
                 <Chatbot />
+              </Suspense>
+            ),
+          },
+          {
+            // QR 결제
+            path: '/qrPayment',
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <QRPayment />
               </Suspense>
             ),
           },
