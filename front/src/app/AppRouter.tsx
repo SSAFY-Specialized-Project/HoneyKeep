@@ -10,6 +10,7 @@ import {
   PocketListSkeleton,
 } from '@/pages/skeleton';
 import PocketCreateWrapper from './PocketCreateWrapper';
+import SpendingAnalysis from '@/pages/pocket/SpendingAnalysis';
 
 // 일반 페이지 컴포넌트 lazy 로딩
 const Landing = lazy(() => import('@/pages/general/Landing'));
@@ -410,10 +411,10 @@ const AppRouter = createBrowserRouter([
           },
           // 예시 페이지
           {
-            path: '/e',
+            path: '/analysis',
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <ExamplePage />
+                <SpendingAnalysis />
               </Suspense>
             ),
           },
