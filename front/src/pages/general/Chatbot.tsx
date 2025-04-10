@@ -352,7 +352,8 @@ const Chatbot = () => {
     </div>
   );
 };
-// 간단한 마크다운 변환 함수
+
+// 개선된 마크다운 변환 함수
 const convertMarkdownToHtml = (markdown: string) => {
   if (!markdown) return '';
 
@@ -367,9 +368,39 @@ const convertMarkdownToHtml = (markdown: string) => {
   // 이탤릭 텍스트 변환 (*텍스트* -> <em>텍스트</em>)
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-  // 목록 변환 (- 항목 -> <li>항목</li>)
+  // 목록 변환 개선 - 먼저 각 목록 항목을 <li> 태그로 변환
   html = html.replace(/^\- (.*?)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*?<\/li>\n)+/g, '<ul></ul>');
+
+  // 연속된 <li> 태그들을 찾아서 <ul> 태그로 감싸기
+  // 기존 코드는 <li> 태그들을 제거하고 빈 <ul></ul>로 대체했음
+  let inList = false;
+  const lines = html.split('\n');
+  html = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('<li>')) {
+      // 목록이 시작되는 경우
+      if (!inList) {
+        html += '<ul>\n';
+        inList = true;
+      }
+      html += line + '\n';
+    } else {
+      // 목록이 아닌 경우
+      if (inList) {
+        html += '</ul>\n';
+        inList = false;
+      }
+      html += line + '\n';
+    }
+  }
+
+  // 목록이 끝나지 않았을 경우 닫기
+  if (inList) {
+    html += '</ul>\n';
+  }
 
   // 코드 블록 변환
   html = html.replace(/```([^`]*?)```/gs, '<pre><code>$1</code></pre>');
@@ -377,8 +408,22 @@ const convertMarkdownToHtml = (markdown: string) => {
   // 인라인 코드 변환
   html = html.replace(/`([^`]*?)`/g, '<code>$1</code>');
 
-  // 단락 변환 (빈 줄로 구분된 텍스트 -> <p>텍스트</p>)
-  html = html.replace(/^\s*(\S[\s\S]*?)(?=\n\s*\n|\n*$)/gm, '<p>$1</p>');
+  // 단락 변환 - 이미 변환된 HTML 태그는 건너뛰도록 개선
+  // <h1>, <h2>, <h3>, <ul>, <pre> 등의 태그가 없는 텍스트 블록만 <p> 태그로 변환
+  const htmlTagRegex = /<\/?[a-z][^>]*>/i;
+  const paragraphs = html.split(/\n\s*\n/);
+  html = '';
+
+  for (const paragraph of paragraphs) {
+    if (paragraph.trim() === '') continue;
+
+    // 이미 HTML 태그가 있는지 확인
+    if (!htmlTagRegex.test(paragraph)) {
+      html += `<p>${paragraph.trim()}</p>\n\n`;
+    } else {
+      html += paragraph + '\n\n';
+    }
+  }
 
   return html;
 };
