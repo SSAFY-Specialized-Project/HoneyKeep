@@ -177,3 +177,19 @@ export interface PocketIsFavoriteResponse {
   name: string;
   isFavorite: boolean;
 }
+
+export interface PocketTypeChangeResponse {
+  id: number;
+  name: string;
+  accountId: number;
+  accountName: string;
+  totalAmount: number;
+  savedAmount: number;
+  link: string | null;
+  imgUrl: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  isFavorite: boolean;
+  type: 'UNUSED' | 'USING' | 'USED';
+  updatedAt: string;
+}

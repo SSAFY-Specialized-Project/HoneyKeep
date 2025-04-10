@@ -2,6 +2,7 @@ import {
   deletePocketAPI,
   getPocketDetailAPI,
   patchPocketIsFavoriteAPI,
+  patchPocketUsingAPI,
 } from '@/entities/pocket/api';
 import { ProductCard, ProgressBar } from '@/features/pocket/ui';
 import { addCommas, extractDate } from '@/shared/lib';
@@ -63,6 +64,15 @@ const PocketDetailPage = () => {
     },
   });
 
+  const pocketUsingMutation = useMutation({
+    mutationFn: (pocketId: number) => patchPocketUsingAPI(pocketId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
+      queryClient.invalidateQueries({ queryKey: ['pocket-list-filter'] });
+      navigate('/pocket/list');
+    },
+  });
+
   useEffect(() => {
     console.log(pocketQuery.data);
   }, [pocketQuery]);
@@ -97,6 +107,10 @@ const PocketDetailPage = () => {
       totalAmount: pocketQuery.data.totalAmount,
       gatheredAmount: pocketQuery.data.savedAmount,
     });
+  };
+
+  const handleUsingButton = () => {
+    pocketUsingMutation.mutate(Number(pocketId));
   };
 
   return (
@@ -140,6 +154,7 @@ const PocketDetailPage = () => {
         </button>
         <button
           type="button"
+          onClick={handleUsingButton}
           className="bg-brand-primary-500 text-text-md xs:text-title-md w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
         >
           사용하기

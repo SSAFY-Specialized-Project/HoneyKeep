@@ -23,7 +23,7 @@ const MyAccountInfo = () => {
   };
 
   const handleClick = (accountId: number) => {
-    navigate(`/accountDetail/${accountId}`);
+    navigate(`/accountDetail/${accountId}/transactions`);
   };
 
   const { data: accountData } = useSuspenseQuery<ResponseDTO<Account[]>>({
