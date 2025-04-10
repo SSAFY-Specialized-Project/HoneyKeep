@@ -1,5 +1,4 @@
 import { LoginForm } from '@/features/auth/login';
-import { Button } from '@/shared/ui';
 import { useMutation } from '@tanstack/react-query';
 import loginUserAPI from '../../entities/user/api/loginUserAPI.ts';
 import { ResponseErrorDTO } from '@/shared/model/types.ts';
@@ -30,13 +29,14 @@ const Login = () => {
   };
 
   return (
-    <div className="flex h-full flex-col gap-8 px-5 pt-20 pb-5">
-      <Button
-        text="테스트 계정으로 로그인"
-        disabled={false}
+    <div className="relative flex h-full flex-col gap-8 px-5 pt-20 pb-5">
+      <button
+        type="button"
         onClick={handleClick}
-        className="cursor-pointer text-white"
-      />
+        className="bg-brand-primary-500 absolute top-5 right-5 w-50 cursor-pointer rounded-xl py-2 font-semibold text-white"
+      >
+        테스트 계정으로 로그인
+      </button>
       <div className="flex flex-col gap-3">
         <h1 className="text-title-xl font-bold text-gray-900">사용자 본인인증</h1>
         <span className="text-title-sm font-semibold text-gray-600">

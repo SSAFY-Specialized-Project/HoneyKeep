@@ -2,6 +2,7 @@
 export interface Pocket {
   id: number;
   name: string;
+  accountId: number;
   accountName: string;
   totalAmount: number;
   savedAmount: number;

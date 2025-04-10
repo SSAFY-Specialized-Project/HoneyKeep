@@ -83,6 +83,7 @@ const Chatbot = () => {
     }
   }, [chatData, messages]);
 
+  // sendChatMessage 함수 부분을 수정했습니다
   const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -107,16 +108,21 @@ const Chatbot = () => {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
+    // 현재 응답 텍스트를 추적하기 위한 로컬 변수
+    let currentResponseText = '';
+
     const addTokenWithDelay = (token: string) => {
       return new Promise<void>((resolve) => {
-        // 현재 메시지 업데이트
+        // 로컬 변수에 토큰 추가
+        currentResponseText += token;
+
+        // 함수형 업데이트로 최신 상태 보장
         setMessages((prev) => {
           const newMessages = [...prev];
           if (currentBotMessageIndexRef.current < newMessages.length) {
-            const currentText = newMessages[currentBotMessageIndexRef.current].text;
             newMessages[currentBotMessageIndexRef.current] = {
               ...newMessages[currentBotMessageIndexRef.current],
-              text: currentText + token,
+              text: currentResponseText, // 로컬 변수 사용
             };
           }
           return newMessages;
@@ -139,7 +145,6 @@ const Chatbot = () => {
         },
         body: JSON.stringify({
           query: userMessage.text,
-          // 필요한 다른 파라미터를 여기에 추가
         }),
         signal,
       });
@@ -156,9 +161,19 @@ const Chatbot = () => {
       const decoder = new TextDecoder();
       let accumulatedData = '';
 
+      // 토큰을 일괄 처리하기 위한 버퍼
+      let tokenBuffer = '';
+      let lastUpdateTime = Date.now();
+
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          // 마지막 남은 토큰 버퍼를 처리
+          if (tokenBuffer) {
+            await addTokenWithDelay(tokenBuffer);
+          }
+          break;
+        }
 
         // 디코딩 및 누적
         const chunk = decoder.decode(value, { stream: true });
@@ -179,13 +194,27 @@ const Chatbot = () => {
             const data = JSON.parse(jsonData);
 
             if (data.type === 'final_answer_token') {
-              // 각 토큰을 순차적으로 표시 (타이핑 효과)
-              await addTokenWithDelay(data.token);
+              // 토큰 버퍼에 추가
+              tokenBuffer += data.token;
+
+              // 일정 시간이 지났거나 버퍼가 특정 크기에 도달하면 업데이트
+              const currentTime = Date.now();
+              if (currentTime - lastUpdateTime > 30 || tokenBuffer.length >= 10) {
+                await addTokenWithDelay(tokenBuffer);
+                tokenBuffer = '';
+                lastUpdateTime = currentTime;
+              }
             } else if (data.type === 'classification') {
+              // 남은 토큰 버퍼 처리
+              if (tokenBuffer) {
+                await addTokenWithDelay(tokenBuffer);
+                tokenBuffer = '';
+              }
+
               const linkType: 1 | 2 | 3 | 4 | 5 | 6 | 7 = data.classification;
               const link = classification_mapping[linkType];
-              // 분류 정보 처리 (필요한 경우)
               console.log('Classification received:', data.classification);
+
               // 응답 완료 처리
               setResponding(false);
 
@@ -220,7 +249,6 @@ const Chatbot = () => {
           return newMessages;
         });
       } else if (!(err instanceof Error)) {
-        // Error 인스턴스가 아닌 다른 예외 처리 (선택 사항)
         console.error('An unexpected error occurred:', err);
       }
     } finally {
@@ -324,7 +352,8 @@ const Chatbot = () => {
     </div>
   );
 };
-// 간단한 마크다운 변환 함수
+
+// 개선된 마크다운 변환 함수
 const convertMarkdownToHtml = (markdown: string) => {
   if (!markdown) return '';
 
@@ -339,9 +368,39 @@ const convertMarkdownToHtml = (markdown: string) => {
   // 이탤릭 텍스트 변환 (*텍스트* -> <em>텍스트</em>)
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-  // 목록 변환 (- 항목 -> <li>항목</li>)
+  // 목록 변환 개선 - 먼저 각 목록 항목을 <li> 태그로 변환
   html = html.replace(/^\- (.*?)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*?<\/li>\n)+/g, '<ul></ul>');
+
+  // 연속된 <li> 태그들을 찾아서 <ul> 태그로 감싸기
+  // 기존 코드는 <li> 태그들을 제거하고 빈 <ul></ul>로 대체했음
+  let inList = false;
+  const lines = html.split('\n');
+  html = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('<li>')) {
+      // 목록이 시작되는 경우
+      if (!inList) {
+        html += '<ul>\n';
+        inList = true;
+      }
+      html += line + '\n';
+    } else {
+      // 목록이 아닌 경우
+      if (inList) {
+        html += '</ul>\n';
+        inList = false;
+      }
+      html += line + '\n';
+    }
+  }
+
+  // 목록이 끝나지 않았을 경우 닫기
+  if (inList) {
+    html += '</ul>\n';
+  }
 
   // 코드 블록 변환
   html = html.replace(/```([^`]*?)```/gs, '<pre><code>$1</code></pre>');
@@ -349,8 +408,22 @@ const convertMarkdownToHtml = (markdown: string) => {
   // 인라인 코드 변환
   html = html.replace(/`([^`]*?)`/g, '<code>$1</code>');
 
-  // 단락 변환 (빈 줄로 구분된 텍스트 -> <p>텍스트</p>)
-  html = html.replace(/^\s*(\S[\s\S]*?)(?=\n\s*\n|\n*$)/gm, '<p>$1</p>');
+  // 단락 변환 - 이미 변환된 HTML 태그는 건너뛰도록 개선
+  // <h1>, <h2>, <h3>, <ul>, <pre> 등의 태그가 없는 텍스트 블록만 <p> 태그로 변환
+  const htmlTagRegex = /<\/?[a-z][^>]*>/i;
+  const paragraphs = html.split(/\n\s*\n/);
+  html = '';
+
+  for (const paragraph of paragraphs) {
+    if (paragraph.trim() === '') continue;
+
+    // 이미 HTML 태그가 있는지 확인
+    if (!htmlTagRegex.test(paragraph)) {
+      html += `<p>${paragraph.trim()}</p>\n\n`;
+    } else {
+      html += paragraph + '\n\n';
+    }
+  }
 
   return html;
 };

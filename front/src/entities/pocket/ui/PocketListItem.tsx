@@ -7,13 +7,23 @@ interface Props {
   id: number;
   name: string;
   imgUrl: string;
+  accountId: number;
   totalAmount: number;
   savedAmount: number;
   endDate: string;
   type: 'UNUSED' | 'USING' | 'USED';
 }
 
-const PocketListItem = ({ id, name, imgUrl, totalAmount, savedAmount, endDate, type }: Props) => {
+const PocketListItem = ({
+  id,
+  name,
+  imgUrl,
+  totalAmount,
+  savedAmount,
+  accountId,
+  endDate,
+  type,
+}: Props) => {
   const navigate = useNavigate();
   const { openModal } = usePocketUseModalStore();
 
@@ -67,7 +77,13 @@ const PocketListItem = ({ id, name, imgUrl, totalAmount, savedAmount, endDate, t
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.stopPropagation();
           // 포켓 관리 모달 오픈
-          openModal({ pocketId: id, totalAmount, gatheredAmount: savedAmount, pocketName: name });
+          openModal({
+            pocketId: id,
+            totalAmount,
+            gatheredAmount: savedAmount,
+            pocketName: name,
+            accountId,
+          });
         }}
       >
         <div className="xs:size-6">
