@@ -1,4 +1,6 @@
 import { Outlet } from 'react-router';
+import NoticeModal from '../NoticeModal/NoticeModal';
+import { useNoticeModalStore } from '@/shared/store';
 
 interface Props {
   headerSlot?: React.ReactNode;
@@ -7,6 +9,8 @@ interface Props {
 }
 
 const Layout = ({ headerSlot, navbarSlot, modalSlot }: Props) => {
+  const { isOpen } = useNoticeModalStore();
+
   return (
     <div className="h-lvh w-lvw">
       <div
@@ -19,6 +23,7 @@ const Layout = ({ headerSlot, navbarSlot, modalSlot }: Props) => {
         </div>
         {navbarSlot}
         {modalSlot}
+        <NoticeModal isOpen={isOpen} />
       </div>
     </div>
   );
