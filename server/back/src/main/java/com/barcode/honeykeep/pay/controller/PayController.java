@@ -54,12 +54,8 @@ public class PayController {
     @PostMapping("/payment")
     public ResponseEntity<ApiResponse<Boolean>> pay(@AuthenticationPrincipal UserId userId,
                                                     @RequestBody PayRequest payRequest
-                                                    // @CookieValue(value = "authToken") String authToken
     ) {
         log.info("QR 결제 요청 시작, userId: {}, payRequest: {}", userId, payRequest);
-
-        // 인증서 검증
-        // webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
 
         PocketBalanceResult pocketBalanceResult = payService.pay(userId, payRequest);
 
@@ -80,10 +76,7 @@ public class PayController {
     @PostMapping("/online")
     public ResponseEntity<ApiResponse<Boolean>> onlinePay(@AuthenticationPrincipal UserId userId,
                                                           @RequestBody OnlinePayRequest onlinePayRequest
-                                                          //@CookieValue(value = "authToken") String authToken
     ) {
-        // 인증서 검증
-        // webAuthnTokenService.validateAuthToken(authToken, userId.value().toString());
 
         log.info("온라인 결제 요청 시작, userId: {}, payRequest: {}", userId, onlinePayRequest);
         PocketBalanceResult pocketBalanceResult = payService.onlinePay(userId, onlinePayRequest);
