@@ -1,4 +1,4 @@
-import React, { MouseEvent } from "react";
+import React from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { FixedExpenseInfo } from "@/entities/fixedExpense/ui";
 import { FixedExpenseResponse } from "@/entities/fixedExpense/model/types.ts";

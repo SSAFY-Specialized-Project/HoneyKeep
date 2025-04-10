@@ -1,7 +1,7 @@
-import React from "react";
+
 
 // 메인 내 계좌정보 옆 인포 아이콘 누르면 나오는 말풍선
-const InfoBubble: React.FC = () => {
+const InfoBubble = () => {
   return (
     <div className="relative max-w-md bg-[#F7F7F7] text-gray-800 text-sm rounded-xl p-4 shadow-md before:absolute before:content-[''] before:top-0 before:left-1/2 before:-translate-x-1/2 before:-translate-y-full before:border-8 before:border-transparent before:border-b-[#F7F7F7]">
       여유 자산은{" "}
