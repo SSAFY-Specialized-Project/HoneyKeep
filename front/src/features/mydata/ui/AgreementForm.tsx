@@ -1,13 +1,13 @@
-import {AGREEMENT_SECTIONS} from '../model/constants.ts';
-import {useState, useEffect} from 'react';
-import {AgreementCard} from "@/features/mydata/ui/index.ts";
+import { AGREEMENT_SECTIONS } from '../model/constants.ts';
+import { useState, useEffect } from 'react';
+import { AgreementCard } from "@/features/mydata/ui/index.ts";
 
 type Props = {
     userName: string;
     onAgreementChange?: (allChecked: boolean) => void;
 }
 
-const AgreementForm = ({userName, onAgreementChange}: Props) => {
+const AgreementForm = ({ userName, onAgreementChange }: Props) => {
     const [checkedSections, setCheckedSections] = useState<Record<string, boolean>>({});
 
     const toggleSection = (sectionId: string) => {
@@ -50,14 +50,14 @@ const AgreementForm = ({userName, onAgreementChange}: Props) => {
             {/* 전체 동의 체크박스 - 커스텀 스타일 적용 */}
             <div className="flex items-center mb-4 p-3 bg-gray-50 rounded-lg">
                 {/* 커스텀 네모 체크박스 */}
-                <div 
+                <div
                     className="relative flex items-center justify-center w-5 h-5 mr-3 cursor-pointer"
                     onClick={handleCheckAll} // div 클릭으로 토글 제어
                 >
                     <input
                         type="checkbox"
                         checked={allChecked}
-                        onChange={() => {}} // 실제 변경은 div 클릭으로 처리
+                        onChange={() => { }} // 실제 변경은 div 클릭으로 처리
                         // 기본 스타일 숨김
                         className="appearance-none absolute w-full h-full border border-gray-400 rounded checked:bg-brand-primary-500 checked:border-brand-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-brand-primary-300 transition-colors duration-150"
                         aria-label="전체 약관 동의"
@@ -69,7 +69,7 @@ const AgreementForm = ({userName, onAgreementChange}: Props) => {
                         </svg>
                     )}
                 </div>
-                <span className="font-bold cursor-pointer" onClick={handleCheckAll}>전체 약관에 동의합니다</span> {/* 텍스트 클릭으로도 토글 */} 
+                <span className="font-bold cursor-pointer" onClick={handleCheckAll}>전체 약관에 동의합니다</span> {/* 텍스트 클릭으로도 토글 */}
             </div>
 
             {/* 약관 카드 리스트 */}
@@ -78,7 +78,7 @@ const AgreementForm = ({userName, onAgreementChange}: Props) => {
                     <AgreementCard
                         key={section.id}
                         section={section}
-                        checked={checkedSections[section.id]}
+                        checked={checkedSections[section.id] ?? false}
                         onToggle={() => toggleSection(section.id)}
                     />
                 ))}

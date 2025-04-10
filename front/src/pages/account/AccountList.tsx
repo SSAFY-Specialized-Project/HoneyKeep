@@ -29,7 +29,7 @@ const AccountList = () => {
       <div className="flex flex-col gap-5">
         <h3 className="text-title-sm text-gray-900">입출금계좌</h3>
         {accountData && (
-          <ul className="flex flex-col gap-3 overflow-y-auto">
+          <ul className="flex flex-col gap-3 overflow-y-auto p-3">
             {accountData.data.map((item) => (
               <NavLink key={item.accountNumber} to={`/accountDetail/${item.accountId}/detail`}>
                 <AccountPocketInfo
