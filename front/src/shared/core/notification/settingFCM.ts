@@ -58,6 +58,12 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 
 // 서비스 워커 등록 및 FCM 토큰 얻기 함수
 export const requestFCMToken = async (): Promise<string | null> => {
+  
+    if(localStorage.getItem("FCMToken") != null){
+      console.log("토큰 이미 있어!");
+      return null;
+    }
+
   try {
 
     // 먼저 알림 권한 요청
@@ -85,7 +91,7 @@ export const requestFCMToken = async (): Promise<string | null> => {
     console.log("토큰 서버에 전송!");
     await sendTokenToServer(currentToken);
 
-    sessionStorage.setItem("FCMToken", currentToken);
+    localStorage.setItem("FCMToken", currentToken);
     return currentToken;
   } catch (err) {
     console.error('FCM 설정 오류:', err);

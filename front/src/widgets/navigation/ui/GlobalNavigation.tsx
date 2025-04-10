@@ -7,7 +7,7 @@ const GlobalNavigation = () => {
       <NavItem path="/pocket/list" text="내 포켓" icon="pocket" />
       <NavItem path="/pocket/calendar" text="캘린더" icon="calendar" />
       <NavItem path="/fixedExpense/list" text="고정지출" icon="wallet" />
-      <NavItem path="/setting" text="설정" icon="information" />
+      <NavItem path="/analysis" text="분석" icon="information" />
     </nav>
   );
 };

@@ -46,75 +46,6 @@
   --breakpoint-xs: 450px;
 }
 
-.markdown-content {
-  font-size: 1rem;
-  line-height: 1.5;
-  overflow-wrap: break-word;
-}
-
-.markdown-content h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-top: 1rem;
-  margin-bottom: 0.8rem;
-}
-
-.markdown-content h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-top: 0.8rem;
-  margin-bottom: 0.6rem;
-}
-
-.markdown-content h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-top: 0.6rem;
-  margin-bottom: 0.4rem;
-}
-
-.markdown-content p {
-  margin-bottom: 0.6rem;
-}
-
-.markdown-content strong {
-  font-weight: 700;
-}
-
-.markdown-content em {
-  font-style: italic;
-}
-
-.markdown-content ul {
-  list-style-type: disc;
-  margin-left: 1.5rem;
-  margin-bottom: 0.6rem;
-}
-
-.markdown-content li {
-  margin-bottom: 0.3rem;
-}
-
-.markdown-content code {
-  font-family: monospace;
-  background-color: #f4f4f4;
-  padding: 0.1rem 0.2rem;
-  border-radius: 0.2rem;
-  font-size: 0.9rem;
-}
-
-.markdown-content pre {
-  background-color: #f4f4f4;
-  padding: 0.5rem;
-  border-radius: 0.3rem;
-  margin: 0.5rem 0;
-  overflow-x: auto;
-}
-
-.markdown-content pre code {
-  background-color: transparent;
-  padding: 0;
-}
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -229,4 +160,90 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+}
+
+.embla__slide {
+  flex: 0 0 360px;
+  height: 160px;
+  width: 360px;
+}
+
+
+.markdown-content {
+  font-size: 1rem;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
+.markdown-content h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.markdown-content p {
+  margin-bottom: 0.6rem;
+}
+
+.markdown-content strong {
+  font-weight: 700;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.3rem;
+}
+
+.markdown-content code {
+  font-family: monospace;
+  background-color: #f4f4f4;
+  padding: 0.1rem 0.2rem;
+  border-radius: 0.2rem;
+  font-size: 0.9rem;
+}
+
+.markdown-content pre {
+  background-color: #f4f4f4;
+  padding: 0.5rem;
+  border-radius: 0.3rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
 }
