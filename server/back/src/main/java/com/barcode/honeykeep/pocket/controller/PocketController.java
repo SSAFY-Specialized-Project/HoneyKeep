@@ -308,9 +308,9 @@ public class PocketController {
      */
     @GetMapping("/analysis")
     public ResponseEntity<ApiResponse<com.barcode.honeykeep.pocket.dto.SpendingAnalysisResponse>> getSpendingAnalysis(
-            @AuthenticationPrincipal UserId userId) {
+            @AuthenticationPrincipal UserId userId, @RequestParam int month) {
 
-        com.barcode.honeykeep.pocket.dto.SpendingAnalysisResponse response = analysisService.getSpendingAnalysis(userId.value());
+        com.barcode.honeykeep.pocket.dto.SpendingAnalysisResponse response = analysisService.getSpendingAnalysis(userId.value(), month);
 
         return ResponseEntity.ok(ApiResponse.success("소비 분석 조회 성공", response));
     }
