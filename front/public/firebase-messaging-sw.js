@@ -1,10 +1,10 @@
 const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '"',
+  apiKey: 'AIzaSyApidiogiMTIOM0Vu-UTr55f9UOwBO4BBo',
+  authDomain: 'honeykeep-55e4b.firebaseapp.com',
+  projectId: 'honeykeep-55e4b',
+  storageBucket: 'honeykeep-55e4b.firebasestorage.app',
+  messagingSenderId: '682734431277',
+  appId: '"1:682734431277:web:b5644103dfc56d0afedca4',
 };
 
 // Firebase 앱 호환성 라이브러리와 메시징 라이브러리 가져오기
