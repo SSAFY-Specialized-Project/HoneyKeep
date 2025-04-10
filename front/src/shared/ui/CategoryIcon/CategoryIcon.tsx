@@ -11,7 +11,7 @@ const CategoryIcon = ({ category, size = 'normal' }: Props) => {
   };
 
   const ICON_SIZE_PROP = {
-    big: 128,
+    big: 108,
     normal: 60,
     small: 28,
   };

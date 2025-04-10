@@ -80,7 +80,6 @@ const PocketCreateStep = () => {
   };
 
   const handleChargeAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const regex = /^[0-9,]+$/;
     const newValue = e.currentTarget.value.replace(/,/g, '');
 
     // 비어있거나 숫자로만 구성된 경우에만 값을 업데이트

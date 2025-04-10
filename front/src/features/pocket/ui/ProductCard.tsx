@@ -1,8 +1,9 @@
-import { ImageContainer } from '@/shared/ui';
+import { CategoryIcon, ImageContainer } from '@/shared/ui';
 
 type ProductCardProps = {
   productImage: string | null;
   productName: string;
+  categoryId: number;
   categoryName: string;
   productLink?: string;
 };
@@ -10,6 +11,7 @@ type ProductCardProps = {
 export default function ProductCard({
   productImage,
   productName,
+  categoryId,
   categoryName,
   productLink,
 }: ProductCardProps) {
@@ -18,7 +20,11 @@ export default function ProductCard({
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <ImageContainer size="big" imgSrc={productImage} />
+      {productImage != null ? (
+        <ImageContainer size="big" imgSrc={productImage} />
+      ) : (
+        <CategoryIcon category={categoryId} size="big" />
+      )}
 
       {/* 텍스트 영역 */}
       <div className="flex flex-col gap-2 text-center">
@@ -34,7 +40,16 @@ export default function ProductCard({
             >
               상품 페이지로 이동
             </a>
-          ) : null}
+          ) : (
+            <a
+              href={productLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-300 hover:underline"
+            >
+              링크 없음
+            </a>
+          )}
         </div>
       </div>
     </div>
