@@ -2,6 +2,7 @@ import successLottie from '@/assets/success.json';
 import ProductCard from '@/features/pocket/ui/ProductCard';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { useNavigate } from 'react-router-dom';
+import { formatWithKRW } from '@/shared/lib';
 
 type TransactionSuccessProps = {
   merchantName: string;
@@ -59,7 +60,7 @@ export default function TransactionSuccess({
         <div className="mt-6 w-full divide-y divide-gray-100 rounded-xl bg-white text-sm text-gray-800 shadow">
           <div className="flex justify-between px-4 py-3">
             <span className="font-medium">모은 금액</span>
-            <span className="font-bold">{totalSavedAmount.toLocaleString()}원</span>
+            <span className="font-bold">{formatWithKRW(totalSavedAmount)}</span>
           </div>
           <div className="flex justify-between px-4 py-3">
             <span className="font-medium">지출 완료일</span>
@@ -74,7 +75,7 @@ export default function TransactionSuccess({
 
       {/* 하단 버튼 */}
       <button
-        className="bg-brand-primary-500 hover:bg-brand-primary-300 mt-2 w-full rounded-xl py-4 text-base font-bold text-white"
+        className="bg-brand-primary-500 hover:bg-brand-primary-300 mt-2 w-full cursor-pointer rounded-xl py-4 text-base font-bold text-white"
         onClick={onConfirm}
       >
         홈으로

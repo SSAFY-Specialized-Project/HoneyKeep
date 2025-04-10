@@ -1,19 +1,19 @@
-import React, {useState, useEffect} from "react";
-import {BorderInput} from "@/shared/ui";
-import {useNavigate, useLocation} from "react-router-dom";
-import {useMutation, useQueryClient, useSuspenseQuery} from "@tanstack/react-query";
+import React, {useState, useEffect} from 'react';
+import {BorderInput} from '@/shared/ui';
+import {useNavigate, useLocation} from 'react-router-dom';
+import {useMutation, useQueryClient, useSuspenseQuery} from '@tanstack/react-query';
 import {
     createFixedExpenseAPI,
     updateFixedExpenseAPI,
-    approveDetectedFixedExpenseAPI
-} from "@/entities/fixedExpense/api";
-import {FixedExpenseRequest} from "@/entities/fixedExpense/model/types";
-import {formatCurrency} from "@/shared/lib";
-import {getAllAccountAPI} from "@/entities/account/api";
-import {Account} from "@/entities/account/model/types";
-import {ResponseDTO} from "@/shared/model/types";
+    approveDetectedFixedExpenseAPI,
+} from '@/entities/fixedExpense/api';
+import {FixedExpenseRequest} from '@/entities/fixedExpense/model/types';
+import {formatCurrency} from '@/shared/lib';
+import {getAllAccountAPI} from '@/entities/account/api';
+import {Account} from '@/entities/account/model/types';
+import {ResponseDTO} from '@/shared/model/types';
 
-type Mode = "REGISTER" | "MODIFY" | "ADD";
+type Mode = 'REGISTER' | 'MODIFY' | 'ADD';
 
 type Props = {
     mode?: Mode;
@@ -26,7 +26,7 @@ type Props = {
         accountNumber: string;
         transactionCount?: number;
     };
-}
+};
 
 const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Props) => {
     const navigate = useNavigate();
@@ -38,11 +38,15 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
     const stateInitialData = location.state?.initialData;
 
     // props로 받은 값과 state로 받은 값 중에서 우선순위 결정 (state > props > default)
-    const mode = stateMode || propMode || "REGISTER";
+    const mode = stateMode || propMode || 'REGISTER';
     const initialData = stateInitialData || propInitialData;
 
     // 계좌 목록 가져오기
-    const {data: accounts = [], isLoading: isLoadingAccounts} = useSuspenseQuery<ResponseDTO<Account[]>, Error, Account[]>({
+    const {data: accounts = [], isLoading: isLoadingAccounts} = useSuspenseQuery<
+        ResponseDTO<Account[]>,
+        Error,
+        Account[]
+    >({
         queryKey: ['accounts'],
         queryFn: getAllAccountAPI,
         select: (response) => response.data,
@@ -51,25 +55,25 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
 
     const [formData, setFormData] = useState({
         id: initialData?.id,
-        name: initialData?.name || "",
+        name: initialData?.name || '',
         amount: initialData?.amount || 0,
         payDay: initialData?.payDay || 1,
         transactionCount: initialData?.transactionCount || 1,
-        memo: initialData?.memo || "",
-        accountNumber: initialData?.accountNumber || "",
+        memo: initialData?.memo || '',
+        accountNumber: initialData?.accountNumber || '',
     });
 
     // 초기 계좌 설정
     useEffect(() => {
         if (accounts.length > 0 && !formData.accountNumber) {
-            const initialAccount = initialData?.accountNumber 
-                ? accounts.find(acc => acc.accountNumber === initialData.accountNumber) 
+            const initialAccount = initialData?.accountNumber
+                ? accounts.find((acc) => acc.accountNumber === initialData.accountNumber)
                 : accounts[0];
-                
+
             if (initialAccount) {
-                setFormData(prev => ({
-                    ...prev, 
-                    accountNumber: initialAccount.accountNumber
+                setFormData((prev) => ({
+                    ...prev,
+                    accountNumber: initialAccount.accountNumber,
                 }));
             }
         }
@@ -81,34 +85,36 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['fixed-expense-info']});
             navigate('/fixedExpense/list');
-        }
+        },
     });
 
     // 2. 고정지출 수정 mutation
     const updateFixedExpenseMutation = useMutation({
-        mutationFn: (params: { id: number; data: FixedExpenseRequest }) => updateFixedExpenseAPI(params),
+        mutationFn: (params: { id: number; data: FixedExpenseRequest }) =>
+            updateFixedExpenseAPI(params),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['fixed-expense-info']});
             navigate('/fixedExpense/list');
-        }
+        },
     });
 
     // 3. 발견된 고정지출 승인 mutation
     const approveDetectedFixedExpenseMutation = useMutation({
-        mutationFn: (id: number) => approveDetectedFixedExpenseAPI(id),
+        mutationFn: (params: { id: number, data: FixedExpenseRequest }) =>
+            approveDetectedFixedExpenseAPI(params),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['fixed-expense-info']});
             queryClient.invalidateQueries({queryKey: ['detected-fixed-expense-info']});
             navigate('/fixedExpense/list');
-        }
+        },
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target;
 
-        if (name === "amount") {
+        if (name === 'amount') {
             // 숫자만 허용
-            const numberValue = value.replace(/[^0-9]/g, "");
+            const numberValue = value.replace(/[^0-9]/g, '');
             const amount = parseInt(numberValue) || 0;
             setFormData({...formData, amount});
         } else {
@@ -125,7 +131,7 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
     // 고정지출 등록 API 호출.
     const handleSubmit = () => {
         if (!formData.accountNumber) {
-            alert("계좌를 선택해주세요.");
+            alert('계좌를 선택해주세요.');
             return;
         }
 
@@ -134,37 +140,40 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
             accountNumber: formData.accountNumber,
             name: formData.name,
             money: {
-                amount: formData.amount
+                amount: formData.amount,
             },
             startDate: today.toISOString().split('T')[0], // 오늘 날짜, YYYY-MM-DD 형식
             payDay: formData.payDay,
             transactionCount: formData.transactionCount,
-            memo: formData.memo || undefined
+            memo: formData.memo || undefined,
         };
         console.log(fixedExpenseData);
 
         // 모드에 따라 다른 API 호출
         switch (mode) {
-            case "REGISTER":
+            case 'REGISTER':
                 // 발견된 고정지출 등록 - 승인 API 호출
                 if (formData.id) {
-                    approveDetectedFixedExpenseMutation.mutate(formData.id);
+                    approveDetectedFixedExpenseMutation.mutate({
+                        id: formData.id,
+                        data: fixedExpenseData,
+                    });
                 } else {
                     createFixedExpenseMutation.mutate(fixedExpenseData); // 또는 ADD 모드로 처리
                 }
                 break;
 
-            case "MODIFY":
+            case 'MODIFY':
                 // 고정지출 수정
                 if (formData.id) {
                     updateFixedExpenseMutation.mutate({
                         id: formData.id,
-                        data: fixedExpenseData
+                        data: fixedExpenseData,
                     });
                 }
                 break;
 
-            case "ADD":
+            case 'ADD':
                 // 새 고정지출 추가
                 createFixedExpenseMutation.mutate(fixedExpenseData);
                 break;
@@ -176,30 +185,29 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
 
     const getActionText = () => {
         switch (mode) {
-            case "REGISTER":
-                return "등록하기";
-            case "MODIFY":
-                return "수정하기";
-            case "ADD":
-                return "추가하기";
+            case 'REGISTER':
+                return '등록하기';
+            case 'MODIFY':
+                return '수정하기';
+            case 'ADD':
+                return '추가하기';
             default:
-                return "등록하기";
+                return '등록하기';
         }
     };
 
-    const isFormValid = formData.name.trim() !== "" && formData.amount > 0 && formData.accountNumber;
+    const isFormValid = formData.name.trim() !== '' && formData.amount > 0 && formData.accountNumber;
     const isLoading =
         createFixedExpenseMutation.isPending ||
         updateFixedExpenseMutation.isPending ||
         approveDetectedFixedExpenseMutation.isPending;
 
     return (
-        <div className="flex flex-col h-full bg-gray-50">
-
+        <div className="flex h-full flex-col bg-gray-50">
             {/* 입력 폼 */}
-            <div className="flex-1 p-4 bg-white">
+            <div className="flex-1 bg-white p-4">
                 <div className="mb-6">
-                    <p className="text-sm text-gray-600 mb-1">고정지출명</p>
+                    <p className="mb-1 text-sm text-gray-600">고정지출명</p>
                     <BorderInput
                         type="text"
                         label="name"
@@ -210,7 +218,7 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
                 </div>
 
                 <div className="mb-6">
-                    <p className="text-sm text-gray-600 mb-1">금액</p>
+                    <p className="mb-1 text-sm text-gray-600">금액</p>
                     <BorderInput
                         type="text"
                         label="amount"
@@ -222,7 +230,7 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
                 </div>
 
                 <div className="mb-6">
-                    <p className="text-sm text-gray-600 mb-1">지출 계좌</p>
+                    <p className="mb-1 text-sm text-gray-600">지출 계좌</p>
                     <div className="relative">
                         <select
                             name="accountNumber"
@@ -231,19 +239,21 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
                             className="w-full border-b border-gray-400 py-2.5 pl-2.5 font-medium text-gray-900 focus:outline-none"
                             disabled={isLoadingAccounts}
                         >
-                            <option value="" disabled>계좌를 선택해주세요</option>
+                            <option value="" disabled>
+                                계좌를 선택해주세요
+                            </option>
                             {accounts.map((account) => (
                                 <option key={account.accountNumber} value={account.accountNumber}>
                                     {account.bankName} {account.accountName} ({account.accountNumber})
                                 </option>
                             ))}
                         </select>
-                        {isLoadingAccounts && <p className="text-gray-400 text-sm">계좌 정보 로딩중...</p>}
+                        {isLoadingAccounts && <p className="text-sm text-gray-400">계좌 정보 로딩중...</p>}
                     </div>
                 </div>
 
                 <div className="mb-6">
-                    <p className="text-sm text-gray-600 mb-1">지출 날짜</p>
+                    <p className="mb-1 text-sm text-gray-600">지출 날짜</p>
                     <div className="relative">
                         <select
                             name="payDay"
@@ -251,37 +261,39 @@ const FixedExpenseCreate = ({mode: propMode, initialData: propInitialData}: Prop
                             onChange={(e) => setFormData({...formData, payDay: parseInt(e.target.value)})}
                             className="w-full border-b border-gray-400 py-2.5 pl-2.5 font-semibold text-gray-900 focus:outline-none"
                         >
-                            {Array.from({length: 31}, (_, i) => i + 1).map(day => (
-                                <option key={day} value={day}>{day}일</option>
+                            {Array.from({length: 31}, (_, i) => i + 1).map((day) => (
+                                <option key={day} value={day}>
+                                    {day}일
+                                </option>
                             ))}
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <p className="text-sm text-gray-600 mb-1">메모 (선택)</p>
+                    <p className="mb-1 text-sm text-gray-600">메모 (선택)</p>
                     <textarea
                         name="memo"
                         placeholder="내용을 입력해주세요."
                         value={formData.memo}
                         onChange={(e) => setFormData({...formData, memo: e.target.value})}
-                        className="w-full h-[120px] border border-gray-300 rounded-lg p-3 text-gray-900 font-medium resize-none focus:outline-none focus:border-gray-400"
+                        className="h-[120px] w-full resize-none rounded-lg border border-gray-300 p-3 font-medium text-gray-900 focus:border-gray-400 focus:outline-none"
                     />
                 </div>
             </div>
 
             {/* 하단 버튼 */}
-            <div className="p-4 bg-white">
+            <div className="bg-white p-4">
                 <button
                     onClick={handleSubmit}
                     disabled={!isFormValid || isLoading}
-                    className={`w-full p-4 rounded-lg text-m font-medium ${
+                    className={`text-m w-full cursor-pointer rounded-lg p-4 font-medium ${
                         isFormValid && !isLoading
-                            ? 'bg-yellow-400 hover:bg-yellow-500 text-white cursor-pointer'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            ? 'cursor-pointer bg-yellow-400 text-white hover:bg-yellow-500'
+                            : 'cursor-not-allowed bg-gray-200 text-gray-400'
                     }`}
                 >
-                    {isLoading ? "처리 중..." : getActionText()}
+                    {isLoading ? '처리 중...' : getActionText()}
                 </button>
             </div>
         </div>

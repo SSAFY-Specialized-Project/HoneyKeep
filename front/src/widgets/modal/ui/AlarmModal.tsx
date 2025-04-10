@@ -25,6 +25,7 @@ const AlarmModal = ({ isOpen, setOpen }: Props) => {
           <span className="text-title-sm font-semibold">알림</span>
           <button
             type="button"
+            className="cursor-pointer"
             onClick={() => {
               setOpen(false);
             }}

@@ -59,7 +59,7 @@ const FixedExpenseList = () => {
     setContent(
       <button
         type="button"
-        className={`rounded-lg bg-gray-100 px-5 py-2 text-sm font-bold text-nowrap text-gray-700${
+        className={`cursor-pointer rounded-lg bg-gray-100 px-5 py-2 text-sm font-bold text-nowrap text-gray-700${
           isFixedExpenseListTab
             ? 'cursor-pointer text-gray-700'
             : 'visibility-hidden cursor-default'

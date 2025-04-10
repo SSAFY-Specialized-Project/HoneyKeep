@@ -123,14 +123,14 @@ const PocketCreateStep = () => {
             <button
               type="button"
               onClick={() => {}}
-              className="text-extra text-text-sm h-9 w-25 rounded-sm bg-gray-100 text-center font-semibold"
+              className="text-extra text-text-sm h-9 w-25 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
             >
               나중에 채우기
             </button>
             <button
               type="button"
               onClick={() => {}}
-              className="text-extra text-text-sm h-9 w-25 rounded-sm bg-gray-100 text-center font-semibold"
+              className="text-extra text-text-sm h-9 w-25 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
             >
               전액 채우기
             </button>

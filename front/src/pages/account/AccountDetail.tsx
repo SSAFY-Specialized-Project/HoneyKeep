@@ -43,7 +43,7 @@ const AccountDetail = () => {
   }, [location.pathname, navigate]);
 
   return (
-    <div className="bg-brand-background flex h-full flex-1 flex-col px-5">
+    <div className="relative bg-brand-background flex h-full flex-1 flex-col px-6 py-4">
       {/* 계좌 정보 섹션 */}
       <div className="mb-5">
         {accountData && (
@@ -63,14 +63,14 @@ const AccountDetail = () => {
       <AccountChoiceTab />
 
       {/* 탭 내용 */}
-      <div className="flex flex-1 flex-col px-4 py-4">
+      <div className="flex flex-1 flex-col px-2 py-4 overflow-auto">
         <Outlet context={{ accountData: accountData?.data }} />
       </div>
 
       {/* 송금하기 버튼 */}
       <Link
         to="/"
-        className="bg-brand-primary-500 text-title-md mt-3 mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+        className="bg-brand-primary-500 py-2.5 text-title-md cursor-pointer rounded-xl text-center font-bold text-white"
       >
         송금하기
       </Link>

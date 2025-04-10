@@ -18,7 +18,7 @@ const FavoritePocketItem = ({ name, imgUrl, totalAmount }: Props) => {
   return (
     <button
       onClick={handleFavorite}
-      className="hover:bg-brand-primary-100 flex w-full items-center justify-between px-4 py-5"
+      className="hover:bg-brand-primary-100 flex w-full cursor-pointer items-center justify-between px-4 py-5"
     >
       <div className="flex gap-3">
         <ImageContainer imgSrc={imgUrl} size="small" />

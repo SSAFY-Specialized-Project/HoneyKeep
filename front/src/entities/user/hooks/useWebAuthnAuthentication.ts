@@ -155,7 +155,7 @@ export const useWebAuthnAuthentication = (): UseWebAuthnAuthenticationReturn => 
                         signature: bufferToBase64Url(assertionResponse.signature),
                         userHandle: userHandle,
                     },
-                    clientExtensionResults: credential.getClientExtensionResults() || {},
+                    clientExtensionResults: (credential.getClientExtensionResults() || {}) as Record<string, AuthenticationExtensionsClientOutputs>,
                 },
             };
 

@@ -1,5 +1,6 @@
 import { Bank } from '@/shared/model/types';
 import { BankIcon } from '@/shared/ui';
+import { formatWithKRW } from '@/shared/lib';
 
 interface Props {
   bank: Bank;
@@ -38,11 +39,13 @@ const AccountInfo = ({
           <div className="relative">
             <div className="flex justify-between gap-1.5">
               <span className="text-text-md text-gray-600">현재 금액</span>
-              <span className="text-text-md">{currentAmount} 원</span>
+              <span className="text-text-md">{formatWithKRW(currentAmount)}</span>
             </div>
             <div className="flex justify-between gap-1.5">
               <span className="text-text-md text-extra">여유 자산</span>
-              <span className="text-text-md text-extra font-semibold">{remainingAmount} 원</span>
+              <span className="text-text-md text-extra font-semibold">
+                {formatWithKRW(remainingAmount)}
+              </span>
             </div>
           </div>
         </div>
