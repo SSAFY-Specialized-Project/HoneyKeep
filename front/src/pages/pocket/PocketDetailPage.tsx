@@ -100,13 +100,14 @@ const PocketDetailPage = () => {
   };
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-10 p-5">
+    <div className="xs:gap-10 flex h-full w-full flex-col items-center justify-center gap-4 p-5">
       <div className="relative w-fit">
         <ProductCard
           productImage={pocketQuery.data.imgUrl}
           productName={pocketQuery.data.name}
           categoryName={pocketQuery.data.categoryName}
           productLink={pocketQuery.data.link}
+          categoryId={pocketQuery.data.categoryId}
         />
         <button className="absolute top-0 right-0 cursor-pointer" onClick={handleIsFavorite}>
           <Icon id={pocketQuery.data.isFavorite ? 'fill-star' : 'non-fill-star'} size="big" />
@@ -129,17 +130,17 @@ const PocketDetailPage = () => {
           canEdit={true}
         />
       </div>
-      <div className="mt-auto flex w-full gap-5">
+      <div className="xs:gap-5 mt-auto flex w-full gap-3">
         <button
           type="button"
           onClick={handleGatheringButton}
-          className="text-title-md w-full cursor-pointer rounded-2xl bg-gray-100 py-3 text-center font-bold text-gray-500"
+          className="text-text-md xs:text-title-md w-full cursor-pointer rounded-2xl bg-gray-100 py-3 text-center font-bold text-gray-500"
         >
           더모으기
         </button>
         <button
           type="button"
-          className="bg-brand-primary-500 text-title-md w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+          className="bg-brand-primary-500 text-text-md xs:text-title-md w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
         >
           사용하기
         </button>

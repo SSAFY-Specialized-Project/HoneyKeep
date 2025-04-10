@@ -9,7 +9,7 @@ const Home = () => {
       <MyPocketInfo />
       <Link
         to="/pocket/create"
-        className="bg-brand-primary-500 text-title-md mt-3 mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+        className="bg-brand-primary-500 xs:text-title-xl text-title-md mt-3 mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
       >
         포켓 만들기
       </Link>
