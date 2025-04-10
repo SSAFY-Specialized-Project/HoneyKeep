@@ -106,16 +106,6 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-
-          {
-            // QR 결제 완료
-            path: '/qrSuccess',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <QRSuccess />
-              </Suspense>
-            ),
-          },
         ],
       },
     ],
@@ -235,7 +225,15 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-
+          {
+            // QR 결제 완료
+            path: '/qrSuccess',
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <QRSuccess />
+              </Suspense>
+            ),
+          },
           // 연결 은행 선택
           {
             path: '/mydata/accountConnect',
