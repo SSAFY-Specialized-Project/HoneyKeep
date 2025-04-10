@@ -26,7 +26,7 @@ const Chatbot = () => {
     3: '/pocket/list',
     4: '/pocket/calendar',
     5: '/fixedExpense/list',
-    6: '/fiexedExpense/create',
+    6: '/fixedExpense/create',
     7: null,
   };
 
@@ -63,16 +63,18 @@ const Chatbot = () => {
   });
 
   useEffect(() => {
-    if (!chatData) return;
-
-    const chatHistory = chatData.data.map((item) => ({
-      type: item.senderId,
-      text: item.content,
-      link: null,
-    }));
-
-    setMessages((prev) => [...prev, ...chatHistory]);
-  }, [chatData]);
+    if (chatData && Array.isArray(chatData.data) && messages.length === 1 && messages[0].text === '안녕하세요!') {
+      console.log('Loading chat history...');
+      const chatHistory = chatData.data.map((item) => ({
+        type: (item.senderId === 'USER' ? 'USER' : 'BOT') as ChatItemType['type'],
+        text: item.content,
+        link: null
+      }));
+      setMessages((prev) => [...prev, ...chatHistory]);
+    } else if (chatData && !Array.isArray(chatData.data)) {
+      console.warn("Chat history data received, but 'data' field is not an array:", chatData);
+    }
+  }, [chatData, messages]);
 
   const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,10 +199,9 @@ const Chatbot = () => {
         }
       }
     } catch (err) {
-      // AbortError는 사용자가 의도적으로 취소한 경우이므로 무시
-      if (err.name !== 'AbortError') {
+      // err가 Error 인스턴스인지 확인 후 name 속성 접근
+      if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Error fetching chat response:', err);
-        // 오류 메시지를 봇 응답으로 표시
         setMessages((prev) => {
           const newMessages = [...prev];
           if (currentBotMessageIndexRef.current < newMessages.length) {
@@ -211,6 +212,9 @@ const Chatbot = () => {
           }
           return newMessages;
         });
+      } else if (!(err instanceof Error)) {
+        // Error 인스턴스가 아닌 다른 예외 처리 (선택 사항)
+        console.error('An unexpected error occurred:', err);
       }
     } finally {
       setResponding(false);
@@ -228,12 +232,12 @@ const Chatbot = () => {
         {messages.map((message, index) => (
           <li
             key={index}
-            className={`flex gap-4 ${message.type === 'USER' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-4 ${message.type === 'USER' ? 'justify-end' : 'justify-start items-start'}`}
           >
             {message.type == 'BOT' ? (
               <ImageContainer imgSrc={'/image/ChatBot.png'} size="small" />
             ) : null}
-            <div className="flex max-w-3/4 flex-col gap-4">
+            <div className="flex flex-col items-start max-w-[75%] gap-2">
               <div
                 className={`rounded-lg p-3 ${message.type === 'USER' ? 'bg-blue-100' : 'bg-gray-100'}`}
               >
@@ -246,7 +250,17 @@ const Chatbot = () => {
                   <div>{message.text}</div>
                 )}
               </div>
-              {message.link != null ? <Link to={message.link}>해당 기능으로 이동하기</Link> : null}
+              {message.link != null && (
+                <Link 
+                  to={message.link} 
+                  className="inline-flex items-center px-3 py-1.5 bg-brand-primary-100 text-brand-primary-700 text-md font-medium rounded-md hover:bg-brand-primary-200 transition-colors"
+                >
+                  해당 기능으로 이동하기
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              )}
             </div>
           </li>
         ))}
@@ -269,9 +283,10 @@ const Chatbot = () => {
         />
         <button
           type="submit"
-          className="absolute top-1/2 right-5 -translate-y-1/2"
+          className="absolute top-1/2 right-5 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 transition-all duration-200 ease-in-out transform hover:scale-110 cursor-pointer"
           disabled={isResponding || !text.trim()}
         >
+          {/* Icon 색상이 기본적으로 회색 계열이라고 가정 */}
           <Icon id="send-plane" size="small" />
         </button>
       </form>
