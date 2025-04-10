@@ -19,6 +19,7 @@ const Chatbot = () => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   // 현재 스트리밍 중인 봇 메시지의 인덱스를 저장하기 위한 참조
   const currentBotMessageIndexRef = useRef<number>(-1);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const classification_mapping = {
     1: '/pocket/create',
@@ -48,6 +49,7 @@ const Chatbot = () => {
     setTitle('챗봇 상담');
 
     return () => {
+      setTitle('');
       closeConnection();
     };
   }, []);
@@ -222,8 +224,14 @@ const Chatbot = () => {
     }
   };
 
-  const handleMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMessage = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.currentTarget.value);
+
+    // Textarea 높이 자동 조절
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; // 높이를 초기화해야 scrollHeight가 정확히 계산됨
+      textareaRef.current.style.height = `${e.currentTarget.scrollHeight}px`; // scrollHeight만큼 높이 설정
+    }
   };
 
   return (
@@ -268,25 +276,32 @@ const Chatbot = () => {
       </ul>
       <form
         onSubmit={sendChatMessage}
-        className="relative mt-auto w-full rounded-xl bg-gray-100 px-5 py-2.5"
+        className="relative mt-auto flex items-center w-full rounded-xl bg-gray-100 px-5 py-2"
       >
         <label htmlFor="chatbot"></label>
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
+          rows={1}
           name="chatbot"
           id="chatbot"
           placeholder="무엇이 궁금하신가요?"
           value={text}
           onChange={handleMessage}
           disabled={isResponding}
-          className="w-full bg-transparent pr-10 outline-none"
+          className="flex-grow bg-transparent pr-10 outline-none resize-none overflow-hidden"
+          style={{ maxHeight: '120px' }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendChatMessage(e);
+            }
+          }}
         />
         <button
           type="submit"
           className="absolute top-1/2 right-5 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 transition-all duration-200 ease-in-out transform hover:scale-110 cursor-pointer"
           disabled={isResponding || !text.trim()}
         >
-          {/* Icon 색상이 기본적으로 회색 계열이라고 가정 */}
           <Icon id="send-plane" size="small" />
         </button>
       </form>

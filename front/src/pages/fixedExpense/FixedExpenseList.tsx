@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FixedChoiceTab, FixedExpenseTotal } from '@/entities/fixedExpense/ui';
-import { NavLink, Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import BasicModal from '@/widgets/modal/ui/BasicModal.tsx';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import {
   DetectedFixedExpenseResponse,
@@ -23,9 +22,6 @@ const FixedExpenseList = () => {
   const { setContent, setTitle } = useHeaderStore();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteItemInfo, setDeleteItemInfo] = useState<{ id: number; title: string } | null>(null);
-  const [modalType, setModalType] = useState<'fixed' | 'detected'>('fixed');
 
   const isFixedExpenseListTab =
     location.pathname === '/fixedExpense/list' || location.pathname === '/fixedExpense';
@@ -120,26 +116,6 @@ const FixedExpenseList = () => {
   // 고정지출 총액 계산
   const totalAmount = fixedExpenses.reduce((sum, item) => sum + item.money.amount, 0);
 
-  // 모달 닫기 핸들러
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setDeleteItemInfo(null);
-  };
-
-  // 모달 확인 핸들러
-  const handleConfirmDelete = () => {
-    if (!deleteItemInfo) return;
-
-    if (modalType === 'fixed') {
-      deleteFixedExpenseMutation.mutate(deleteItemInfo.id);
-    } else {
-      deleteDetectedFixedExpenseMutation.mutate(deleteItemInfo.id);
-    }
-
-    setIsModalOpen(false);
-    setDeleteItemInfo(null);
-  };
-
   return (
     <div className="relative flex h-full flex-1 flex-col gap-5 px-5">
       {/* 내 고정지출 요약 */}
@@ -153,28 +129,11 @@ const FixedExpenseList = () => {
         context={{
           fixedExpenses,
           detectedFixedExpenses,
-          setDeleteItemInfo,
-          setModalType,
-          setIsModalOpen,
           navigate,
           isEditMode,
+          deleteFixedExpense: deleteFixedExpenseMutation.mutate,
+          deleteDetectedExpense: deleteDetectedFixedExpenseMutation.mutate,
         }}
-      />
-
-      {/* 고정지출 삭제 확인 모달 */}
-      <BasicModal
-        isOpen={isModalOpen}
-        icon="exclamation-triangle"
-        title={modalType === 'fixed' ? '고정지출 삭제' : '발견된 고정지출 삭제'}
-        itemName={deleteItemInfo?.title || ''}
-        description={
-          modalType === 'fixed'
-            ? '을 고정지출 목록에서 삭제할까요?'
-            : '을 발견된 고정지출 목록에서 삭제할까요?'
-        }
-        buttonText="삭제"
-        onClose={handleCloseModal}
-        onConfirm={handleConfirmDelete}
       />
 
       {/* 추가 버튼 (고정지출 목록 탭이면서 편집 모드가 아닐 때만 표시) */}

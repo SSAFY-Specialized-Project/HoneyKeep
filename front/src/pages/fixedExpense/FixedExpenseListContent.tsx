@@ -1,27 +1,29 @@
-import React from "react";
+import React, { MouseEvent } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { FixedExpenseInfo } from "@/entities/fixedExpense/ui";
 import { FixedExpenseResponse } from "@/entities/fixedExpense/model/types.ts";
+import { useBasicModalStore } from "@/shared/store";
+import { UseMutateFunction } from '@tanstack/react-query';
+import { ResponseDTO, ResponseErrorDTO } from '@/shared/model/types';
 
 // Outlet context 타입 정의
 type ContextType = {
     fixedExpenses: FixedExpenseResponse[];
-    setDeleteItemInfo: React.Dispatch<React.SetStateAction<{ id: number; title: string } | null>>;
-    setModalType: React.Dispatch<React.SetStateAction<'fixed' | 'detected'>>;
-    setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     navigate: ReturnType<typeof useNavigate>;
     isEditMode: boolean;
+    deleteFixedExpense: UseMutateFunction<ResponseDTO<void>, ResponseErrorDTO | Error, number, unknown>;
+    deleteDetectedExpense: UseMutateFunction<ResponseDTO<void>, ResponseErrorDTO | Error, number, unknown>;
 };
 
 const FixedExpenseListContent = () => {
-    const { 
-        fixedExpenses, 
-        setDeleteItemInfo, 
-        setModalType, 
-        setIsModalOpen,
+    const {
+        fixedExpenses,
         navigate,
-        isEditMode
+        isEditMode,
+        deleteFixedExpense
     } = useOutletContext<ContextType>();
+
+    const { openModal, closeModal } = useBasicModalStore();
 
     const handleFixedExpenseDetail = () => {
         // TODO: FixedExpenseDetail 페이지로 네비게이트.
@@ -45,12 +47,18 @@ const FixedExpenseListContent = () => {
     };
 
     const handleFixedExpenseDelete = (item: FixedExpenseResponse) => {
-        setDeleteItemInfo({
-            id: item.id,
-            title: item.name
+        openModal({
+            icon: "exclamation-triangle",
+            title: '고정지출 삭제',
+            itemName: item.name,
+            description: '을 고정지출 목록에서 삭제할까요?',
+            buttonText: '삭제',
+            onConfirm: (e: React.MouseEvent) => {
+                e.preventDefault();
+                deleteFixedExpense(item.id);
+                closeModal();
+            }
         });
-        setModalType('fixed');
-        setIsModalOpen(true);
     };
 
     return (
@@ -63,7 +71,7 @@ const FixedExpenseListContent = () => {
             ) : (
                 fixedExpenses.map(item => {
                     const monthCount = item.transactionCount || 1;
-                    
+
                     return (
                         <FixedExpenseInfo
                             key={item.id}
