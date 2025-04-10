@@ -11,8 +11,9 @@ interface Props {
 }
 
 const PocketChooseItem = ({ id, name, imgUrl, totalAmount, savedAmount }: Props) => {
-  const { setPocketId, setPocketName, closeModal } = usePocketChooseStore();
+  const { setPocketId, setPocketName, closeModal, setPocketAmount } = usePocketChooseStore();
   const handleChoose = () => {
+    setPocketAmount(totalAmount);
     setPocketId(id);
     setPocketName(name);
     closeModal();

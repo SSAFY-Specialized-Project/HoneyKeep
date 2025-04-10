@@ -5,7 +5,7 @@ import { Transaction } from '@/entities/transaction/model/types';
 import { addCommas, formatTime } from '@/shared/lib';
 import { ResponseDTO } from '@/shared/model/types';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
 // 날짜 문자열에서 "YYYY-MM-DD" 형식 추출
@@ -53,7 +53,7 @@ const groupTransactionsByDate = (transactions: Transaction[]) => {
 };
 
 const PocketHistoryUse = () => {
-  const { accountId, pocketId } = useParams();
+  const { accountId, pocketId, totalAmount } = useParams();
 
   const { data: accountData } = useSuspenseQuery<ResponseDTO<AccountDetail>>({
     queryKey: ['account-detail', accountId],
@@ -78,7 +78,16 @@ const PocketHistoryUse = () => {
     (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
-  const handleItem = () => {};
+  const [active, setActive] = useState(null);
+  const [amount, setAmount] = useState(null);
+  const [name, setName] = useState('');
+  const [id, setId] = useState(null);
+
+  const handleItem = (transaction: Transaction) => {
+    setActive(transaction.id);
+    setId(pocketId);
+    setAmount(transaction.amount);
+  };
 
   return (
     <div className="flex h-full flex-col gap-4 px-5">
@@ -116,9 +125,9 @@ const PocketHistoryUse = () => {
                 // TransactionListItem 렌더링 (별도 div 불필요, key는 여기에)
                 <button
                   type="button"
-                  className="flex items-center justify-between border-b border-gray-100 py-3"
+                  className={`flex cursor-pointer items-center justify-between border-b border-gray-100 py-3 ${active == transaction.id ? 'bg-brand-primary-100' : ''}`}
                   onClick={() => {
-                    handleItem();
+                    handleItem(transaction);
                   }}
                   key={transaction.id} // key를 TransactionListItem에 직접 전달
                 >
