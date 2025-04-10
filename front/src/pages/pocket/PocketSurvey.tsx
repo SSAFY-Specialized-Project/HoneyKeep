@@ -1,11 +1,14 @@
+import postPocketSurveyAPI from '@/entities/pocket/api/postPocketSurveyAPI';
 import { Button, Checkbox } from '@/shared/ui';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 const PocketSurvey = () => {
   const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [otherReason, setOtherReason] = useState<string>('');
+  const { pocketId } = useParams();
 
   const options = [
     '예상보다 가격이 올랐어요',
@@ -15,18 +18,29 @@ const PocketSurvey = () => {
     '기타:',
   ];
 
+  const surveyMutation = useMutation({
+    mutationFn: postPocketSurveyAPI,
+    onSuccess: () => {
+      navigate('/qrSuccess');
+    },
+    onError: () => {
+      navigate('-1');
+    },
+  });
+
   const handleOptionChange = (option: string) => {
     setSelectedOption(option);
+    console.log(selectedOption);
   };
 
   const handleConfirm = () => {
-    navigate(-1);
+    surveyMutation.mutate({ pocketId: pocketId, data: { reasonText: selectedOption } });
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white px-6 pt-6">
+    <div className="flex h-screen flex-col bg-white px-6 pt-6">
       {/* 메인 컨텐츠 */}
-      <div className="flex flex-grow flex-col">
+      <div className="flex h-full flex-grow flex-col items-center justify-center">
         <h1 className="text-title-lg mb-4 font-bold">이번 포켓, 왜 초과하셨나요?</h1>
         <p className="text-text-md mb-8 text-gray-600">
           다음에 더 좋은 계획을 세우기 위한 회고 단계에요
@@ -57,7 +71,7 @@ const PocketSurvey = () => {
       </div>
 
       {/* 하단 확인 버튼 */}
-      <div className="py-6">
+      <div className="mt-auto py-6">
         <Button
           text="확인"
           disabled={!selectedOption}

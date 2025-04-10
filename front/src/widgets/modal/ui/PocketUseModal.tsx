@@ -83,7 +83,7 @@ const PocketUseModal = ({
   // 최근 거래 내역에서 사용하기
   const handleUseAtHistory = () => {
     closeUseModal();
-    navigate(`/pocket/use/${accountId}/${pocketId}`);
+    navigate(`/pocket/use/${accountId}/${pocketId}/${totalAmount}`);
   };
 
   // 링크로 사용하기

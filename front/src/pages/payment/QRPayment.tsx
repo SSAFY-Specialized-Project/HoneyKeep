@@ -13,22 +13,27 @@ import getCredentialsAPI from '@/entities/certification/api/getCredentialsAPI.ts
 import useQRPayStore from '@/shared/store/useQRPayStore';
 
 const QRPayment = () => {
-  const { pocketId, pocketName } = usePocketChooseStore();
-
   const navigate = useNavigate();
   const { setTitle } = useHeaderStore();
   const [index, setIndex] = useState<number>(0);
   const [account, setAccount] = useState<number | null>(null);
   const [isActive, setActive] = useState<boolean>(false);
   const accessToken = localStorage.getItem('accessToken');
-  const { isOpen } = usePocketChooseStore();
+  const { isOpen, pocketAmount, pocketId, pocketName } = usePocketChooseStore();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { startAuthentication } = useWebAuthnAuthentication();
   const isAuthenticating = useRef(false); // 인증 진행 중인지 추적
-  const { isSuccess } = useQRPayStore();
+  const { isSuccess, productAmount } = useQRPayStore();
 
   useEffect(() => {
-    if (isSuccess) navigate('/qrSuccess');
+    if (isSuccess && productAmount != null && productAmount > pocketAmount) {
+      navigate(`/pay/survey/${pocketId}`);
+      return;
+    }
+
+    if (isSuccess) {
+      navigate('/qrSuccess');
+    }
   }, [isSuccess, navigate]);
 
   useEffect(() => {

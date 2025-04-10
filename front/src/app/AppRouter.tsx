@@ -13,6 +13,7 @@ import PocketCreateWrapper from './PocketCreateWrapper';
 import SpendingAnalysis from '@/pages/pocket/SpendingAnalysis';
 import { QRPaySimulation } from '@/pages/general';
 import { PocketHistoryUse } from '@/pages/pocket';
+import PocketSurvey from '@/pages/pocket/PocketSurvey';
 
 // 일반 페이지 컴포넌트 lazy 로딩
 const Landing = lazy(() => import('@/pages/general/Landing'));
@@ -210,7 +211,7 @@ const AppRouter = createBrowserRouter([
             ],
           },
           {
-            path: '/pocket/use/:accountId/:pocketId',
+            path: '/pocket/use/:accountId/:pocketId/:totalAmount',
             element: (
               <Suspense fallback={<BankPageSkeleton />}>
                 <PocketHistoryUse />
@@ -488,6 +489,10 @@ const AppRouter = createBrowserRouter([
   {
     path: '/pay/send',
     element: <QRPaySimulation />,
+  },
+  {
+    path: '/pay/survey/:pocketId',
+    element: <PocketSurvey />,
   },
 ]);
 

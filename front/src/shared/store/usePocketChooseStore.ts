@@ -5,8 +5,10 @@ interface Props {
   setIsOpen: (isOpen: boolean) => void;
   pocketId: number;
   pocketName: string;
+  pocketAmount: number;
   setPocketId: (id: number) => void;
   setPocketName: (name: string) => void;
+  setPocketAmount: (amount: number) => void;
   modalProps: {
     accountId: number;
   } | null;
@@ -19,6 +21,8 @@ const usePocketChooseStore = create<Props>(((set) => ({
   modalProps: null,
   pocketId: 0,
   pocketName: "",
+  pocketAmount: 0,
+  setPocketAmount: (amount) => set({pocketAmount: amount}),
   setPocketId: (id) => set({pocketId: id}),
   setPocketName: (name) => set({pocketName: name}), 
   setIsOpen: (isOpen: boolean) => set({isOpen}),
