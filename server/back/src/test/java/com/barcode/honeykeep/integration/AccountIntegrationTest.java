@@ -401,4 +401,50 @@ public class AccountIntegrationTest {
         assertTrue(expectedDepositBalance.compareTo(actualDepositBalance) == 0,
                 "계좌 B의 잔액이 예상과 다릅니다. 예상: " + expectedDepositBalance + ", 실제: " + actualDepositBalance);
     }
+
+
+    @Test
+    @Order(4)
+    @DisplayName("계좌 이체 실패 시 롤백 확인 (잔액 부족)")
+    void 계좌이체_롤백_테스트() {
+// 1. 사용자1이 계좌 A에서 사용자3의 계좌 D로 20,000원 이체 요청 (잔액 부족)
+        String requestJson = "{" +
+                "\"withdrawAccountId\": 1," +
+                "\"depositAccountNumber\": \"D-0001\"," +
+                "\"transferAmount\": 20000" +
+                "}";
+
+        // 2. POST 요청 → 잔액 부족으로 인해 실패 (예: 400 또는 409 상태 코드)
+        given()
+                .header("Authorization", "Bearer " + accessTokenUser1)
+                .contentType(ContentType.JSON)
+                .body(requestJson)
+                .when()
+                .post("/api/v1/accounts/execute")
+                .then()
+                .statusCode(400); // 혹은 400: 비즈니스 예외 발생
+
+        // 3. 계좌 A (ID = 1)의 잔액은 롤백되어 여전히 10,000원
+        Float balanceA = given()
+                .header("Authorization", "Bearer " + accessTokenUser1)
+                .when()
+                .get("/api/v1/accounts/1")
+                .then()
+                .statusCode(200)
+                .extract().path("data.accountBalance");
+        assertTrue(new BigDecimal("10000.00").compareTo(BigDecimal.valueOf(balanceA)) == 0,
+                "계좌 A의 잔액이 롤백되지 않았습니다.");
+
+        // 4. 계좌 D (ID = 4)의 잔액도 변경되지 않아야 함 (12,000원)
+        Float balanceD = given()
+                .header("Authorization", "Bearer " + accessTokenUser3)
+                .when()
+                .get("/api/v1/accounts/4")
+                .then()
+                .statusCode(200)
+                .extract().path("data.accountBalance");
+        assertTrue(new BigDecimal("12000.00").compareTo(BigDecimal.valueOf(balanceD)) == 0,
+                "계좌 D의 잔액이 롤백되지 않았습니다.");
+    }
+
 }

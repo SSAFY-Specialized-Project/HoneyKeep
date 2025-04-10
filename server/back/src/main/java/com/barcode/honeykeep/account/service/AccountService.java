@@ -142,7 +142,30 @@ public class AccountService {
                 .depositAccountName(depositAccount.getAccountName())
                 .transferDate(now)
                 .build();
-        notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
+
+        try {
+            notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
+            log.info("계좌이체(출금) 알림 전송 성공 - 사용자 ID: {}", withdrawAccount.getUser().getId());
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
+            String formattedAmount = nf.format(transferAmount);
+
+            // 전송 성공 시 알림 DB 저장
+            String title = "계좌이체";
+            // payAmount가 BigDecimal인 경우 적절한 포맷 적용 (여기서는 단순 문자열로 처리)
+            String body = String.format("%s 님, 출금 %s 원이 출금 되었습니다.",
+                    withdrawAccount.getUser().getName(), formattedAmount);
+            notificationService.saveNotification(
+                    withdrawAccount.getUser().getId(),
+                    PushType.TRANSFER,
+                    title,
+                    body
+            );
+        } catch (Exception e) {
+            log.error("계좌이체(출금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
+                    withdrawAccount.getUser().getId(), e.getMessage(), e);
+        }
+
 
         AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
                 .transactionType(TransactionType.DEPOSIT)
@@ -151,7 +174,29 @@ public class AccountService {
                 .depositAccountName(depositAccount.getAccountName())
                 .transferDate(now)
                 .build();
-        notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
+        try {
+            // FCM 전송: 입금 알림 전송 시도
+            notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
+            log.info("계좌이체(입금) 알림 전송 성공 - 사용자 ID: {}", depositAccount.getUser().getId());
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
+            String formattedAmount = nf.format(transferAmount);
+
+            // 전송 성공 시 알림 DB 저장
+            String title = "계좌이체";
+            String body = String.format("%s 님, %s 원이 입금 되었습니다.",
+                    depositAccount.getUser().getName(), formattedAmount);
+            notificationService.saveNotification(
+                    depositAccount.getUser().getId(),
+                    PushType.TRANSFER,
+                    title,
+                    body
+            );
+        } catch (Exception e) {
+            log.error("계좌이체(입금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
+                    depositAccount.getUser().getId(), e.getMessage(), e);
+        }
+
 
         return TransferExecutionResponse.builder()
                 .withdrawAccountId(withdrawAccount.getId())
