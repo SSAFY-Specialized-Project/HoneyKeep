@@ -13,7 +13,7 @@ const MyAccountInfo = () => {
   const [isBubbleVisible, setIsBubbleVisible] = useState(false);
 
   const toggleBubble = () => {
-    setIsBubbleVisible(prev => !prev);
+    setIsBubbleVisible((prev) => !prev);
   };
 
   const handleNotice = () => {
@@ -22,9 +22,9 @@ const MyAccountInfo = () => {
     toggleBubble();
   };
 
-  const handleClick = (accountId : number) => {
+  const handleClick = (accountId: number) => {
     navigate(`/accountDetail/${accountId}`);
-  }
+  };
 
   const { data: accountData } = useSuspenseQuery<ResponseDTO<Account[]>>({
     queryKey: ['accounts-info'],
@@ -34,22 +34,22 @@ const MyAccountInfo = () => {
   });
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="xs:gap-2 flex flex-col gap-1.5">
       <div className="flex justify-between">
-        <div className="relative flex items-center gap-2">
-          <h3 className="text-title-sm text-gray-900">내 계좌 정보</h3>
-          <button type="button" onClick={handleNotice} className="relative cursor-pointer text-gray-400 hover:text-gray-600">
+        <div className="xs:gap-2 relative flex gap-1.5">
+          <h3 className="text-text-md xs:text-title-sm text-gray-900">내 계좌 정보</h3>
+          <button type="button" onClick={handleNotice} className="cursor-pointer">
             <Icon size="small" id="notice" />
             {isBubbleVisible && (
-                <div className="absolute left-3 -translate-x-1/2 mt-2.5 z-10 w-64">
-                  <InfoBubble />
-                </div>
+              <div className="absolute left-3 z-10 mt-2.5 w-64 -translate-x-1/2">
+                <InfoBubble />
+              </div>
             )}
           </button>
         </div>
         <button
           type="button"
-          className="text-text-sm cursor-pointer rounded-lg border border-gray-200 px-4 py-2 font-semibold text-gray-600"
+          className="text-text-xxs xs:text-text-sm xs:px-4 xs:py-2 cursor-pointer rounded-lg border border-gray-200 px-1.5 py-0.5 font-semibold text-gray-600"
           onClick={() => {
             navigate('/accountList');
           }}
@@ -58,7 +58,7 @@ const MyAccountInfo = () => {
         </button>
       </div>
       {accountData != null && accountData.data.length > 0 ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="xs:gap-3 flex flex-col gap-1.5">
           {accountData.data.map((item, index) => {
             if (index >= 2) return null;
 
@@ -70,7 +70,7 @@ const MyAccountInfo = () => {
                 currentAmount={item.accountBalance}
                 remainingAmount={item.spareBalance}
                 onClick={() => handleClick(item.accountId)}
-                onClickSend={() => { }}
+                onClickSend={() => {}}
               />
             );
           })}

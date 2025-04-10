@@ -3,26 +3,22 @@ import { formatWithKRW } from '@/shared/lib';
 type Props = {
   count: number;
   totalAmount: number;
-}
+};
 
 const FixedExpenseTotal = ({ count, totalAmount }: Props) => {
   return (
-    <div className="w-full shadow-custom rounded-[1.25rem] bg-white">
-      <div className="flex flex-col w-full p-5 gap-3">
-        <div className="flex justify-between items-center w-full">
-          <span className="text-text-xl text-gray-600 font-medium">
+    <div className="shadow-custom w-full rounded-[1.25rem] bg-white">
+      <div className="flex w-full flex-col gap-3 p-5">
+        <div className="flex w-full items-center justify-between">
+          <span className="text-text-lg xs:text-text-xl font-medium text-gray-600">
             내 고정지출
           </span>
-          <span className="text-text-xl text-gray-900 font-medium">
-            {count} 개
-          </span>
+          <span className="text-text-lg xs:text-text-xl font-medium text-gray-900">{count} 개</span>
         </div>
 
-        <div className="flex justify-between items-center w-full">
-          <span className="text-text-xl text-gray-600 font-medium">
-            총 금액
-          </span>
-          <span className="text-text-xl text-gray-900 font-medium">
+        <div className="flex w-full items-center justify-between">
+          <span className="text-text-lg xs:text-text-xl font-medium text-gray-600">총 금액</span>
+          <span className="text-text-lg xs:text-text-xl font-medium text-gray-900">
             {formatWithKRW(totalAmount)}
           </span>
         </div>

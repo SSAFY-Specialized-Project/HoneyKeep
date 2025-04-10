@@ -13,7 +13,9 @@ const AccountPockets = () => {
     <>
       <div className="flex flex-col gap-4">
         {accountData?.pocketList?.length === 0 ? (
-          <div className="text-text-md text-gray-600">현재 생성된 포켓이 없습니다.</div>
+          <div className="xs:text-text-lg text-text-md text-gray-600">
+            현재 생성된 포켓이 없습니다.
+          </div>
         ) : (
           accountData?.pocketList?.map((pocket) => (
             <PocketListItem
@@ -24,6 +26,7 @@ const AccountPockets = () => {
               totalAmount={pocket.totalAmount}
               endDate={pocket.endDate}
               type={pocket.type}
+              savedAmount={pocket.savedAmount}
             />
           ))
         )}

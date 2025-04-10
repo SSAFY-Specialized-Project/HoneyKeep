@@ -18,7 +18,7 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
   const [isOpen, setOpen] = useState<boolean>(false);
 
   return (
-    <div className="shadow-custom flex flex-col gap-2 rounded-2xl p-5">
+    <div className="shadow-custom xs:gap-2 xs:p-5 flex flex-col gap-1.5 rounded-2xl p-3">
       <button
         type="button"
         className="flex w-full cursor-pointer justify-between"
@@ -27,13 +27,13 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
           setOpen(!isOpen);
         }}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="xs:gap-2 flex items-center gap-1.5">
           <CategoryIcon size="small" category={imageId} />
           <div className="flex flex-col items-start justify-center">
-            <span className="text-text-xl font-semibold text-gray-900">{name}</span>
-            <div className="flex gap-2">
-              <span className="text-text-sm text-gray-500">{`${pocketCount}개 항목`}</span>
-              <span className="text-text-sm text-gray-900">
+            <span className="text-text-md xs:text-text-xl font-semibold text-gray-900">{name}</span>
+            <div className="xs:gap-2 flex gap-1.5">
+              <span className="text-text-xxs xs:text-text-sm text-gray-500">{`${pocketCount}개 항목`}</span>
+              <span className="text-text-xxs xs:text-text-sm text-gray-900">
                 {formatWithKRW(`${totalAmount}원`)}
               </span>
             </div>
@@ -44,7 +44,7 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
         </div>
       </button>
       <ul
-        className={`flex flex-col gap-4 overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? '' : 'hidden'} mt-3`}
+        className={`xs:gap-4 flex flex-col gap-2 overflow-hidden transition-transform duration-300 ease-in-out ${isOpen ? '' : 'hidden'} xs:mt-3 mt-1.5`}
       >
         {pocketList.map((item) => {
           return (
@@ -62,7 +62,7 @@ const CategoryDropdown = ({ id, imageId, name, pocketCount, totalAmount, pocketL
         })}
         <Link
           to={`/pocket/list?category=${id}`}
-          className="block w-full py-2 text-center text-gray-600"
+          className="xs:py-2 text-text-xxs xs:text-text-sm block w-full py-1 text-center text-gray-600"
         >
           더 보기
         </Link>

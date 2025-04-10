@@ -16,7 +16,7 @@ const FilterDropdown = ({ title, value, children, isOpen, setOpen }: Props) => {
         onClick={() => {
           setOpen(!isOpen);
         }}
-        className="flex cursor-pointer items-center gap-2 px-4 py-1.5"
+        className="flex w-full cursor-pointer items-center justify-between px-4 py-1.5"
       >
         <span className="text-text-md font-bold text-nowrap text-gray-600">
           {value == null ? title : value}
