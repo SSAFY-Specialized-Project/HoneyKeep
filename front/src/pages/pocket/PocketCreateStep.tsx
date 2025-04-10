@@ -20,9 +20,9 @@ const PocketCreateStep = () => {
     navigate('/home');
   }
 
-  const [isActive, setActive] = useState<boolean>(false);
+  const [isActive, setActive] = useState<boolean>(true);
   const [endDate, setEndDate] = useState<string>('');
-  const [chargeAmount, setChargeAmount] = useState<string>('');
+  const [chargeAmount, setChargeAmount] = useState<string>('0');
 
   const [accountId, setAccountId] = useState<number | null>(null);
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
@@ -33,23 +33,23 @@ const PocketCreateStep = () => {
   const [isLoading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    setDisabled(accountId == null || categoryId == null || Number(chargeAmount) <= 0);
-  }, [accountId, categoryId, chargeAmount]);
+    setDisabled(accountId == null || categoryId == null);
+  }, [accountId, categoryId]);
 
   const handleEndDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEndDate(e.currentTarget.value);
   };
 
-  const handleChargeAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const regex = /^[0-9]+$/;
+  // const handleChargeAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const regex = /^[0-9]+$/;
 
-    const newValue = e.currentTarget.value;
+  //   const newValue = e.currentTarget.value;
 
-    // 비어있거나 숫자로만 구성된 경우에만 값을 업데이트
-    if (newValue === '' || regex.test(newValue)) {
-      setChargeAmount(newValue);
-    }
-  };
+  //   // 비어있거나 숫자로만 구성된 경우에만 값을 업데이트
+  //   if (newValue === '' || regex.test(newValue)) {
+  //     setChargeAmount(newValue);
+  //   }
+  // };
 
   const createPocketMutate = useMutation({
     mutationFn: createPocketWithLinkAPI,
@@ -104,7 +104,7 @@ const PocketCreateStep = () => {
         setAccountBalance={setAccountBalance}
       />
       <CategoryInputDropDown categoryId={categoryId} setCategoryId={setCategoryId} />
-      <div className="flex flex-col gap-3">
+      {/* <div className="flex flex-col gap-3">
         <BorderInput
           type="text"
           label="amount"
@@ -136,7 +136,7 @@ const PocketCreateStep = () => {
             </button>
           </div>
         )}
-      </div>
+      </div> */}
       <button
         type="button"
         disabled={disabled}
