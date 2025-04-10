@@ -19,4 +19,12 @@ export interface AccountDetail extends Account {
   pocketList: Pocket[];
 }
 
+export interface QRPaymentRequest {
+  accountId: number;
+  pocketId: number;
+  amount: number;
+  uuid: string;
+  productName: string;
+}
+
 export default Account;

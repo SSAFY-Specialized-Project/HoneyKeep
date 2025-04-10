@@ -10,6 +10,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useWebAuthnAuthentication } from '@/entities/user/hooks';
 import getCredentialsAPI from '@/entities/certification/api/getCredentialsAPI.ts';
+import useQRPayStore from '@/shared/store/useQRPayStore';
 
 const QRPayment = () => {
   const { pocketId, pocketName } = usePocketChooseStore();
@@ -24,6 +25,11 @@ const QRPayment = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { startAuthentication } = useWebAuthnAuthentication();
   const isAuthenticating = useRef(false); // 인증 진행 중인지 추적
+  const { isSuccess } = useQRPayStore();
+
+  useEffect(() => {
+    if (isSuccess) navigate('/qrSuccess');
+  }, [isSuccess, navigate]);
 
   useEffect(() => {
     setTitle('허니페이');
