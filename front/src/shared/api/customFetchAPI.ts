@@ -64,9 +64,8 @@ const customFetchAPI = async <T, P, H extends Record<string, string> = Record<st
           // 토큰 만료 에러 하나 던져줘야 할듯
           
           //
-
           setTimeout(() => {
-            window.location.href = "/";
+            window.location.href = "/login";
           }, 0);
           
           if(refreshError instanceof Error && "status" in refreshError){

@@ -14,7 +14,7 @@ const CategoryCheck = ({ iconId, name, pocketCount, checked, onChange }: Props) 
       <label htmlFor={name} className="flex w-full items-center gap-3">
         <CategoryIcon size="small" category={iconId} />
         <div className="flex flex-col">
-          <span className="font-semibold text-gray-900">{name}</span>
+          <span className="xs:text-text-md text-text-sm font-semibold text-gray-900">{name}</span>
           {pocketCount ? (
             <span className="text-text-sm text-gray-500">{`연결된 포켓 ${pocketCount}개`}</span>
           ) : null}

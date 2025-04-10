@@ -43,13 +43,15 @@ const PocketCreateDirect = () => {
         value={formatNumber(totalAmount)}
         onChange={handlePocketAmount}
         placeholder="지출 금액을 입력해주세요."
-        content={<span className="text-title-sm absolute right-2.5 bottom-3 pl-2">원</span>}
+        content={
+          <span className="xs:text-title-sm text-text-lg absolute right-2.5 bottom-3 pl-2">원</span>
+        }
       />
       <button
         type="button"
         onClick={handleCreatePocket}
         disabled={name == '' || totalAmount == 0}
-        className="bg-brand-primary-500 text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
+        className="bg-brand-primary-500 text-text-xl xs:text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
       >
         다음으로
       </button>
