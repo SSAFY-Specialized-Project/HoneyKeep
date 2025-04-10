@@ -40,6 +40,7 @@ const PocketUseModal = ({ isOpen, pocketId, pocketName, totalAmount, gatheredAmo
     mutationFn: (pocketId: number) => deletePocketAPI(pocketId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
+      queryClient.invalidateQueries({ queryKey: ['pocket-list-filter'] });
       closeBasicModal();
     },
     onError: () => {},

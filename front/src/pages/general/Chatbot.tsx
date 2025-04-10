@@ -4,11 +4,14 @@ import { useHeaderStore } from '@/shared/store';
 import { Icon, ImageContainer } from '@/shared/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 
 const Chatbot = () => {
   const { setTitle } = useHeaderStore();
 
-  const [messages, setMessages] = useState<ChatItemType[]>([{ type: 'BOT', text: '안녕하세요!' }]);
+  const [messages, setMessages] = useState<ChatItemType[]>([
+    { type: 'BOT', text: '안녕하세요!', link: null },
+  ]);
   const [isConnected, setConnected] = useState<boolean>(false);
   const [isResponding, setResponding] = useState<boolean>(false);
   const [text, setText] = useState<string>('');
@@ -16,6 +19,16 @@ const Chatbot = () => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   // 현재 스트리밍 중인 봇 메시지의 인덱스를 저장하기 위한 참조
   const currentBotMessageIndexRef = useRef<number>(-1);
+
+  const classification_mapping = {
+    1: '/pocket/create',
+    2: '/pocket/list',
+    3: '/pocket/list',
+    4: '/pocket/calendar',
+    5: '/fixedExpense/list',
+    6: '/fiexedExpense/create',
+    7: null,
+  };
 
   const scrollToBottom = () => {
     if (!messageEndRef.current) return;
@@ -52,7 +65,11 @@ const Chatbot = () => {
   useEffect(() => {
     if (!chatData) return;
 
-    const chatHistory = chatData.data.map((item) => ({ type: item.senderId, text: item.content }));
+    const chatHistory = chatData.data.map((item) => ({
+      type: item.senderId,
+      text: item.content,
+      link: null,
+    }));
 
     setMessages((prev) => [...prev, ...chatHistory]);
   }, [chatData]);
@@ -60,12 +77,14 @@ const Chatbot = () => {
   const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isConnected) return;
+
     if (!text.trim() || isResponding) return;
 
-    const userMessage: ChatItemType = { type: 'USER', text: text.trim() };
+    const userMessage: ChatItemType = { type: 'USER', text: text.trim(), link: null };
     setMessages((prev) => [...prev, userMessage]);
 
-    const botResponse: ChatItemType = { type: 'BOT', text: '' };
+    const botResponse: ChatItemType = { type: 'BOT', text: '', link: null };
     setMessages((prev) => {
       // 새 봇 메시지의 인덱스 저장
       currentBotMessageIndexRef.current = prev.length;
@@ -154,10 +173,23 @@ const Chatbot = () => {
               // 각 토큰을 순차적으로 표시 (타이핑 효과)
               await addTokenWithDelay(data.token);
             } else if (data.type === 'classification') {
+              const linkType: 1 | 2 | 3 | 4 | 5 | 6 | 7 = data.classification;
+              const link = classification_mapping[linkType];
               // 분류 정보 처리 (필요한 경우)
               console.log('Classification received:', data.classification);
               // 응답 완료 처리
               setResponding(false);
+
+              setMessages((prev) => {
+                const newMessages = [...prev];
+                if (currentBotMessageIndexRef.current < newMessages.length) {
+                  newMessages[currentBotMessageIndexRef.current] = {
+                    ...newMessages[currentBotMessageIndexRef.current],
+                    link: link, // 링크 속성 업데이트
+                  };
+                }
+                return newMessages;
+              });
             }
           } catch (e) {
             console.error('Failed to parse SSE data:', e);
@@ -201,17 +233,20 @@ const Chatbot = () => {
             {message.type == 'BOT' ? (
               <ImageContainer imgSrc={'/image/ChatBot.png'} size="small" />
             ) : null}
-            <div
-              className={`max-w-3/4 rounded-lg p-3 ${message.type === 'USER' ? 'bg-blue-100' : 'bg-gray-100'}`}
-            >
-              {message.type === 'BOT' ? (
-                <div
-                  className="markdown-content"
-                  dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(message.text) }}
-                />
-              ) : (
-                <div>{message.text}</div>
-              )}
+            <div className="flex max-w-3/4 flex-col gap-4">
+              <div
+                className={`rounded-lg p-3 ${message.type === 'USER' ? 'bg-blue-100' : 'bg-gray-100'}`}
+              >
+                {message.type === 'BOT' ? (
+                  <div
+                    className="markdown-content"
+                    dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(message.text) }}
+                  />
+                ) : (
+                  <div>{message.text}</div>
+                )}
+              </div>
+              {message.link != null ? <Link to={message.link}>해당 기능으로 이동하기</Link> : null}
             </div>
           </li>
         ))}
