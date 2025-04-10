@@ -165,7 +165,7 @@ public class AccountService {
 
 
     public List<AccountResponse> getAccountsByUserId(Long userId) {
-        List<Account> accounts = accountRepository.findByUser_Id(userId);
+        List<Account> accounts = accountRepository.findByUser_IdOrderByAccountBalance_AmountDesc(userId);
 
         return accounts.stream().map(account -> {
             return AccountResponse.builder()

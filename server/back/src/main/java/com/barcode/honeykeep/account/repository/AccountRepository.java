@@ -54,6 +54,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findAccountsForUpdateByIds(@Param("ids") List<Long> ids);
 
 
+    List<Account> findByUser_IdOrderByAccountBalance_AmountDesc(Long userId);
+
 }
 
 
