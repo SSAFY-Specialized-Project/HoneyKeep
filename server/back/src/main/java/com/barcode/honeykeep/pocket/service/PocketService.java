@@ -406,6 +406,7 @@ public class PocketService {
     private PocketSummaryResponse mapToPocketSummaryResponse(Pocket pocket) {
         return PocketSummaryResponse.builder()
                 .id(pocket.getId())
+                .accountId(pocket.getAccount().getId())
                 .name(pocket.getName())
                 .accountName(pocket.getAccount().getAccountName())
                 .totalAmount(pocket.getTotalAmount().getAmountAsLong())
