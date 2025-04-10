@@ -50,7 +50,7 @@ const PocketCreateSuccess = () => {
         />
       </div>
 
-      <div className="xs:mt-auto mt-4 flex w-full justify-between gap-5">
+      <div className="mt-auto flex w-full justify-between gap-5">
         <Link
           to="/home"
           className="xs:text-title-md text-text-lg mt-auto w-full cursor-pointer rounded-2xl bg-gray-100 py-3 text-center font-bold text-gray-500 disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
