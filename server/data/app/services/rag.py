@@ -1,6 +1,7 @@
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain, LLMChain
 from langchain.memory import ConversationBufferMemory
+from langchain.chains.question_answering import load_qa_chain
 
 from app.services.memory import ChatMessageHistory
 from app.services.prompts import *
@@ -58,7 +59,7 @@ def get_conversation_chain(memory: ConversationBufferMemory, streaming_handler=N
             callbacks=[streaming_handler]
         )
         
-        # 먼저 condense 단계는 non_streaming_llm으로 처리
+        # 먼저 condense 단계는 non_streaming_llm으로 처리 (qa_prompt 파라미터 제거)
         conversation_chain = ConversationalRetrievalChain.from_llm(
             non_streaming_llm,
             retriever=retriever,
@@ -67,24 +68,36 @@ def get_conversation_chain(memory: ConversationBufferMemory, streaming_handler=N
             chain_type="stuff"
         )
         
-        # 그리고 최종 답변 생성 단계에 streaming_llm을 할당
-        if hasattr(conversation_chain, "combine_docs_chain") and hasattr(conversation_chain.combine_docs_chain, "llm_chain"):
-            conversation_chain.combine_docs_chain.llm_chain.llm = streaming_llm
+        # 최종 답변을 위한 QA 체인 생성
+        qa_chain = load_qa_chain(streaming_llm, chain_type="stuff", prompt=QA_PROMPT)
+        
+        # 기존 combine_docs_chain을 새로운 체인으로 교체
+        conversation_chain.combine_docs_chain = qa_chain
         
         return conversation_chain
     else:
-        # 스트리밍 핸들러가 없는 경우 기존 방식 그대로
-        return ConversationalRetrievalChain.from_llm(
-            ChatOpenAI(
-                temperature=Config.TEMPERATURE,
-                openai_api_key=Config.OPENAI_API_KEY,
-                model_name=Config.MODEL_NAME,
-            ),
+        # 스트리밍 핸들러가 없는 경우
+        standard_llm = ChatOpenAI(
+            temperature=Config.TEMPERATURE,
+            openai_api_key=Config.OPENAI_API_KEY,
+            model_name=Config.MODEL_NAME,
+        )
+        
+        conversation_chain = ConversationalRetrievalChain.from_llm(
+            standard_llm,
             retriever=retriever,
             memory=memory,
             condense_question_prompt=CONDENSE_QUESTION_PROMPT,
             chain_type="stuff"
         )
+        
+        # 최종 답변을 위한 QA 체인 생성
+        qa_chain = load_qa_chain(standard_llm, chain_type="stuff", prompt=QA_PROMPT)
+        
+        # 기존 combine_docs_chain을 새로운 체인으로 교체
+        conversation_chain.combine_docs_chain = qa_chain
+        
+        return conversation_chain
 
 
 async def stream_ask_question(query: str, conversation_id: int):
