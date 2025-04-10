@@ -4,15 +4,27 @@ import { AccountInfo } from '@/entities/account/ui';
 import { ResponseDTO } from '@/shared/model/types';
 import { ContentAddBox, Icon } from '@/shared/ui';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import InfoBubble from '@/shared/ui/InfoBubble/InfoBubble';
 
 const MyAccountInfo = () => {
   const navigate = useNavigate();
+  const [isBubbleVisible, setIsBubbleVisible] = useState(false);
+
+  const toggleBubble = () => {
+    setIsBubbleVisible(prev => !prev);
+  };
 
   const handleNotice = () => {
     // TODO: 알림 기능 구현
-    console.log('알림 클릭');
+    // console.log('알림 클릭'); // 필요하면 유지
+    toggleBubble();
   };
+
+  const handleClick = (accountId : number) => {
+    navigate(`/accountDetail/${accountId}`);
+  }
 
   const { data: accountData } = useSuspenseQuery<ResponseDTO<Account[]>>({
     queryKey: ['accounts-info'],
@@ -24,12 +36,16 @@ const MyAccountInfo = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between">
-        <div className="relative flex gap-2">
+        <div className="relative flex items-center gap-2">
           <h3 className="text-title-sm text-gray-900">내 계좌 정보</h3>
-          <button type="button" onClick={handleNotice} className="cursor-pointer">
+          <button type="button" onClick={handleNotice} className="relative cursor-pointer text-gray-400 hover:text-gray-600">
             <Icon size="small" id="notice" />
+            {isBubbleVisible && (
+                <div className="absolute left-3 -translate-x-1/2 mt-2.5 z-10 w-64">
+                  <InfoBubble />
+                </div>
+            )}
           </button>
-          {/* 말풍선 달아야함 */}
         </div>
         <button
           type="button"
@@ -53,8 +69,8 @@ const MyAccountInfo = () => {
                 account={item.accountName}
                 currentAmount={item.accountBalance}
                 remainingAmount={item.spareBalance}
-                onClick={() => {}}
-                onClickSend={() => {}}
+                onClick={() => handleClick(item.accountId)}
+                onClickSend={() => { }}
               />
             );
           })}
