@@ -58,32 +58,38 @@ public class PayService {
                 .productName(payRequest.getProductName())
                 .build();
 
-        // Redis에서 QR UUID 조회
-        Object value = redisTemplate.opsForValue().get(payRequest.getUuid());
+//        // Redis에서 QR UUID 조회
+//        Object value = redisTemplate.opsForValue().get(payRequest.getUuid());
+//
+//        if (value == null) {
+//            log.error("유효하지 않은 QR 코드 요청: {}", payRequest.getUuid());
+//            throw new CustomException(PayErrorCode.INVALID_QR);
+//        }
+//
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        try {
+//            QrUuid qrUuid = objectMapper.convertValue(value, QrUuid.class);
+//            if (qrUuid.isUsed()) {
+//                log.error("이미 사용된 QR 코드: {}", payRequest.getUuid());
+//                throw new CustomException(PayErrorCode.ALREADY_USED_QR);
+//            }
+//            else {
+//                log.info("유효한 QR 코드 확인: {}", payRequest.getUuid());
+//                PocketBalanceResult pocketBalanceResult = payRepository.payment(userId, payDto);
+//
+//                log.info("QR 결제 처리 결과: {}", pocketBalanceResult.getIsSuccess() ? "성공" : "실패");
+//                return pocketBalanceResult;
+//            }
+//        } catch (IllegalArgumentException e) {
+//            log.error("QR 코드 변환 중 에러 발생: {}", e.getMessage());
+//            throw new CustomException(PayErrorCode.INVALID_QR);
+//        }
 
-        if (value == null) {
-            log.error("유효하지 않은 QR 코드 요청: {}", payRequest.getUuid());
-            throw new CustomException(PayErrorCode.INVALID_QR);
-        }
+        PocketBalanceResult pocketBalanceResult = payRepository.payment(userId, payDto);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            QrUuid qrUuid = objectMapper.convertValue(value, QrUuid.class);
-            if (qrUuid.isUsed()) {
-                log.error("이미 사용된 QR 코드: {}", payRequest.getUuid());
-                throw new CustomException(PayErrorCode.ALREADY_USED_QR);
-            }
-            else {
-                log.info("유효한 QR 코드 확인: {}", payRequest.getUuid());
-                PocketBalanceResult pocketBalanceResult = payRepository.payment(userId, payDto);
+        log.info("결제 처리 결과: {}", pocketBalanceResult.getIsSuccess() ? "성공" : "실패");
 
-                log.info("QR 결제 처리 결과: {}", pocketBalanceResult.getIsSuccess() ? "성공" : "실패");
-                return pocketBalanceResult;
-            }
-        } catch (IllegalArgumentException e) {
-            log.error("QR 코드 변환 중 에러 발생: {}", e.getMessage());
-            throw new CustomException(PayErrorCode.INVALID_QR);
-        }
+        return pocketBalanceResult;
     }
 
     /**
