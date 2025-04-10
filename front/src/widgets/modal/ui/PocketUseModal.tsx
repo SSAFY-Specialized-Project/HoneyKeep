@@ -1,4 +1,4 @@
-import { deletePocketAPI } from '@/entities/pocket/api';
+import { deletePocketAPI, patchPocketUsedAPI } from '@/entities/pocket/api';
 import { addCommas } from '@/shared/lib';
 import { useBasicModalStore, useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
 import { Icon, ModalOptionButton } from '@/shared/ui';
@@ -33,7 +33,17 @@ const PocketUseModal = ({
   };
 
   // 사용 완료
-  const handleUseComplete = () => {};
+  const handleUseComplete = () => {
+    patchPocketUsedAPI(pocketId)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
+        queryClient.invalidateQueries({ queryKey: ['pocket-list-filter'] });
+        closeUseModal();
+      })
+      .catch(() => {
+        // 에러 처리
+      });
+  };
 
   // 더 모으기
   const handleChargeMore = () => {
