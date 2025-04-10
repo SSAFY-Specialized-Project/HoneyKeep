@@ -3,7 +3,8 @@ from langchain.prompts import PromptTemplate
 # 프롬프트 템플릿 정의
 # 질문 독립화 프롬프트: 대화 내역과 후속 질문을 독립 질문으로 재구성
 CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(
-    "다음 대화 내역과 후속 질문을 독립적인 질문으로 재구성해줘.\n\n"
+    "다음 대화 내역과 후속 질문을 독립적인 질문으로 재구성해줘.\n"
+    "최종 답변은 100자 이내 분량으로 구성해줘.\n\n"
     "대화 내역:\n{chat_history}\n"
     "후속 질문: {question}\n"
     "독립적인 질문:"
