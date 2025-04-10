@@ -41,6 +41,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Boolean existsAccountByAccountNumber(String accountNumber);
 
+    List<Account> findByUser_IdOrderByAccountBalance_AmountDesc(Long userId);
+
 }
 
 
