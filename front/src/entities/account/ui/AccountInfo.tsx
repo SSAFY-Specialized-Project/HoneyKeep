@@ -26,24 +26,28 @@ const AccountInfo = ({
       <div
         role="button"
         onClick={onClick}
-        className="flex w-full cursor-pointer flex-col items-end gap-3 rounded-[1.25rem] p-5"
+        className="xs:gap-3 xs:p-5 flex w-full cursor-pointer flex-col items-end gap-2 rounded-[1.25rem] p-4"
       >
         <div className="flex w-full justify-between">
           <div className="flex gap-2">
             <BankIcon bank={bank} />
             <div className="flex flex-col items-start">
-              <strong className="text-text-xl font-bold text-gray-900">{bank}</strong>
-              <span className="text-text-sm font-semibold text-gray-600">{accountName}</span>
+              <strong className="text-text-lg xs:text-text-xl font-bold text-gray-900">
+                {bank}
+              </strong>
+              <span className="text-text-xs xs:text-text-sm font-semibold text-gray-600">
+                {accountName}
+              </span>
             </div>
           </div>
           <div className="relative">
             <div className="flex justify-between gap-1.5">
-              <span className="text-text-md text-gray-600">현재 금액</span>
-              <span className="text-text-md">{formatWithKRW(currentAmount)}</span>
+              <span className="text-text-sm xs:text-text-md text-gray-600">현재 금액</span>
+              <span className="text-text-sm xs:text-text-md">{formatWithKRW(currentAmount)}</span>
             </div>
             <div className="flex justify-between gap-1.5">
-              <span className="text-text-md text-extra">여유 자산</span>
-              <span className="text-text-md text-extra font-semibold">
+              <span className="text-text-sm xs:text-text-md text-extra">여유 자산</span>
+              <span className="text-text-sm xs:text-text-md text-extra font-semibold">
                 {formatWithKRW(remainingAmount)}
               </span>
             </div>
@@ -52,7 +56,7 @@ const AccountInfo = ({
         <button
           type="button"
           onClick={onClickSend}
-          className="text-gary-700 text-text-sm cursor-pointer rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-100"
+          className="text-gary-700 text-text-xs xs:text-text-sm xs:px-3 xs:py-2 cursor-pointer rounded-lg border border-gray-200 px-2 py-1 hover:bg-gray-100"
         >
           송금하기
         </button>

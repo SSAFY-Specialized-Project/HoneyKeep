@@ -312,7 +312,7 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
         <button onClick={goToPrevMonth} className="flex cursor-pointer items-center justify-center">
           <Icon id="chevron-left" size="small" />
         </button>
-        <h2 className="text-center text-2xl font-medium">
+        <h2 className="xs:text-2xl text-center text-xl font-medium">
           {currentYear} {currentMonth + 1}월
         </h2>
         <button onClick={goToNextMonth} className="flex cursor-pointer items-center justify-center">
@@ -323,28 +323,31 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
       {/* 요일 헤더 */}
       <div className="mb-2 grid grid-cols-7">
         {weekdays.map((day, index) => (
-          <div key={index} className={`py-2 text-center font-normal ${getWeekdayClass(index)}`}>
+          <div
+            key={index}
+            className={`xs:py-2 xs:text-base py-1 text-center text-sm font-normal ${getWeekdayClass(index)}`}
+          >
             {day}
           </div>
         ))}
       </div>
 
       {/* 달력 날짜 그리드 */}
-      <div className="grid grid-cols-7 gap-y-2">
+      <div className="xs:gap-y-2 grid grid-cols-7 gap-y-1">
         {calendarDays.map((date, index) => (
           <div key={index} className={getDateClasses(date)} onClick={() => handleDateClick(date)}>
             {/* 날짜 숫자는 항상 동일한 위치에 (패딩 통일) */}
-            <div className="pt-2">{date.day}</div>
+            <div className="xs:pt-2 xs:text-base pt-1 text-sm">{date.day}</div>
 
             {/* 인디케이터 표시 - 항상 같은 공간 차지 */}
-            <div className="mt-1 flex h-2 gap-1">
+            <div className="xs:h-2 xs:gap-1 mt-1 flex h-1.5 gap-0.5">
               {date.indicators &&
                 Array.isArray(date.indicators) &&
                 date.indicators.length > 0 &&
                 date.indicators.map((indicator, i) => (
                   <div
                     key={i}
-                    className={`h-2 w-2 rounded-full ${getIndicatorClass(indicator)}`}
+                    className={`xs:h-2 xs:w-2 h-1.5 w-1.5 rounded-full ${getIndicatorClass(indicator)}`}
                   ></div>
                 ))}
             </div>
@@ -354,11 +357,11 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
 
       {/* 선택된 날짜의 제품 목록 */}
       {
-        <div className="mt-6 flex flex-1 flex-col px-5 pt-4">
-          <h3 className="mb-6 text-lg font-medium">
+        <div className="xs:mt-6 xs:px-5 xs:pt-4 mt-4 flex flex-1 flex-col px-4 pt-2">
+          <h3 className="xs:mb-6 xs:text-lg mb-4 text-base font-medium">
             {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일 포켓 목록
           </h3>
-          <ul className="flex flex-1 flex-col gap-3 overflow-auto">
+          <ul className="xs:gap-3 flex flex-1 flex-col gap-2 overflow-auto">
             {selectedProducts && Array.isArray(selectedProducts) && selectedProducts.length > 0 ? (
               selectedProducts.map((product) => (
                 <PocketListItem
@@ -373,7 +376,7 @@ const CustomCalendar = ({ products = [], onDateSelect }: CustomCalendarProps) =>
                 />
               ))
             ) : (
-              <li>해당하는 포켓이 없습니다.</li>
+              <li className="xs:text-base text-sm">해당하는 포켓이 없습니다.</li>
             )}
           </ul>
         </div>

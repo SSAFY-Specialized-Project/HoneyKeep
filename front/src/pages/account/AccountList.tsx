@@ -25,11 +25,11 @@ const AccountList = () => {
   });
 
   return (
-    <div className="bg-brand-background flex h-full flex-col flex-1 justify-between px-6 py-4">
-      <div className="flex flex-col gap-5">
-        <h3 className="text-title-sm text-gray-900">입출금계좌</h3>
+    <div className="bg-brand-background xs:px-6 flex h-full flex-1 flex-col justify-between px-4 py-4">
+      <div className="xs:gap-5 flex flex-col gap-4">
+        <h3 className="text-text-lg xs:text-title-sm text-gray-900">입출금계좌</h3>
         {accountData && (
-          <ul className="flex flex-col gap-3 overflow-y-auto p-3">
+          <ul className="xs:p-3 flex flex-col gap-3 overflow-y-auto p-2">
             {accountData.data.map((item) => (
               <NavLink key={item.accountNumber} to={`/accountDetail/${item.accountId}/detail`}>
                 <AccountPocketInfo
@@ -49,7 +49,7 @@ const AccountList = () => {
 
       <Link
         to="/mydata"
-        className="bg-brand-primary-500 py-2.5 text-title-md cursor-pointer rounded-xl text-center font-bold text-white"
+        className="bg-brand-primary-500 xs:py-2.5 text-text-lg xs:text-title-md cursor-pointer rounded-xl py-2 text-center font-bold text-white"
       >
         내 자산 추가하기
       </Link>

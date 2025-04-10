@@ -39,32 +39,40 @@ const PocketListItem = ({ id, name, imgUrl, totalAmount, savedAmount, endDate, t
           navigate(`/pocket/detail/${id}`);
         }}
       >
-        <ImageContainer imgSrc={imgUrl} size="small" />
+        <div className="xs:size-12">
+          <ImageContainer imgSrc={imgUrl} size="small" />
+        </div>
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
-            <span className="text-text-md font-semibold text-gray-900">{shortName}</span>
-            <span>{calculateDDay(endDate)}</span>
+            <span className="xs:text-text-lg text-text-md font-semibold text-gray-900">
+              {shortName}
+            </span>
+            <span className="xs:text-text-lg text-text-md">{calculateDDay(endDate)}</span>
           </div>
           <div className="flex gap-1">
             <div
-              className={`text-text-sm h-5.5 w-15 ${STYLE_TYPE[type]} flex items-center justify-center rounded-md text-center`}
+              className={`xs:text-text-md text-text-sm h-5.5 w-15 ${STYLE_TYPE[type]} flex items-center justify-center rounded-md text-center`}
             >
               <span className={`font-bold`}>{pocketType[type]}</span>
             </div>
-            <span className="text-text-sm text-gray-900">{addCommas(totalAmount)}원</span>
+            <span className="xs:text-text-lg text-text-sm text-gray-900">
+              {addCommas(totalAmount)}원
+            </span>
           </div>
         </div>
       </div>
       <button
         type="button"
-        className="justify-content flex h-6 w-6 cursor-pointer items-center"
+        className="justify-content xs:h-8 xs:w-8 flex h-6 w-6 cursor-pointer items-center"
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.stopPropagation();
           // 포켓 관리 모달 오픈
           openModal({ pocketId: id, totalAmount, gatheredAmount: savedAmount, pocketName: name });
         }}
       >
-        <Icon size="small" id="three-dots-vertical" />
+        <div className="xs:size-6">
+          <Icon size="small" id="three-dots-vertical" />
+        </div>
       </button>
     </li>
   );
