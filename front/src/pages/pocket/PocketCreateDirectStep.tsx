@@ -72,6 +72,7 @@ const PocketCreateStep = () => {
 
   const handleStartDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStartDate(e.currentTarget.value);
+    setEndDate(e.currentTarget.value);
   };
 
   const handleEndDate = (e: React.ChangeEvent<HTMLInputElement>) => {
