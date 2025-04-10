@@ -43,7 +43,7 @@ async def history(user_id: str = Depends(get_user_id)):
     response_payload = {
         "status": 200,
         "message": "Success",
-        "data": data,
+        "data": data[::-1],
         "timestamp": datetime.now().isoformat() + "Z"
     }
 
