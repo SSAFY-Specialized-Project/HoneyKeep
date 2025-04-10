@@ -28,7 +28,7 @@ const AccountInfoDropDown = ({ accountId, setAccountId, setAccountBalance }: Pro
   });
 
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       <button
         className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
         onClick={() => {
@@ -39,15 +39,19 @@ const AccountInfoDropDown = ({ accountId, setAccountId, setAccountBalance }: Pro
           <div className="flex gap-3">
             <BankIcon bank={bankName} />
             <div className="flex flex-col items-start">
-              <span className="text-text-md font-semibold text-gray-900">{accountName}</span>
-              <div className="text-text-sm flex gap-2 text-gray-600">
+              <span className="xs:text-text-md text-text-sm font-semibold text-gray-900">
+                {accountName}
+              </span>
+              <div className="xs:text-text-sm text-text-xs flex gap-2 text-gray-600">
                 <span>{bankName}</span>
                 <span>{accountNumber}</span>
               </div>
             </div>
           </div>
         ) : (
-          <span className="text-text-lg font-bold text-gray-600">연결할 계좌를 선택해주세요.</span>
+          <span className="xs:text-text-lg text-text-sm font-bold text-gray-600">
+            연결할 계좌를 선택해주세요.
+          </span>
         )}
         <Icon size="small" isRotate={isOpen} id="chevron-down" />
       </button>

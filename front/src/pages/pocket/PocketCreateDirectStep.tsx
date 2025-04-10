@@ -125,19 +125,21 @@ const PocketCreateStep = () => {
   };
 
   return (
-    <div className="relative flex h-full flex-col gap-4 p-5">
+    <div className="relative flex h-full flex-col gap-4 px-5">
       <div>
         <div className="flex items-center gap-3">
           <Icon size="big" id="money-bag" />
-          <h2 className="text-title-xl font-bold">포켓 만들기</h2>
+          <h2 className="xs:text-title-xl text-title-md font-bold">포켓 만들기</h2>
         </div>
-        <span className="text-title-sm text-gray-500">어떤 지출이 예정되어 있나요?</span>
+        <span className="xs:text-title-sm tex-text-lg text-gray-500">
+          어떤 지출이 예정되어 있나요?
+        </span>
       </div>
-      <div className="text-text-md flex items-center gap-3 font-bold text-gray-700">
+      <div className="xs:text-text-md text-text-sm flex items-center gap-3 font-bold text-gray-700">
         <span>지출 예정일</span>
         <ToggleButton isActive={isActive} setActive={setActive} />
       </div>
-      <div className={`w-full justify-between gap-15 ${isActive ? 'flex' : 'hidden'}`}>
+      <div className={`xs:gap-15 w-full justify-between gap-2 ${isActive ? 'flex' : 'hidden'}`}>
         <BorderInput type="date" label="startDate" value={startDate} onChange={handleStartDate} />
         <BorderInput type="date" label="endDate" value={endDate} onChange={handleEndDate} />
       </div>
@@ -158,7 +160,7 @@ const PocketCreateStep = () => {
           content={<span className="text-title-sm absolute right-2.5 bottom-3">원</span>}
         />
         {accountBalance != null && accountBalance < Number(chargeAmount) ? (
-          <span className="text-text-sm text-warning font-bold">
+          <span className="xs:text-text-sm text-text-xs text-warning font-bold">
             계좌 잔액이 포켓 금액보다 적어 비활성화 상태로 생성됩니다.
           </span>
         ) : (
@@ -166,14 +168,17 @@ const PocketCreateStep = () => {
             <button
               type="button"
               onClick={() => {}}
-              className="text-extra text-text-sm h-9 w-25 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
+              className="text-extra xs:text-text-sm text-text-xs xs:h-9 xs:w-25 h-6 w-20 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
             >
               나중에 채우기
             </button>
             <button
               type="button"
-              onClick={() => {}}
-              className="text-extra text-text-sm h-9 w-25 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
+              onClick={() => {
+                setChargeAmount(String(totalAmount));
+                setSavedAmount(totalAmount);
+              }}
+              className="text-extra xs:text-text-sm text-text-xs xs:h-9 xs:w-25 h-6 w-20 cursor-pointer rounded-sm bg-gray-100 text-center font-semibold"
             >
               전액 채우기
             </button>
@@ -184,7 +189,7 @@ const PocketCreateStep = () => {
         type="button"
         disabled={disabled}
         onClick={handleCreatePocket}
-        className="bg-brand-primary-500 text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
+        className="bg-brand-primary-500 text-text-xl xs:text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
       >
         생성하기
       </button>
