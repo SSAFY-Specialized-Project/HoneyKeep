@@ -36,7 +36,7 @@ const BorderInput = ({
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className="text-title-sm w-full border-b border-gray-400 py-2.5 pl-2.5 font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
+            className="text-text-lg xs:text-title-sm w-full border-b border-gray-400 py-2.5 pl-2.5 font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none"
           />
           {content ? content : null}
         </div>
