@@ -41,7 +41,7 @@ const PocketCreateLink = () => {
 
   return (
     <div className="flex h-full flex-col gap-6">
-      <p className="font-semibold text-gray-500">
+      <p className="text-text-sm xs:text-text-md font-semibold text-gray-500">
         입력한 링크로 상품 정보를 불러올게요.
         <br />
         상품 정보를 다 불러오면 알림을 보내드릴게요!
@@ -61,7 +61,7 @@ const PocketCreateLink = () => {
         type="button"
         disabled={url.length == 0}
         onClick={handleURL}
-        className="bg-brand-primary-500 text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
+        className="bg-brand-primary-500 text-text-xl xs:text-title-md mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white disabled:cursor-default disabled:bg-gray-100 disabled:text-gray-400"
       >
         다음으로
       </button>

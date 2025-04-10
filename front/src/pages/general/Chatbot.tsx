@@ -4,11 +4,14 @@ import { useHeaderStore } from '@/shared/store';
 import { Icon, ImageContainer } from '@/shared/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
 
 const Chatbot = () => {
   const { setTitle } = useHeaderStore();
 
-  const [messages, setMessages] = useState<ChatItemType[]>([{ type: 'BOT', text: '안녕하세요!' }]);
+  const [messages, setMessages] = useState<ChatItemType[]>([
+    { type: 'BOT', text: '안녕하세요!', link: null },
+  ]);
   const [isConnected, setConnected] = useState<boolean>(false);
   const [isResponding, setResponding] = useState<boolean>(false);
   const [text, setText] = useState<string>('');
@@ -16,6 +19,16 @@ const Chatbot = () => {
   const messageEndRef = useRef<HTMLDivElement>(null);
   // 현재 스트리밍 중인 봇 메시지의 인덱스를 저장하기 위한 참조
   const currentBotMessageIndexRef = useRef<number>(-1);
+
+  const classification_mapping = {
+    1: '/pocket/create',
+    2: '/pocket/list',
+    3: '/pocket/list',
+    4: '/pocket/calendar',
+    5: '/fixedExpense/list',
+    6: '/fixedExpense/create',
+    7: null,
+  };
 
   const scrollToBottom = () => {
     if (!messageEndRef.current) return;
@@ -53,10 +66,9 @@ const Chatbot = () => {
     if (chatData && Array.isArray(chatData.data) && messages.length === 1 && messages[0].text === '안녕하세요!') {
       console.log('Loading chat history...');
       const chatHistory = chatData.data.map((item) => ({
-        // senderId가 'USER'이면 'USER', 그 외에는 'BOT'으로 가정. 실제 값 확인 필요.
-        // 타입을 명시적으로 ChatItemType['type']으로 단언하여 에러 해결
-        type: (item.senderId === 'USER' ? 'USER' : 'BOT') as ChatItemType['type'], 
-        text: item.content
+        type: (item.senderId === 'USER' ? 'USER' : 'BOT') as ChatItemType['type'],
+        text: item.content,
+        link: null
       }));
       setMessages((prev) => [...prev, ...chatHistory]);
     } else if (chatData && !Array.isArray(chatData.data)) {
@@ -67,12 +79,14 @@ const Chatbot = () => {
   const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isConnected) return;
+
     if (!text.trim() || isResponding) return;
 
-    const userMessage: ChatItemType = { type: 'USER', text: text.trim() };
+    const userMessage: ChatItemType = { type: 'USER', text: text.trim(), link: null };
     setMessages((prev) => [...prev, userMessage]);
 
-    const botResponse: ChatItemType = { type: 'BOT', text: '' };
+    const botResponse: ChatItemType = { type: 'BOT', text: '', link: null };
     setMessages((prev) => {
       // 새 봇 메시지의 인덱스 저장
       currentBotMessageIndexRef.current = prev.length;
@@ -161,10 +175,23 @@ const Chatbot = () => {
               // 각 토큰을 순차적으로 표시 (타이핑 효과)
               await addTokenWithDelay(data.token);
             } else if (data.type === 'classification') {
+              const linkType: 1 | 2 | 3 | 4 | 5 | 6 | 7 = data.classification;
+              const link = classification_mapping[linkType];
               // 분류 정보 처리 (필요한 경우)
               console.log('Classification received:', data.classification);
               // 응답 완료 처리
               setResponding(false);
+
+              setMessages((prev) => {
+                const newMessages = [...prev];
+                if (currentBotMessageIndexRef.current < newMessages.length) {
+                  newMessages[currentBotMessageIndexRef.current] = {
+                    ...newMessages[currentBotMessageIndexRef.current],
+                    link: link, // 링크 속성 업데이트
+                  };
+                }
+                return newMessages;
+              });
             }
           } catch (e) {
             console.error('Failed to parse SSE data:', e);
@@ -173,7 +200,7 @@ const Chatbot = () => {
       }
     } catch (err) {
       // err가 Error 인스턴스인지 확인 후 name 속성 접근
-      if (err instanceof Error && err.name !== 'AbortError') { 
+      if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Error fetching chat response:', err);
         setMessages((prev) => {
           const newMessages = [...prev];
@@ -205,21 +232,34 @@ const Chatbot = () => {
         {messages.map((message, index) => (
           <li
             key={index}
-            className={`flex gap-4 ${message.type === 'USER' ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-4 ${message.type === 'USER' ? 'justify-end' : 'justify-start items-start'}`}
           >
             {message.type == 'BOT' ? (
               <ImageContainer imgSrc={'/image/ChatBot.png'} size="small" />
             ) : null}
-            <div
-              className={`max-w-3/4 rounded-lg p-3 ${message.type === 'USER' ? 'bg-blue-100' : 'bg-gray-100'}`}
-            >
-              {message.type === 'BOT' ? (
-                <div
-                  className="markdown-content"
-                  dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(message.text) }}
-                />
-              ) : (
-                <div>{message.text}</div>
+            <div className="flex flex-col items-start max-w-[75%] gap-2">
+              <div
+                className={`rounded-lg p-3 ${message.type === 'USER' ? 'bg-blue-100' : 'bg-gray-100'}`}
+              >
+                {message.type === 'BOT' ? (
+                  <div
+                    className="markdown-content"
+                    dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(message.text) }}
+                  />
+                ) : (
+                  <div>{message.text}</div>
+                )}
+              </div>
+              {message.link != null && (
+                <Link 
+                  to={message.link} 
+                  className="inline-flex items-center px-3 py-1.5 bg-brand-primary-100 text-brand-primary-700 text-md font-medium rounded-md hover:bg-brand-primary-200 transition-colors"
+                >
+                  해당 기능으로 이동하기
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
               )}
             </div>
           </li>
@@ -243,9 +283,10 @@ const Chatbot = () => {
         />
         <button
           type="submit"
-          className="absolute top-1/2 right-5 -translate-y-1/2"
+          className="absolute top-1/2 right-5 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 transition-all duration-200 ease-in-out transform hover:scale-110 cursor-pointer"
           disabled={isResponding || !text.trim()}
         >
+          {/* Icon 색상이 기본적으로 회색 계열이라고 가정 */}
           <Icon id="send-plane" size="small" />
         </button>
       </form>

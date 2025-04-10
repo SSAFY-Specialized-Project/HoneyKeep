@@ -9,10 +9,11 @@ import { useBasicModalStore, useGatheringModalStore, useHeaderStore } from '@/sh
 import { Icon } from '@/shared/ui';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 const PocketDetailPage = () => {
   const setContent = useHeaderStore((state) => state.setContent);
+  const navigate = useNavigate();
   const { openModal: openBasicModal, closeModal: closeBasicModal } = useBasicModalStore();
 
   // 삭제하기
@@ -20,7 +21,9 @@ const PocketDetailPage = () => {
     mutationFn: (pocketId: number) => deletePocketAPI(pocketId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pockets-info'] });
+      queryClient.invalidateQueries({ queryKey: ['pocket-list-filter'] });
       closeBasicModal();
+      navigate('/pocket/list');
     },
     onError: () => {},
   });

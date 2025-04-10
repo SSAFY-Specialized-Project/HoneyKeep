@@ -36,10 +36,14 @@
   --text-text-lg: 1.125rem;
   --text-text-md: 1rem;
   --text-text-sm: 0.875rem;
+  --text-text-xs: 0.65rem;
+  --text-text-xxs: 0.5rem;
 
   --shadow-custom: 0px 4px 20px 0px rgba(0, 0, 0, 0.06);
   --shadow-header: 0px 0px 10px 4px rgba(173, 173, 173, 0.15);
   --shadow-nav: 0px 0px 10px 4px rgba(0, 0, 0, 0.05);
+
+  --breakpoint-xs: 450px;
 }
 
 .markdown-content {

@@ -41,7 +41,7 @@ const MyAccountInfo = () => {
           편집
         </button>
       </div>
-      {accountData != null ? (
+      {accountData != null && accountData.data.length > 0 ? (
         <ul className="flex flex-col gap-3">
           {accountData.data.map((item, index) => {
             if (index >= 2) return null;

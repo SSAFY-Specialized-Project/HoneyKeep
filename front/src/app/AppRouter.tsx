@@ -9,6 +9,7 @@ import {
   MainSkeleton,
   PocketListSkeleton,
 } from '@/pages/skeleton';
+import PocketCreateWrapper from './PocketCreateWrapper';
 
 // 일반 페이지 컴포넌트 lazy 로딩
 const Landing = lazy(() => import('@/pages/general/Landing'));
@@ -162,8 +163,6 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-
-
         ],
       },
     ],
@@ -309,57 +308,70 @@ const AppRouter = createBrowserRouter([
             ),
           },
 
-          // 포켓
           {
-            // 포켓 생성
-            path: '/pocket/create',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <PocketCreate />
-              </Suspense>
-            ),
+            element: <PocketCreateWrapper />,
             children: [
+              // 포켓
               {
-                path: 'link',
+                // 포켓 생성
+                path: '/pocket/create',
                 element: (
                   <Suspense fallback={<DefaultLoadingSkeleton />}>
-                    <PocketCreateLink />
+                    <PocketCreate />
+                  </Suspense>
+                ),
+                children: [
+                  {
+                    path: 'link',
+                    element: (
+                      <Suspense fallback={<DefaultLoadingSkeleton />}>
+                        <PocketCreateLink />
+                      </Suspense>
+                    ),
+                  },
+                  {
+                    path: 'favorite',
+                    element: (
+                      <Suspense fallback={<DefaultLoadingSkeleton />}>
+                        <PocketFavoriteList />
+                      </Suspense>
+                    ),
+                  },
+                  {
+                    element: (
+                      <Suspense fallback={<DefaultLoadingSkeleton />}>
+                        <PocketCreateDirect />
+                      </Suspense>
+                    ),
+                    index: true,
+                  },
+                ],
+              },
+              {
+                path: '/pocket/create/link/step',
+                element: (
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <PocketCreateStep />
                   </Suspense>
                 ),
               },
               {
-                path: 'favorite',
+                path: '/pocket/create/direct/step',
                 element: (
                   <Suspense fallback={<DefaultLoadingSkeleton />}>
-                    <PocketFavoriteList />
+                    <PocketCreateDirectStep />
                   </Suspense>
                 ),
               },
               {
+                path: '/category/create',
                 element: (
                   <Suspense fallback={<DefaultLoadingSkeleton />}>
-                    <PocketCreateDirect />
+                    <CategoryCreate />
                   </Suspense>
                 ),
-                index: true,
               },
             ],
-          },
-          {
-            path: '/pocket/create/link/step',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <PocketCreateStep />
-              </Suspense>
-            ),
-          },
-          {
-            path: '/pocket/create/direct/step',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <PocketCreateDirectStep />
-              </Suspense>
-            ),
           },
           {
             path: '/pocket/success',
@@ -377,15 +389,6 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-          {
-            path: '/category/create',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <CategoryCreate />
-              </Suspense>
-            ),
-          },
-
           // 고정 지출 상세
           {
             path: '/fixedExpense/:id',
@@ -422,7 +425,6 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-
         ],
       },
     ],
@@ -431,31 +433,31 @@ const AppRouter = createBrowserRouter([
     element: <HistoryNavLayout />,
     children: [
       {
-        element: <AuthWrapper/>,
+        element: <AuthWrapper />,
         children: [
           // 고정 지출
           {
             path: '/fixedExpense',
             element: (
-                <Suspense fallback={<BankPageSkeleton />}>
-                  <FixedExpenseList />
-                </Suspense>
+              <Suspense fallback={<BankPageSkeleton />}>
+                <FixedExpenseList />
+              </Suspense>
             ),
             children: [
               {
                 path: 'list',
                 element: (
-                    <Suspense fallback={<DefaultLoadingSkeleton />}>
-                      <FixedExpenseListContent />
-                    </Suspense>
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <FixedExpenseListContent />
+                  </Suspense>
                 ),
               },
               {
                 path: 'found',
                 element: (
-                    <Suspense fallback={<DefaultLoadingSkeleton />}>
-                      <FixedExpenseListFound />
-                    </Suspense>
+                  <Suspense fallback={<DefaultLoadingSkeleton />}>
+                    <FixedExpenseListFound />
+                  </Suspense>
                 ),
               },
             ],
@@ -464,15 +466,14 @@ const AppRouter = createBrowserRouter([
             // 고정 지출 생성
             path: '/fixedExpense/create',
             element: (
-                <Suspense fallback={<DefaultLoadingSkeleton />}>
-                  <FixedExpenseCreate />
-                </Suspense>
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <FixedExpenseCreate />
+              </Suspense>
             ),
           },
-        ]
-      }
-
-    ]
+        ],
+      },
+    ],
   },
 ]);
 

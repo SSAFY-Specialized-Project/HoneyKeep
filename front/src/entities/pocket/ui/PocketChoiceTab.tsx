@@ -6,7 +6,7 @@ const PocketChoiceTab = () => {
       <NavLink
         to="/pocket/create/link"
         className={({ isActive }) =>
-          `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
+          `xs:text-text-xl text-text-md flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
               ? 'border-[var(--color-brand-primary-500)] font-bold text-[var(--color-brand-primary-500)]'
               : 'border-transparent text-gray-600'
@@ -18,7 +18,7 @@ const PocketChoiceTab = () => {
       <NavLink
         to="/pocket/create/favorite"
         className={({ isActive }) =>
-          `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
+          `xs:text-text-xl text-text-md flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
               ? 'border-[var(--color-brand-primary-500)] font-bold text-[var(--color-brand-primary-500)]'
               : 'border-transparent text-gray-600'
@@ -30,7 +30,7 @@ const PocketChoiceTab = () => {
       <NavLink
         to="/pocket/create"
         className={({ isActive }) =>
-          `text-text-xl flex-1 border-b-2 py-2 text-center font-medium ${
+          `xs:text-text-xl text-text-md flex-1 border-b-2 py-2 text-center font-medium ${
             isActive
               ? 'border-[var(--color-brand-primary-500)] font-bold text-[var(--color-brand-primary-500)]'
               : 'border-transparent text-gray-600'
