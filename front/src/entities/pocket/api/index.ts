@@ -11,3 +11,5 @@ export { default as createPocketLinkAPI } from './createPocketLinkAPI';
 export { default as getPocketDetailAPI } from './getPocketDetailAPI';
 export { default as CreatePocketAPI } from './createPocketAPI';
 export { default as deletePocketAPI } from './deletePocketAPI';
+export { default as patchPocketUsingAPI } from './patchPocketUsingAPI';
+export { default as patchPocketUsedAPI } from './patchPocketUsedAPI';
