@@ -140,7 +140,7 @@ const FixedExpenseList = () => {
       {isFixedExpenseListTab && !isEditMode && (
         <Link
           to="/fixedExpense/create"
-          className="bg-brand-primary-500 text-title-md mt-3 mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
+          className="bg-brand-primary-500 text-text-lg xs:text-title-md mt-3 mt-auto w-full cursor-pointer rounded-2xl py-3 text-center font-bold text-white"
         >
           고정지출 추가하기
         </Link>

@@ -18,9 +18,9 @@ const MyPocketInfo = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-title-sm text-gray-900">내 포켓</h3>
+      <h3 className="text-text-lg xs:text-title-sm text-gray-900">내 포켓</h3>
       {pocketData.data != null ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="xs:gap-3 flex flex-col gap-2">
           {pocketData.data.map((item) => {
             return (
               <CategoryDropdown

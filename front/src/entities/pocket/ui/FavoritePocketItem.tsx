@@ -23,11 +23,13 @@ const FavoritePocketItem = ({ name, imgUrl, totalAmount }: Props) => {
       <div className="flex gap-3">
         <ImageContainer imgSrc={imgUrl} size="small" />
         <div className="flex flex-col">
-          <span className="text-text-lg font-semibold text-gray-900">{name}</span>
-          <span className="text-text-sm text-gray-400">{}</span>
+          <span className="xs:text-text-lg text-text-md font-semibold text-gray-900">{name}</span>
+          <span className="xs:text-text-sm text-text-xs text-gray-400">{}</span>
         </div>
       </div>
-      <span className="text-text-lg font-semibold text-gray-900">{totalAmount}</span>
+      <span className="xs:text-text-lg text-text-md font-semibold text-gray-900">
+        {totalAmount}
+      </span>
     </button>
   );
 };
