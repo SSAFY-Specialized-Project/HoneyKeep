@@ -50,12 +50,19 @@ const Chatbot = () => {
   });
 
   useEffect(() => {
-    if (!chatData) return;
-
-    const chatHistory = chatData.data.map((item) => ({ type: item.senderId, text: item.content }));
-
-    setMessages((prev) => [...prev, ...chatHistory]);
-  }, [chatData]);
+    if (chatData && Array.isArray(chatData.data) && messages.length === 1 && messages[0].text === '안녕하세요!') {
+      console.log('Loading chat history...');
+      const chatHistory = chatData.data.map((item) => ({
+        // senderId가 'USER'이면 'USER', 그 외에는 'BOT'으로 가정. 실제 값 확인 필요.
+        // 타입을 명시적으로 ChatItemType['type']으로 단언하여 에러 해결
+        type: (item.senderId === 'USER' ? 'USER' : 'BOT') as ChatItemType['type'], 
+        text: item.content
+      }));
+      setMessages((prev) => [...prev, ...chatHistory]);
+    } else if (chatData && !Array.isArray(chatData.data)) {
+      console.warn("Chat history data received, but 'data' field is not an array:", chatData);
+    }
+  }, [chatData, messages]);
 
   const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,10 +172,9 @@ const Chatbot = () => {
         }
       }
     } catch (err) {
-      // AbortError는 사용자가 의도적으로 취소한 경우이므로 무시
-      if (err.name !== 'AbortError') {
+      // err가 Error 인스턴스인지 확인 후 name 속성 접근
+      if (err instanceof Error && err.name !== 'AbortError') { 
         console.error('Error fetching chat response:', err);
-        // 오류 메시지를 봇 응답으로 표시
         setMessages((prev) => {
           const newMessages = [...prev];
           if (currentBotMessageIndexRef.current < newMessages.length) {
@@ -179,6 +185,9 @@ const Chatbot = () => {
           }
           return newMessages;
         });
+      } else if (!(err instanceof Error)) {
+        // Error 인스턴스가 아닌 다른 예외 처리 (선택 사항)
+        console.error('An unexpected error occurred:', err);
       }
     } finally {
       setResponding(false);
