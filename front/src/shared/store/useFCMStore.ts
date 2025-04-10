@@ -30,12 +30,7 @@ const useFCMStore = create<FCMState>((set) => ({
         
         // 브라우저 알림 표시
         const { notification } = payload;
-        if (notification?.title) {
-          new Notification(notification.title, {
-            body: notification.body,
-            icon: '/public/pwa-192x192.png'
-          });
-        }
+        console.log(" 알림 도착!");
       });
       
       set({ token: fcmToken, isInitialized: true });

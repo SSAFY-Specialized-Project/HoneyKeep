@@ -23,7 +23,7 @@ export default function ProductCard({
       {productImage != null ? (
         <ImageContainer size="big" imgSrc={productImage} />
       ) : (
-        <CategoryIcon category={categoryId} size="big" />
+        <CategoryIcon category={categoryId} size="semiBig" />
       )}
 
       {/* 텍스트 영역 */}
