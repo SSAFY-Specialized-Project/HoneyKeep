@@ -23,7 +23,7 @@ const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
   });
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <button
         className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-gray-200 px-4 py-5"
         onClick={() => {
@@ -36,7 +36,7 @@ const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
             <span>{categoryName}</span>
           </div>
         ) : (
-          <span className="text-text-lg font-bold text-gray-600">
+          <span className="xs:text-text-lg text-text-sm font-bold text-gray-600">
             포켓의 카테고리를 선택해주세요.
           </span>
         )}
@@ -72,7 +72,7 @@ const CategoryInputDropDown = ({ categoryId, setCategoryId }: Props) => {
         }}
         className="flex w-full cursor-pointer items-center justify-center rounded-2xl border border-gray-200 py-4"
       >
-        <span className="text-text-xl text-gray-900">새 카테고리 추가</span>
+        <span className="xs:text-text-xl text-text-md text-gray-900">새 카테고리 추가</span>
       </button>
     </div>
   );
