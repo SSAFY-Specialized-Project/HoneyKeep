@@ -38,7 +38,7 @@ const PocketSurvey = () => {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-white px-6 pt-6">
+    <div className="mx-auto flex h-screen max-w-[600px] flex-col bg-white px-6 pt-6">
       {/* 메인 컨텐츠 */}
       <div className="flex h-full flex-grow flex-col items-center justify-center">
         <h1 className="text-title-lg mb-4 font-bold">이번 포켓, 왜 초과하셨나요?</h1>
