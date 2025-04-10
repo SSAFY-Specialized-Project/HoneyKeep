@@ -1,23 +1,9 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-
-interface SpendingData {
-  username: string;
-  userType: string;
-  plannedAmount: number;
-  unplannedAmount: number;
-  pocketTotal: number;
-  pocketUsage: {
-    successAmount: number;
-    incompleteAmount: number;
-    exceededAmount: number;
-  };
-  overspendingReasons: {
-    label: string;
-    count: number;
-  }[];
-}
+import getPocketAnalysis from '@/entities/analysis/api/getPocketAnalysis';
+import { useQuery } from '@tanstack/react-query';
+import { getMeAPI } from '@/entities/user/api';
 
 const typeCommentMap: Record<string, string> = {
   '계획 마스터':
@@ -30,54 +16,44 @@ const typeCommentMap: Record<string, string> = {
 };
 
 const SpendingAnalysis = () => {
-  const [data, setData] = useState<SpendingData | null>(null);
+  const { data: analysisData } = useQuery({
+    queryFn: getPocketAnalysis,
+    queryKey: ['pocket-analysis'],
+    staleTime: 60 * 1000 * 20,
+  });
 
-  useEffect(() => {
-    const mockData: SpendingData = {
-      username: '백가은',
-      userType: '계획 마스터',
-      plannedAmount: 35000,
-      unplannedAmount: 65000,
-      pocketTotal: 1364000,
-      pocketUsage: {
-        successAmount: 844290,
-        incompleteAmount: 214820,
-        exceededAmount: 140290,
-      },
-      overspendingReasons: [
-        { label: '예상보다 가격이 올랐어요', count: 22 },
-        { label: '갑작스러운 일이 생겼어요', count: 7 },
-        { label: '계획이 너무 타이트했어요', count: 55 },
-      ],
-    };
-    setData(mockData);
-  }, []);
+  const { data: userData } = useQuery({
+    queryFn: getMeAPI,
+    queryKey: ['my-info'],
+    staleTime: 60 * 1000 * 60,
+  });
 
   const plannedRatio = useMemo(() => {
-    if (!data) return 0;
-    const total = data.plannedAmount + data.unplannedAmount;
-    return total === 0 ? 0 : Math.round((data.plannedAmount / total) * 100);
-  }, [data]);
+    if (!analysisData) return 0;
+    const total = analysisData.data.plannedAmount + analysisData.data.unplannedAmount;
+    return total === 0 ? 0 : Math.round((analysisData.data.plannedAmount / total) * 100);
+  }, [analysisData]);
 
   const pocketRatios = useMemo(() => {
-    if (!data) return { success: 0, incomplete: 0, exceeded: 0 };
-    const { successAmount, incompleteAmount, exceededAmount } = data.pocketUsage;
+    if (!analysisData) return { success: 0, incomplete: 0, exceeded: 0 };
+    const { successAmount, incompleteAmount, exceededAmount } = analysisData.data.pocketUsage;
     const total = successAmount + incompleteAmount + exceededAmount;
     const success = total === 0 ? 0 : Math.round((successAmount / total) * 100);
     const incomplete = total === 0 ? 0 : Math.round((incompleteAmount / total) * 100);
     const exceeded = 100 - success - incomplete;
     return { success, incomplete, exceeded };
-  }, [data]);
+  }, [analysisData]);
 
-  if (!data) return <div>로딩 중...</div>;
+  if (!analysisData || !userData) return <div>로딩 중...</div>;
 
-  const comment = typeCommentMap[data.userType] ?? '당신만의 소비 성향을 분석 중이에요.';
+  const comment =
+    typeCommentMap[analysisData.data.userType] ?? '당신만의 소비 성향을 분석 중이에요.';
 
   return (
-    <div className="w-full space-y-6 p-3">
+    <div className="w-full space-y-6 p-5">
       <div>
         <h2 className="text-xl font-bold">
-          {data.username}님은 {data.userType}예요!
+          {userData.data.name}님은 {analysisData.data.userType}예요!
         </h2>
         <p className="whitespace-pre-line text-gray-500">{comment}</p>
       </div>
@@ -126,11 +102,11 @@ const SpendingAnalysis = () => {
           <div className="flex justify-center gap-6 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <span className="inline-block h-3 w-3 rounded-sm bg-yellow-500"></span> 계획 소비 (
-              {data.plannedAmount.toLocaleString()}원)
+              {analysisData.data.plannedAmount.toLocaleString()}원)
             </div>
             <div className="flex items-center gap-1">
               <span className="inline-block h-3 w-3 rounded-sm bg-yellow-300"></span> 비계획 소비 (
-              {data.unplannedAmount.toLocaleString()}원)
+              {analysisData.data.unplannedAmount.toLocaleString()}원)
             </div>
           </div>
         </CardContent>
@@ -144,7 +120,7 @@ const SpendingAnalysis = () => {
           </p>
 
           <div className="my-4">
-            <p className="text-lg font-bold">{data.pocketTotal.toLocaleString()}원</p>
+            <p className="text-lg font-bold">{analysisData.data.pocketTotal.toLocaleString()}원</p>
             <div className="flex h-4 w-full overflow-hidden rounded-full bg-gray-200">
               <div
                 className="h-full bg-green-500"
@@ -166,19 +142,19 @@ const SpendingAnalysis = () => {
               <span className="flex items-center gap-1 text-green-600">
                 <CheckCircle size={16} /> 계획 성공 {pocketRatios.success}%
               </span>
-              <span>{data.pocketUsage.successAmount.toLocaleString()}원</span>
+              <span>{analysisData.data.pocketUsage.successAmount.toLocaleString()}원</span>
             </li>
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-yellow-600">
                 <AlertTriangle size={16} /> 미완료 {pocketRatios.incomplete}%
               </span>
-              <span>{data.pocketUsage.incompleteAmount.toLocaleString()}원</span>
+              <span>{analysisData.data.pocketUsage.incompleteAmount.toLocaleString()}원</span>
             </li>
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-red-600">
                 <XCircle size={16} /> 초과 사용 {pocketRatios.exceeded}%
               </span>
-              <span>{data.pocketUsage.exceededAmount.toLocaleString()}원</span>
+              <span>{analysisData.data.pocketUsage.exceededAmount.toLocaleString()}원</span>
             </li>
           </ul>
         </CardContent>
@@ -189,7 +165,7 @@ const SpendingAnalysis = () => {
           <h3 className="text-lg font-semibold">포켓 금액 초과 원인</h3>
           <p className="text-sm text-gray-500">포켓 금액을 초과하여 지출한 주요 원인이에요</p>
           <div className="mt-4 space-y-3 text-sm text-gray-700">
-            {[...data.overspendingReasons]
+            {[...analysisData.data.overspendingReasons]
               .sort((a, b) => b.count - a.count)
               .map((reason, idx, arr) => {
                 const total = arr.reduce((sum, r) => sum + r.count, 0) || 1;

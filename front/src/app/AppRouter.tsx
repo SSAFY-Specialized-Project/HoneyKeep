@@ -10,6 +10,7 @@ import {
   PocketListSkeleton,
 } from '@/pages/skeleton';
 import PocketCreateWrapper from './PocketCreateWrapper';
+import SpendingAnalysis from '@/pages/pocket/SpendingAnalysis';
 
 // 일반 페이지 컴포넌트 lazy 로딩
 const Landing = lazy(() => import('@/pages/general/Landing'));
@@ -105,15 +106,7 @@ const AppRouter = createBrowserRouter([
               </Suspense>
             ),
           },
-          {
-            // QR 결제
-            path: '/qrPayment',
-            element: (
-              <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <QRPayment />
-              </Suspense>
-            ),
-          },
+
           {
             // QR 결제 완료
             path: '/qrSuccess',
@@ -410,10 +403,10 @@ const AppRouter = createBrowserRouter([
           },
           // 예시 페이지
           {
-            path: '/e',
+            path: '/analysis',
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
-                <ExamplePage />
+                <SpendingAnalysis />
               </Suspense>
             ),
           },
@@ -422,6 +415,15 @@ const AppRouter = createBrowserRouter([
             element: (
               <Suspense fallback={<DefaultLoadingSkeleton />}>
                 <Chatbot />
+              </Suspense>
+            ),
+          },
+          {
+            // QR 결제
+            path: '/qrPayment',
+            element: (
+              <Suspense fallback={<DefaultLoadingSkeleton />}>
+                <QRPayment />
               </Suspense>
             ),
           },

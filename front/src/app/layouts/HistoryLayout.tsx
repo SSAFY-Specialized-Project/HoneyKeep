@@ -21,10 +21,15 @@ const HistoryLayout = () => {
             itemName={modalProps?.itemName ?? ''}
             description={modalProps?.description ?? ''}
             buttonText={modalProps?.buttonText ?? ''}
-            onClose={modalProps?.onClose}
             onConfirm={modalProps?.onConfirm}
           />
-          <PocketUseModal isOpen={pocketModalOpen} pocketId={pocketModalProps?.pocketId ?? 0} />
+          <PocketUseModal
+            isOpen={pocketModalOpen}
+            pocketId={pocketModalProps?.pocketId ?? 0}
+            pocketName={pocketModalProps?.pocketName ?? ''}
+            totalAmount={pocketModalProps?.totalAmount ?? 0}
+            gatheredAmount={pocketModalProps?.gatheredAmount ?? 0}
+          />
           <PocketGatheringModal
             isOpen={gatheringModalOpen}
             totalAmount={gatheringModalProps?.totalAmount ?? 0}
