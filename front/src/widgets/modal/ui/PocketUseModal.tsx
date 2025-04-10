@@ -3,20 +3,30 @@ import { addCommas } from '@/shared/lib';
 import { useBasicModalStore, useGatheringModalStore, usePocketUseModalStore } from '@/shared/store';
 import { Icon, ModalOptionButton } from '@/shared/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
 
 interface Props {
   isOpen: boolean;
   pocketId: number;
+  accountId: number;
   pocketName: string;
   totalAmount: number;
   gatheredAmount: number;
 }
 
-const PocketUseModal = ({ isOpen, pocketId, pocketName, totalAmount, gatheredAmount }: Props) => {
+const PocketUseModal = ({
+  isOpen,
+  pocketId,
+  pocketName,
+  totalAmount,
+  gatheredAmount,
+  accountId,
+}: Props) => {
   const { closeModal: closeUseModal } = usePocketUseModalStore();
   const { openModal: openGatheringModal } = useGatheringModalStore();
   const { openModal: openBasicModal, closeModal: closeBasicModal } = useBasicModalStore();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleClose = () => {
     closeUseModal();
@@ -51,7 +61,7 @@ const PocketUseModal = ({ isOpen, pocketId, pocketName, totalAmount, gatheredAmo
     openBasicModal({
       icon: 'exclamation-triangle',
       title: '포켓 삭제',
-      itemName: pocketName,
+      itemName: pocketName.length > 10 ? pocketName.substring(0, 10) + '...' : pocketName,
       description: `포켓에 모은 ${addCommas(gatheredAmount)}원이 초기화해요.`,
       buttonText: '포켓 삭제',
       onConfirm: () => {
@@ -61,7 +71,9 @@ const PocketUseModal = ({ isOpen, pocketId, pocketName, totalAmount, gatheredAmo
   };
 
   // 최근 거래 내역에서 사용하기
-  const handleUseAtHistory = () => {};
+  const handleUseAtHistory = () => {
+    navigate(`/pocket/use/${accountId}/${pocketId}`);
+  };
 
   // 링크로 사용하기
   const handleUseWithLink = () => {};

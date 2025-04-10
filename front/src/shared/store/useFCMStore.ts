@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { requestFCMToken, onForegroundMessage } from '../core/notification/settingFCM';
 import { MessagePayload } from 'firebase/messaging';
 import useNoticeModalStore from './useNoticeModalStore';
+import useQRPayStore from './useQRPayStore';
 
 interface FCMState {
   token: string | null;
@@ -26,15 +27,22 @@ const useFCMStore = create<FCMState>((set) => ({
       // 포그라운드 메시지 리스너 설정
       onForegroundMessage((payload: MessagePayload) => {
         console.log('알림 수신:', payload);
-        useNoticeModalStore.setState({ isOpen: true });
+        
         // 브라우저 알림 표시
-        const { notification } = payload;
-        if (notification) {
-          new Notification(notification.title || '알림', {
-            body: notification.body,
-            icon: notification.image || '/path/to/icon.png',
+        const { data } = payload;
+        
+        if(data.notificationType == "CRAWLING"){
+          useNoticeModalStore.setState({ isOpen: true });
+        }else if(data.notificationType == "PAYMENT"){
+          useQRPayStore.setState({
+            isSuccess: true,
+            productName:data.productName, 
+            productAmount:Number(data.amount), 
+            accountName: data.withdrawAccountName, 
+            payDate: data.transferDate
           });
         }
+
         console.log(' 알림 도착!');
       });
 

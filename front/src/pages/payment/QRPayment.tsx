@@ -10,6 +10,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useWebAuthnAuthentication } from '@/entities/user/hooks';
 import getCredentialsAPI from '@/entities/certification/api/getCredentialsAPI.ts';
+import useQRPayStore from '@/shared/store/useQRPayStore';
 
 const QRPayment = () => {
   const { pocketId, pocketName } = usePocketChooseStore();
@@ -24,6 +25,11 @@ const QRPayment = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { startAuthentication } = useWebAuthnAuthentication();
   const isAuthenticating = useRef(false); // 인증 진행 중인지 추적
+  const { isSuccess } = useQRPayStore();
+
+  useEffect(() => {
+    if (isSuccess) navigate('/qrSuccess');
+  }, [isSuccess, navigate]);
 
   useEffect(() => {
     setTitle('허니페이');
@@ -86,7 +92,7 @@ const QRPayment = () => {
         });
     };
 
-    // checkAuthentication();
+    checkAuthentication();
 
     return () => {
       // 컴포넌트 언마운트 시 정리 작업
@@ -123,15 +129,15 @@ const QRPayment = () => {
     setActive(accessToken != null && account != null && pocketId != 0 && qrcodeData != null);
   }, [accessToken, account, pocketId, qrcodeData]);
 
-  // if (isCheckingAuth) {
-  //   return (
-  //     <div className="flex h-full flex-col items-center justify-center gap-4">
-  //       <div className="border-brand-primary-500 h-12 w-12 animate-spin rounded-full border-t-2 border-b-2"></div>
-  //       <p className="text-lg font-medium">인증 정보를 확인하는 중...</p>
-  //       <p className="text-sm text-gray-500">잠시만 기다려주세요</p>
-  //     </div>
-  //   );
-  // }
+  if (isCheckingAuth) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4">
+        <div className="border-brand-primary-500 h-12 w-12 animate-spin rounded-full border-t-2 border-b-2"></div>
+        <p className="text-lg font-medium">인증 정보를 확인하는 중...</p>
+        <p className="text-sm text-gray-500">잠시만 기다려주세요</p>
+      </div>
+    );
+  }
 
   return (
     <>

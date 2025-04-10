@@ -12,6 +12,7 @@ import {
 import PocketCreateWrapper from './PocketCreateWrapper';
 import SpendingAnalysis from '@/pages/pocket/SpendingAnalysis';
 import { QRPaySimulation } from '@/pages/general';
+import { PocketHistoryUse } from '@/pages/pocket';
 
 // 일반 페이지 컴포넌트 lazy 로딩
 const Landing = lazy(() => import('@/pages/general/Landing'));
@@ -207,6 +208,14 @@ const AppRouter = createBrowserRouter([
                 ),
               },
             ],
+          },
+          {
+            path: '/pocket/use/:accountId/:pocketId',
+            element: (
+              <Suspense fallback={<BankPageSkeleton />}>
+                <PocketHistoryUse />
+              </Suspense>
+            ),
           },
 
           // 인증서 등록
