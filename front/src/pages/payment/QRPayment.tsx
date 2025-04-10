@@ -92,7 +92,7 @@ const QRPayment = () => {
         });
     };
 
-    checkAuthentication();
+    // checkAuthentication();
 
     return () => {
       // 컴포넌트 언마운트 시 정리 작업
@@ -129,15 +129,15 @@ const QRPayment = () => {
     setActive(accessToken != null && account != null && pocketId != 0 && qrcodeData != null);
   }, [accessToken, account, pocketId, qrcodeData]);
 
-  if (isCheckingAuth) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-4">
-        <div className="border-brand-primary-500 h-12 w-12 animate-spin rounded-full border-t-2 border-b-2"></div>
-        <p className="text-lg font-medium">인증 정보를 확인하는 중...</p>
-        <p className="text-sm text-gray-500">잠시만 기다려주세요</p>
-      </div>
-    );
-  }
+  // if (isCheckingAuth) {
+  //   return (
+  //     <div className="flex h-full flex-col items-center justify-center gap-4">
+  //       <div className="border-brand-primary-500 h-12 w-12 animate-spin rounded-full border-t-2 border-b-2"></div>
+  //       <p className="text-lg font-medium">인증 정보를 확인하는 중...</p>
+  //       <p className="text-sm text-gray-500">잠시만 기다려주세요</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
@@ -145,7 +145,7 @@ const QRPayment = () => {
         <div className="flex flex-col items-center justify-center gap-10 rounded-xl bg-white px-10 py-15">
           {isActive ? (
             <QRCodeCanvas
-              value={`http://localhost:5173/pay/send?qrcode=${qrcodeData.data.qrCode}&token=${accessToken}&account=${account}&pocketId=${pocketId}`}
+              value={`https://j12a405.p.ssafy.io/pay/send?qrcode=${qrcodeData.data.qrCode}&token=${accessToken}&account=${account}&pocketId=${pocketId}`}
               style={{ width: 256, height: 256 }}
             />
           ) : (

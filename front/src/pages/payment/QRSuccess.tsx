@@ -1,14 +1,26 @@
 import { Player } from '@lottiefiles/react-lottie-player';
 import successLottie from '@/assets/success.json';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import useQRPayStore from '@/shared/store/useQRPayStore';
+import { addCommas } from '@/shared/lib';
 
 const QRSuccess = () => {
+  const { productName, productAmount, accountName } = useQRPayStore();
+  const navigate = useNavigate();
+
+  if (productName == null || productAmount == null || accountName == null) {
+    navigate('/home');
+    return;
+  }
+
   return (
     <div className="flex h-full flex-col items-center gap-10 px-5 pt-15">
       <Player autoplay loop src={successLottie} style={{ height: '90px', width: '90px' }} />
       <div className="flex flex-col items-center gap-2">
-        <span className="text-title-lg font-bold">스타벅스 역삼대로점</span>
-        <span className="text-title-md text-brand-primary-500 font-bold">5,800원 결제 완료</span>
+        <span className="text-title-lg font-bold">{productName}</span>
+        <span className="text-title-md text-brand-primary-500 font-bold">
+          {addCommas(productAmount)}원 결제 완료
+        </span>
       </div>
       <div className="flex w-full flex-col gap-4 rounded-xl bg-gray-100 px-4 py-6">
         <div className="flex justify-between">
@@ -17,7 +29,7 @@ const QRSuccess = () => {
         </div>
         <div className="flex justify-between">
           <span className="">연동 계좌</span>
-          <span className="font-semibold">우리은행 저축예금</span>
+          <span className="font-semibold">{accountName}</span>
         </div>
       </div>
       <Link

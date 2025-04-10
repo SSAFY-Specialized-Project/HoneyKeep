@@ -27,6 +27,7 @@ const HistoryNavLayout = () => {
           />
           <PocketUseModal
             isOpen={pocketModalOpen}
+            accountId={pocketModalProps?.accountId ?? 0}
             pocketId={pocketModalProps?.pocketId ?? 0}
             pocketName={pocketModalProps?.pocketName ?? ''}
             totalAmount={pocketModalProps?.totalAmount ?? 0}

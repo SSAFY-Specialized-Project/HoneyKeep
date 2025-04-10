@@ -83,6 +83,7 @@ const Chatbot = () => {
     }
   }, [chatData, messages]);
 
+  // sendChatMessage 함수 부분을 수정했습니다
   const sendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -107,16 +108,21 @@ const Chatbot = () => {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
+    // 현재 응답 텍스트를 추적하기 위한 로컬 변수
+    let currentResponseText = '';
+
     const addTokenWithDelay = (token: string) => {
       return new Promise<void>((resolve) => {
-        // 현재 메시지 업데이트
+        // 로컬 변수에 토큰 추가
+        currentResponseText += token;
+
+        // 함수형 업데이트로 최신 상태 보장
         setMessages((prev) => {
           const newMessages = [...prev];
           if (currentBotMessageIndexRef.current < newMessages.length) {
-            const currentText = newMessages[currentBotMessageIndexRef.current].text;
             newMessages[currentBotMessageIndexRef.current] = {
               ...newMessages[currentBotMessageIndexRef.current],
-              text: currentText + token,
+              text: currentResponseText, // 로컬 변수 사용
             };
           }
           return newMessages;
@@ -139,7 +145,6 @@ const Chatbot = () => {
         },
         body: JSON.stringify({
           query: userMessage.text,
-          // 필요한 다른 파라미터를 여기에 추가
         }),
         signal,
       });
@@ -156,9 +161,19 @@ const Chatbot = () => {
       const decoder = new TextDecoder();
       let accumulatedData = '';
 
+      // 토큰을 일괄 처리하기 위한 버퍼
+      let tokenBuffer = '';
+      let lastUpdateTime = Date.now();
+
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          // 마지막 남은 토큰 버퍼를 처리
+          if (tokenBuffer) {
+            await addTokenWithDelay(tokenBuffer);
+          }
+          break;
+        }
 
         // 디코딩 및 누적
         const chunk = decoder.decode(value, { stream: true });
@@ -179,13 +194,27 @@ const Chatbot = () => {
             const data = JSON.parse(jsonData);
 
             if (data.type === 'final_answer_token') {
-              // 각 토큰을 순차적으로 표시 (타이핑 효과)
-              await addTokenWithDelay(data.token);
+              // 토큰 버퍼에 추가
+              tokenBuffer += data.token;
+
+              // 일정 시간이 지났거나 버퍼가 특정 크기에 도달하면 업데이트
+              const currentTime = Date.now();
+              if (currentTime - lastUpdateTime > 30 || tokenBuffer.length >= 10) {
+                await addTokenWithDelay(tokenBuffer);
+                tokenBuffer = '';
+                lastUpdateTime = currentTime;
+              }
             } else if (data.type === 'classification') {
+              // 남은 토큰 버퍼 처리
+              if (tokenBuffer) {
+                await addTokenWithDelay(tokenBuffer);
+                tokenBuffer = '';
+              }
+
               const linkType: 1 | 2 | 3 | 4 | 5 | 6 | 7 = data.classification;
               const link = classification_mapping[linkType];
-              // 분류 정보 처리 (필요한 경우)
               console.log('Classification received:', data.classification);
+
               // 응답 완료 처리
               setResponding(false);
 
@@ -220,7 +249,6 @@ const Chatbot = () => {
           return newMessages;
         });
       } else if (!(err instanceof Error)) {
-        // Error 인스턴스가 아닌 다른 예외 처리 (선택 사항)
         console.error('An unexpected error occurred:', err);
       }
     } finally {

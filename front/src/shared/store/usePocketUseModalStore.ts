@@ -8,6 +8,7 @@ interface Props {
     pocketName: string;
     totalAmount: number;
     gatheredAmount: number;
+    accountId: number;
   } | null;
   openModal: (props: Props['modalProps']) => void;
   closeModal: () => void;
