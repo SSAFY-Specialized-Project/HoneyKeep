@@ -1,15 +1,18 @@
 import Account from '@/entities/account/model/types';
 import { QRAccount } from '@/entities/account/ui';
+import { usePocketChooseStore } from '@/shared/store';
 import { EmblaOptionsType } from 'embla-carousel';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback, useEffect } from 'react';
 
 interface Props {
   accounts: Account[];
+  pocketName: string;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const AccountCarousel = ({ accounts, setIndex }: Props) => {
+const AccountCarousel = ({ accounts, setIndex, pocketName }: Props) => {
+  const { setPocketName, setPocketId } = usePocketChooseStore();
   const options: EmblaOptionsType = {
     containScroll: 'trimSnaps',
     align: 'start',
@@ -21,6 +24,8 @@ const AccountCarousel = ({ accounts, setIndex }: Props) => {
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
     setIndex(emblaApi.selectedScrollSnap());
+    setPocketId(0);
+    setPocketName('');
   }, [emblaApi]);
 
   // emblaApi가 준비되면 이벤트 리스너 등록
@@ -50,6 +55,7 @@ const AccountCarousel = ({ accounts, setIndex }: Props) => {
                 accountName={item.accountName}
                 accountId={item.accountId}
                 accountBalance={item.accountBalance}
+                pocketName={pocketName}
               />
             );
           })
