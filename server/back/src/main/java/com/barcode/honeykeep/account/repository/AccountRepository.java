@@ -1,0 +1,61 @@
+package com.barcode.honeykeep.account.repository;
+
+import com.barcode.honeykeep.account.entity.Account;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface AccountRepository extends JpaRepository<Account, Long> {
+
+    //계좌 목록 조회
+    List<Account> findByUser_Id(Long userId);
+
+    //계좌 번호로 계좌 단일 조회
+    Optional<Account> findByAccountNumber(String accountNumber);
+
+    // 비관적 락을 이용해 계좌 번호로 계좌 엔티티 락
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.accountNumber = :accountNumber")
+    Account findByAccountNumberWithLock(@Param("accountNumber") String accountNumber);
+
+    Optional<Account> findByAccountNumberAndBank_Code(String s, String s1);
+
+
+    /**
+     * Pessimistic Lock을 걸어 출금 계좌를 조회한다.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.id in :accountId order by a.id asc")
+    Optional<Account> findAccountForUpdate(@Param("accountId") Long accountId);
+
+    @Query("select a.id from Account a where a.accountNumber = :accountNumber")
+    Optional<Long> findAccountIdByAccountNumber(@Param("accountNumber") String accountNumber);
+
+    Boolean existsAccountByAccountNumber(String accountNumber);
+
+    /**
+     * 여러 계좌를 한 번에 조회하고 PESSIMISTIC_WRITE 락을 획득한다.
+     * 전달된 계좌 ID 목록에 해당하는 모든 Account를 ID 오름차순으로 정렬하여 반환한다.
+     *
+     * 데드락을 방지하기 위해, 여러 계좌에 대해 락을 요청할 때 항상 일정한 순서(낮은 ID부터 높은 ID)를 따라 락을 획득하도록 한다.
+     *
+     * @param ids 조회할 계좌 ID 목록
+     * @return 해당 계좌들 목록 (ID 오름차순 정렬)
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Account a where a.id in :ids order by a.id asc")
+    List<Account> findAccountsForUpdateByIds(@Param("ids") List<Long> ids);
+
+
+    List<Account> findByUser_IdOrderByAccountBalance_AmountDesc(Long userId);
+
+}
+
+

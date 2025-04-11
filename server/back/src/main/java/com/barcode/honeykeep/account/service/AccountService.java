@@ -1,0 +1,331 @@
+package com.barcode.honeykeep.account.service;
+
+import com.barcode.honeykeep.account.dto.*;
+import com.barcode.honeykeep.account.entity.Account;
+import com.barcode.honeykeep.account.exception.AccountErrorCode;
+import com.barcode.honeykeep.account.repository.AccountRepository;
+import com.barcode.honeykeep.common.exception.CustomException;
+import com.barcode.honeykeep.notification.service.NotificationDispatcher;
+import com.barcode.honeykeep.notification.service.NotificationService;
+import com.barcode.honeykeep.notification.type.PushType;
+import com.barcode.honeykeep.pocket.dto.PocketSummaryResponse;
+import com.barcode.honeykeep.common.vo.Money;
+import com.barcode.honeykeep.notification.dto.AccountTransferNotificationDTO;
+import com.barcode.honeykeep.pocket.entity.Pocket;
+import com.barcode.honeykeep.pocket.type.PocketType;
+import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
+import com.barcode.honeykeep.transaction.service.TransactionService;
+import com.barcode.honeykeep.transaction.type.TransactionType;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
+@Slf4j
+public class AccountService {
+
+    private final AccountRepository accountRepository;
+    private final TransactionService transactionService;
+    private final NotificationDispatcher notificationDispatcher;
+    private final NotificationService notificationService;
+
+    //이체 하기 전 실행 로직
+    //출금 계좌와 입금 계좌를 단순 조회하여 정보를 반환
+    public TransferValidationResponse validateTransfer(TransferValidationRequest request, Long userId) {
+
+        //출금 계좌 조회
+        Account withdrawalAccount = accountRepository.findById(request.getWithdrawAccountId())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+        //출금 계좌 소유자 검증
+        if(!withdrawalAccount.getUser().getId().equals(userId)) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
+        }
+
+        //입금 계좌 조회
+        Account depositAccount = accountRepository.findByAccountNumber(request.getDepositAccountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+        return TransferValidationResponse.builder()
+                .withdrawAccountId(withdrawalAccount.getId())
+                .withdrawAccountName(withdrawalAccount.getAccountName())
+                .withdrawAccountBalance(withdrawalAccount.getAccountBalance().getAmount())
+                .depositAccountId(depositAccount.getId())
+                .depositAccountName(depositAccount.getAccountName())
+                .depositAccountBalance(depositAccount.getAccountBalance().getAmount())
+                .depositAccountUserName(depositAccount.getUser().getName())
+                .build();
+    }
+
+
+    /**
+     * 실제 계좌 이체 로직 실행
+     * - Pessimistic Lock을 사용하여 출금 계좌와 입금 계좌를 동시에 업데이트
+     * - 출금 계좌의 잔액이 충분한지 체크한 후 금액 차감 및 입금 처리를 진행
+     */
+    @Transactional
+    public TransferExecutionResponse executeTransfer(TransferExecutionRequest request, Long userId) {
+        // 1. 출금 계좌 ID는 직접 요청에서 얻습니다.
+        Long withdrawId = request.getWithdrawAccountId();
+
+        // 2. 입금 계좌의 ID는 계좌 번호로 단순 조회(락 없이)하여 구합니다.
+        Long depositId = accountRepository.findAccountIdByAccountNumber(request.getDepositAccountNumber())
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+
+        // 3. 두 계좌의 ID 목록 생성 후 동시에 락을 획득하는 bulk 조회
+        List<Long> accountIds = Arrays.asList(withdrawId, depositId);
+        List<Account> accounts = accountRepository.findAccountsForUpdateByIds(accountIds);
+        if (accounts.size() != 2) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND);
+        }
+
+        // 4. 조회된 계좌들은 ID 오름차순으로 정렬되어 있음 => 출금/입금 계좌 식별
+        Account withdrawAccount, depositAccount;
+        if (accounts.get(0).getId().equals(withdrawId)) {
+            withdrawAccount = accounts.get(0);
+            depositAccount = accounts.get(1);
+        } else {
+            withdrawAccount = accounts.get(1);
+            depositAccount = accounts.get(0);
+        }
+
+        // 5. 소유자 검증 및 이체 금액, 잔액 체크
+        if (!withdrawAccount.getUser().getId().equals(userId)) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
+        }
+        BigDecimal transferAmount = request.getTransferAmount();
+        if (withdrawAccount.getAccountBalance().getAmount().compareTo(transferAmount) < 0) {
+            throw new CustomException(AccountErrorCode.INSUFFICIENT_FUNDS);
+        }
+
+        // 6. 계좌 업데이트: 출금 및 입금
+        BigDecimal newWithdrawBalance = withdrawAccount.getAccountBalance().getAmount().subtract(transferAmount);
+        withdrawAccount.updateBalance(new Money(newWithdrawBalance));
+
+        BigDecimal newDepositBalance = depositAccount.getAccountBalance().getAmount().add(transferAmount);
+        depositAccount.updateBalance(new Money(newDepositBalance));
+
+        // 7. 거래내역 저장
+        transactionService.createTransaction(
+                withdrawAccount,
+                depositAccount.getUser().getName(),
+                new Money(transferAmount),
+                new Money(newWithdrawBalance),
+                TransactionType.WITHDRAWAL
+        );
+        transactionService.createTransaction(
+                depositAccount,
+                withdrawAccount.getUser().getName(),
+                new Money(transferAmount),
+                new Money(newDepositBalance),
+                TransactionType.DEPOSIT
+        );
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 8. 알림 전송 (이 부분은 추후 비동기 처리 등으로 개선 가능)
+        AccountTransferNotificationDTO withdrawalNotification = AccountTransferNotificationDTO.builder()
+                .transactionType(TransactionType.WITHDRAWAL)
+                .amount(transferAmount)
+                .withdrawAccountName(withdrawAccount.getAccountName())
+                .depositAccountName(depositAccount.getAccountName())
+                .transferDate(now)
+                .build();
+
+        try {
+            notificationDispatcher.send(PushType.TRANSFER, withdrawAccount.getUser().getId(), withdrawalNotification);
+            log.info("계좌이체(출금) 알림 전송 성공 - 사용자 ID: {}", withdrawAccount.getUser().getId());
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
+            String formattedAmount = nf.format(transferAmount);
+
+            // 전송 성공 시 알림 DB 저장
+            String title = "계좌이체";
+            // payAmount가 BigDecimal인 경우 적절한 포맷 적용 (여기서는 단순 문자열로 처리)
+            String body = String.format("%s 님, 출금 %s 원이 출금 되었습니다.",
+                    withdrawAccount.getUser().getName(), formattedAmount);
+            notificationService.saveNotification(
+                    withdrawAccount.getUser().getId(),
+                    PushType.TRANSFER,
+                    title,
+                    body
+            );
+        } catch (Exception e) {
+            log.error("계좌이체(출금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
+                    withdrawAccount.getUser().getId(), e.getMessage(), e);
+        }
+
+
+        AccountTransferNotificationDTO depositNotification = AccountTransferNotificationDTO.builder()
+                .transactionType(TransactionType.DEPOSIT)
+                .amount(transferAmount)
+                .withdrawAccountName(withdrawAccount.getAccountName())
+                .depositAccountName(depositAccount.getAccountName())
+                .transferDate(now)
+                .build();
+        try {
+            // FCM 전송: 입금 알림 전송 시도
+            notificationDispatcher.send(PushType.TRANSFER, depositAccount.getUser().getId(), depositNotification);
+            log.info("계좌이체(입금) 알림 전송 성공 - 사용자 ID: {}", depositAccount.getUser().getId());
+
+            NumberFormat nf = NumberFormat.getNumberInstance(Locale.KOREA);
+            String formattedAmount = nf.format(transferAmount);
+
+            // 전송 성공 시 알림 DB 저장
+            String title = "계좌이체";
+            String body = String.format("%s 님, %s 원이 입금 되었습니다.",
+                    depositAccount.getUser().getName(), formattedAmount);
+            notificationService.saveNotification(
+                    depositAccount.getUser().getId(),
+                    PushType.TRANSFER,
+                    title,
+                    body
+            );
+        } catch (Exception e) {
+            log.error("계좌이체(입금) 알림 전송 실패 - 사용자 ID: {}, 에러: {}",
+                    depositAccount.getUser().getId(), e.getMessage(), e);
+        }
+
+
+        return TransferExecutionResponse.builder()
+                .withdrawAccountId(withdrawAccount.getId())
+                .withdrawAccountNewBalance(newWithdrawBalance)
+                .depositAccountId(depositAccount.getId())
+                .depositAccountNewBalance(newDepositBalance)
+                .message("Transfer successful")
+                .build();
+    }
+
+
+
+    public List<AccountResponse> getAccountsByUserId(Long userId) {
+        List<Account> accounts = accountRepository.findByUser_IdOrderByAccountBalance_AmountDesc(userId);
+
+        return accounts.stream().map(account -> {
+            return AccountResponse.builder()
+                    .accountId(account.getId())
+                    .accountNumber(account.getAccountNumber())
+                    .accountBalance(account.getAccountBalance().getAmount())
+                    .accountName(account.getAccountName())
+                    .bankName(account.getBank().getName())
+                    .totalPocketAmount(calculateTotalPocketAmount(account))
+                    .pocketCount(account.getPockets().size())
+                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                    .totalUsedPocketAmount(calculateUsedTotalPocketAmount(account))
+                    .spareBalance(account.getAccountBalance().getAmount().subtract(calculateActivePocketAmount(account)))
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+
+    public AccountDetailResponse getAccountDetailById(Long id, Long userId) {
+        Account account = getAccountById(id);
+        validateAccountOwner(account, userId);
+
+        // Pocket 엔티티를 DTO로 변환 (기존 코드)
+        List<PocketSummaryResponse> pocketDtos = account.getPockets().stream()
+                .map(pocket -> PocketSummaryResponse.builder()
+                        .id(pocket.getId())
+                        .accountId(pocket.getAccount().getId())
+                        .name(pocket.getName())
+                        .accountName(account.getAccountName())
+                        .totalAmount(pocket.getTotalAmount().getAmountAsLong())
+                        .savedAmount(pocket.getSavedAmount().getAmountAsLong())
+                        .type(pocket.getType().getType())
+                        .isFavorite(pocket.getIsFavorite())
+                        .imgUrl(pocket.getImgUrl())
+                        .endDate(pocket.getEndDate())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Transaction 엔티티를 TransactionDetailResponse DTO로 변환
+        List<TransactionDetailResponse> transactionDtos = account.getTransactions().stream()
+                .map(transaction -> TransactionDetailResponse.builder()
+                        .id(transaction.getId())
+                        .name(transaction.getName())
+                        .amount(transaction.getAmount().getAmountAsLong())
+                        .balance(transaction.getBalance().getAmountAsLong())
+                        .date(transaction.getDate())
+                        .type(transaction.getType())
+                        .accountId(account.getId())
+                        .accountName(account.getAccountName())
+                        .memo(transaction.getMemo())
+                        .pocketId(transaction.getPocket() != null ? transaction.getPocket().getId() : null)
+                        .build())
+                .collect(Collectors.toList());
+
+        return AccountDetailResponse.builder()
+                .accountId(account.getId())
+                .accountNumber(account.getAccountNumber())
+                .accountBalance(account.getAccountBalance().getAmount())
+                .bankName(account.getBank().getName())
+                .accountName(account.getAccountName())
+                .totalPocketAmount(calculateTotalPocketAmount(account))
+                .pocketCount(account.getPockets().size())
+                .spareBalance(account.getAccountBalance().getAmount().subtract(calculateTotalPocketAmount(account)))
+                .transactionList(transactionDtos) // TransactionDetailResponse DTO 리스트 사용
+                .pocketList(pocketDtos)
+                .build();
+    }
+
+    /**
+     * ID로 계좌 조회
+     */
+    public Account getAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new CustomException(AccountErrorCode.ACCOUNT_NOT_FOUND));
+    }
+
+    /**
+     * 계좌 소유자 검증
+     */
+    public void validateAccountOwner(Account account, Long userId) {
+        if (!account.getUser().getId().equals(userId)) {
+            throw new CustomException(AccountErrorCode.ACCOUNT_ACCESS_DENIED);
+        }
+    }
+
+    //포켓들 금액 합 계산
+    private BigDecimal calculateTotalPocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            total = total.add(pocket.getSavedAmount().getAmount());
+        }
+        return total;
+    }
+
+    //활성화된 포켓들(UNUSED, USING)의 금액 합 계산 (USED 상태 제외)
+    private BigDecimal calculateActivePocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            // USED 상태가 아닌 포켓만 합산 (UNUSED, USING 상태인 경우)
+            if (pocket.getType() != PocketType.USED) {
+                total = total.add(pocket.getSavedAmount().getAmount());
+            }
+        }
+        return total;
+    }
+
+    // 모든 포켓에서 사용한 모든 금액 계산
+    private BigDecimal calculateUsedTotalPocketAmount(Account account) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pocket pocket : account.getPockets()) {
+            total = total.add(pocket.getTotalAmount().getAmount());
+        }
+        return total;
+    }
+}

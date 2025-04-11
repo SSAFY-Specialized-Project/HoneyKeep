@@ -1,0 +1,307 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - my-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: redis
+    command: redis-server --requirepass "${REDIS_PASSWORD}"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - my-network
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      TZ: Asia/Seoul
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - my-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "-u", "${MONGO_INITDB_ROOT_USERNAME}", "-p", "${MONGO_INITDB_ROOT_PASSWORD}", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: springboot-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      ml-server:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - my-network
+    volumes:
+      - "/home/ubuntu/secrets/honeykeep-55e4b-firebase-adminsdk-fbsvc-fccd58a678.json:/app/config/firebase/firebase-service-key.json"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      # firebase-service-key.json 파일 경로를 환경 변수로 설정
+      GOOGLE_APPLICATION_CREDENTIALS: /app/config/firebase/firebase-service-key.json
+      TZ: Asia/Seoul
+
+      # PostgreSQL
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # MongoDB
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE_SEC: ${JWT_EXPIRE_SEC}
+      JWT_REFRESH_EXPIRE_SEC: ${JWT_REFRESH_EXPIRE_SEC}
+
+      SECRET_KEY: ${SECRET_KEY}
+
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+
+      SSAFY_FINANCIAL_NETWORK_API_KEY: ${SSAFY_FINANCIAL_NETWORK_API_KEY}
+
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+
+      ML_SERVER_URL: http://ml-server:5000
+      DATA_URL: ${DATA_URL}
+      APP_COOKIE_DOMAIN: ${APP_COOKIE_DOMAIN}
+
+      CERT_CA_KEYSTORE_PATH: ${CERT_CA_KEYSTORE_PATH}
+      CERT_CA_KEYSTORE_PASSWORD: ${CERT_CA_KEYSTORE_PASSWORD}
+      CERT_CA_KEY_ALIAS: ${CERT_CA_KEY_ALIAS}
+
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID}
+      WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME}
+      WEBAUTHN_RP_ORIGIN: ${WEBAUTHN_RP_ORIGIN}
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai-server:
+    build:
+      context: ./data
+      dockerfile: Dockerfile
+    container_name: ai-server
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "8081:8081"  # 실제 서비스 포트에 맞게 수정하세요.
+    networks:
+      - my-network
+    environment:
+      DATA_HOST: ${DATA_HOST}
+      DOCUMENT_PATH: ${DOCUMENT_PATH}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_DB: ${REDIS_DB}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      TZ: Asia/Seoul
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-server:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: ml-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ml/model:/app/model
+    networks:
+      - my-network
+    environment:
+      PYTHONUNBUFFERED: 1
+      TZ: Asia/Seoul
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  backend-test:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: springboot-backend-test
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      ml-server:
+        condition: service_healthy
+    ports:
+      - "8097:8080"
+    networks:
+      - my-network
+    volumes:
+      - "/home/ubuntu/secrets/honeykeep-55e4b-firebase-adminsdk-fbsvc-fccd58a678.json:/app/config/firebase/firebase-service-key.json"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      # firebase-service-key.json 파일 경로를 환경 변수로 설정
+      GOOGLE_APPLICATION_CREDENTIALS: /app/config/firebase/firebase-service-key.json
+      TZ: Asia/Seoul
+
+      # PostgreSQL
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # MongoDB
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE_SEC: ${JWT_EXPIRE_SEC}
+      JWT_REFRESH_EXPIRE_SEC: ${JWT_REFRESH_EXPIRE_SEC}
+
+      SECRET_KEY: ${SECRET_KEY}
+
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+
+      external.bank.institution-code: 00100
+      external.bank.fintech-app-no: 001
+      SSAFY_FINANCIAL_NETWORK_API_KEY: ${SSAFY_FINANCIAL_NETWORK_API_KEY}
+
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+
+      ML_SERVER_URL: http://ml-server:5000
+      DATA_URL: ${DATA_URL}
+      APP_COOKIE_DOMAIN: ${APP_COOKIE_DOMAIN}
+
+      CERT_CA_KEYSTORE_PATH: ${CERT_CA_KEYSTORE_PATH}
+      CERT_CA_KEYSTORE_PASSWORD: ${CERT_CA_KEYSTORE_PASSWORD}
+      CERT_CA_KEY_ALIAS: ${CERT_CA_KEY_ALIAS}
+
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID}
+      WEBAUTHN_RP_NAME: ${WEBAUTHN_RP_NAME}
+      WEBAUTHN_RP_ORIGIN: ${WEBAUTHN_RP_ORIGIN}
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-remote-write-receiver'
+      - '--enable-feature=native-histograms'
+    ports:
+      - "9091:9090"
+    networks:
+      - my-network
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - my-network
+    environment:
+      GF_DATE_FORMATS_DEFAULT_TIMEZONE: Asia/Seoul
+      TZ: Asia/Seoul
+
+networks:
+  my-network:
+    name: my-network
+    external: true
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  mongo-data:
+  prometheus_data: { }
+  grafana_data: { }
