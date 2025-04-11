@@ -65,12 +65,17 @@ const Chatbot = () => {
   });
 
   useEffect(() => {
-    if (chatData && Array.isArray(chatData.data) && messages.length === 1 && messages[0].text === '안녕하세요!') {
+    if (
+      chatData &&
+      Array.isArray(chatData.data) &&
+      messages.length === 1 &&
+      messages[0].text === '안녕하세요!'
+    ) {
       console.log('Loading chat history...');
       const chatHistory = chatData.data.map((item) => ({
         type: (item.senderId === 'USER' ? 'USER' : 'BOT') as ChatItemType['type'],
         text: item.content,
-        link: null
+        link: null,
       }));
       setMessages((prev) => [...prev, ...chatHistory]);
     } else if (chatData && !Array.isArray(chatData.data)) {
@@ -240,12 +245,12 @@ const Chatbot = () => {
         {messages.map((message, index) => (
           <li
             key={index}
-            className={`flex gap-4 ${message.type === 'USER' ? 'justify-end' : 'justify-start items-start'}`}
+            className={`flex gap-4 ${message.type === 'USER' ? 'justify-end' : 'items-start justify-start'}`}
           >
             {message.type == 'BOT' ? (
               <ImageContainer imgSrc={'/image/ChatBot.png'} size="small" />
             ) : null}
-            <div className="flex flex-col items-start max-w-[75%] gap-2">
+            <div className="flex max-w-[75%] flex-col items-start gap-2">
               <div
                 className={`rounded-lg p-3 ${message.type === 'USER' ? 'bg-blue-100' : 'bg-gray-100'}`}
               >
@@ -259,14 +264,27 @@ const Chatbot = () => {
                 )}
               </div>
               {message.link != null && (
-                <Link 
-                  to={message.link} 
-                  className="inline-flex items-center px-3 py-1.5 bg-brand-primary-100 text-brand-primary-700 text-md font-medium rounded-md hover:bg-brand-primary-200 transition-colors"
+                <Link
+                  to={message.link}
+                  className="group relative inline-flex items-center justify-center overflow-hidden rounded-xl border border-orange-200 bg-orange-100 px-5 py-3 text-sm font-semibold text-black shadow-sm transition-all duration-300 hover:bg-orange-200 hover:shadow-md"
                 >
-                  해당 기능으로 이동하기
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  <span className="flex items-center space-x-2">
+                    <span>지금 바로 시작하기</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4.5 w-4.5 transform transition-transform duration-300 group-hover:translate-x-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </span>
                 </Link>
               )}
             </div>
@@ -276,7 +294,7 @@ const Chatbot = () => {
       </ul>
       <form
         onSubmit={sendChatMessage}
-        className="relative mt-auto flex items-center w-full rounded-xl bg-gray-100 px-5 py-2"
+        className="relative mt-auto flex w-full items-center rounded-xl bg-gray-100 px-5 py-2"
       >
         <label htmlFor="chatbot"></label>
         <textarea
@@ -288,7 +306,7 @@ const Chatbot = () => {
           value={text}
           onChange={handleMessage}
           disabled={isResponding}
-          className="flex-grow bg-transparent pr-10 outline-none resize-none overflow-hidden"
+          className="flex-grow resize-none overflow-hidden bg-transparent pr-10 outline-none"
           style={{ maxHeight: '120px' }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -299,7 +317,7 @@ const Chatbot = () => {
         />
         <button
           type="submit"
-          className="absolute top-1/2 right-5 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 transition-all duration-200 ease-in-out transform hover:scale-110 cursor-pointer"
+          className="absolute top-1/2 right-5 -translate-y-1/2 transform cursor-pointer rounded-full p-1 transition-all duration-200 ease-in-out hover:scale-110 hover:bg-gray-200"
           disabled={isResponding || !text.trim()}
         >
           <Icon id="send-plane" size="small" />
