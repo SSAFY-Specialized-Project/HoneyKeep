@@ -12,6 +12,7 @@ import com.barcode.honeykeep.pocket.repository.OverspendingReasonRepository;
 import com.barcode.honeykeep.pocket.repository.PocketRepository;
 import com.barcode.honeykeep.pocket.type.UserType;
 import com.barcode.honeykeep.transaction.dto.TransactionDetailResponse;
+import com.barcode.honeykeep.transaction.type.TransactionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class AnalysisService {
     private final PocketRepository pocketRepository;
     private final OverspendingReasonRepository overspendingReasonRepository;
 
-    public SpendingAnalysisResponse getSpendingAnalysis(Long userId) {
+    public SpendingAnalysisResponse getSpendingAnalysis(Long userId, int month) {
         
         // 1. 사용자 아이디로 계좌 목록 조회
         List<AccountResponse> accounts = accountService.getAccountsByUserId(userId);
@@ -42,7 +43,7 @@ public class AnalysisService {
         long pocketTotal = calculatePocketTotal(accounts);
 
         // 3. 계획/비계획 소비, 성공/미완료/초과 포켓 분류
-        AnalysisContext context = analyzeTransactionsAndPockets(accounts, userId);
+        AnalysisContext context = analyzeTransactionsAndPockets(accounts, userId, month);
 
         // 4. 사용자 유형 분류
         UserType userType = determineUserType(
@@ -102,32 +103,41 @@ public class AnalysisService {
      * todo : 초과 여부, 초과한 금액 저장해서 바로 불러오는 로직으로 추후 변경
      * 소비 분석 로직
      */
-    private AnalysisContext analyzeTransactionsAndPockets(List<AccountResponse> accounts, Long userId) {
+    private AnalysisContext analyzeTransactionsAndPockets(List<AccountResponse> accounts, Long userId, int month) {
         AnalysisContext ctx = new AnalysisContext();
 
         for (AccountResponse summary : accounts) {
             AccountDetailResponse detail = accountService.getAccountDetailById(summary.getAccountId(), userId);
-            ctx.pocketCount += detail.getPocketList().size();
+            // ctx.pocketCount += detail.getPocketList().size();
 
             for (TransactionDetailResponse txn : detail.getTransactionList()) {
-                long amount = txn.amount().longValue();
-                if (txn.pocketId() != null) {
-                    ctx.plannedAmount += amount;
-                    ctx.pocketSpendingMap.merge(txn.pocketId(), amount, Long::sum);
-                } else {
-                    ctx.unplannedAmount += amount;
+
+                if(txn.date().getMonthValue() == month && txn.type().equals(TransactionType.WITHDRAWAL)) {
+                    long amount = txn.amount().longValue();
+
+                    if (txn.pocketId() != null) {
+                        ctx.plannedAmount += amount;
+                        ctx.pocketSpendingMap.merge(txn.pocketId(), amount, Long::sum);
+                    } else {
+                        ctx.unplannedAmount += amount;
+                    }
                 }
             }
 
             for (PocketSummaryResponse pocket : detail.getPocketList()) {
-                long totalAmount = pocket.totalAmount();
-                long spent = ctx.pocketSpendingMap.getOrDefault(pocket.id(), 0L);
+                if(pocket.endDate() != null && pocket.endDate().getMonthValue() == month) {
+                    long totalAmount = pocket.totalAmount();
 
-                if ("USED".equals(pocket.type())) {
-                    if (spent <= totalAmount) ctx.successAmount += totalAmount;
-                    else ctx.exceededAmount += totalAmount;
-                } else {
-                    ctx.incompleteAmount += totalAmount;
+                    long spent = ctx.pocketSpendingMap.getOrDefault(pocket.id(), 0L);
+
+                    if ("USED".equals(pocket.type())) {
+                        if (spent <= totalAmount) ctx.successAmount += totalAmount;
+                        else ctx.exceededAmount += totalAmount;
+
+                        ctx.pocketCount += 1;
+                    } else {
+                        ctx.incompleteAmount += totalAmount;
+                    }
                 }
             }
         }
